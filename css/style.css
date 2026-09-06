@@ -123,6 +123,132 @@ a {
 }
 
 
+/* ---- MOVIE DETAILS ---- */
+
+.details {
+    min-height: 600px;
+    padding: 65px 6%;
+    display: flex;
+    gap: 45px;
+    align-items: center;
+    background: #15171d;
+}
+
+.details img {
+    width: 280px;
+    height: 410px;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+.details-content {
+    max-width: 650px;
+}
+
+.details-content h1 {
+    font-size: 42px;
+    margin-bottom: 15px;
+}
+
+.details-meta {
+    color: #aaa;
+    margin-bottom: 18px;
+}
+
+.details-content p {
+    color: #ccc;
+    line-height: 1.7;
+    margin-bottom: 18px;
+}
+
+.cast {
+    color: #ddd;
+    margin-bottom: 25px;
+}
+
+/* ---- LOGIN PAGE ---- */
+
+.login-page {
+    min-height: calc(100vh - 65px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+
+    background:
+        linear-gradient(
+            rgba(0, 0, 0, .7),
+            rgba(0, 0, 0, .7)
+        ),
+        url("https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=1400&q=80");
+
+    background-size: cover;
+    background-position: center;
+}
+
+.login-box {
+    width: 360px;
+    background: rgba(17, 19, 24, .96);
+    padding: 35px;
+    border-radius: 6px;
+}
+
+.login-box h1 {
+    margin-bottom: 25px;
+}
+
+.login-box label {
+    display: block;
+    margin: 13px 0 7px;
+    color: #ddd;
+}
+
+.login-box input[type="email"],
+.login-box input[type="password"] {
+    width: 100%;
+    padding: 11px;
+    background: #292c33;
+    border: 1px solid #454852;
+    color: white;
+    border-radius: 4px;
+}
+
+.login-box .btn {
+    border: 0;
+    width: 100%;
+    margin-top: 20px;
+    cursor: pointer;
+    text-align: center;
+}
+
+/* Remember Me */
+
+.remember {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.remember input {
+    margin: 0;
+}
+
+.remember label {
+    margin: 0;
+}
+
+/* Login Extra */
+
+.login-extra {
+    margin-top: 18px;
+    color: #aaa;
+    font-size: 14px;
+}
+
+.login-extra a {
+    color: #e50914;
+}
 
 
 .container {
@@ -220,6 +346,8 @@ a {
         font-size: 42px;
     }
 
+    
+
     .footer-content h2 {
         font-size: 45px;
     }
@@ -255,6 +383,18 @@ a {
 
     .movie-card img {
         height: 220px;
+    .details {
+    flex-direction: column;
+    align-items: flex-start;
+    }
+
+    .details img {
+    width: 220px;
+    height: 325px;
+    }
+
+    .details-content h1 {
+    font-size: 34px;
     }
 
     .footer {

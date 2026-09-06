@@ -383,6 +383,8 @@ a {
 
     .movie-card img {
         height: 220px;
+    }
+    
     .details {
     flex-direction: column;
     align-items: flex-start;

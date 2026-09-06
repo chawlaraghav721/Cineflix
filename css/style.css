@@ -251,6 +251,39 @@ a {
 }
 
 
+.container {
+    width: 88%;
+    max-width: 1250px;
+    margin: 35px auto;
+}
+
+.page-title {
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+.page-intro {
+    color: #aaa;
+    margin-bottom: 30px;
+}
+
+
+/* ---- SEARCH BOX ---- */
+
+.search-box {
+    width: 100%;
+    padding: 12px;
+    background: #1c1f26;
+    border: 1px solid #3b3e46;
+    color: white;
+    border-radius: 4px;
+    margin: 15px 0 30px;
+}
+
+
+
+
+
 @media (max-width: 900px) {
 
     .hero h1 {

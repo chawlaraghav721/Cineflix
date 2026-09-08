@@ -17,6 +17,76 @@ a {
     text-decoration: none;
 }
 
+/* Website reveal */
+.website {
+    opacity: 1;
+    filter: blur(12px);
+    animation: websiteReveal 0.2s ease-out 2.2s forwards;
+}
+
+/* Intro overlay */
+.intro {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+}
+
+/* Logo animation */
+.intro img {
+    width: 420px;
+    opacity: 0;
+    transform: scale(0.82);
+    filter: blur(10px);
+    animation: logoAnimation 2.4s ease-in-out forwards;
+}
+
+@keyframes logoAnimation {
+    0% {
+        opacity: 0;
+        transform: scale(0.82);
+        filter: blur(10px);
+    }
+
+    25% {
+        opacity: 1;
+        transform: scale(0.96);
+        filter: blur(3px);
+    }
+
+    45%,
+    75% {
+        opacity: 1;
+        transform: scale(1);
+        filter: blur(0);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(1.08);
+        filter: blur(4px);
+    }
+}
+
+/* Remove background blur */
+@keyframes websiteReveal {
+    from {
+        filter: blur(12px);
+    }
+
+    to {
+        filter: blur(0);
+    }
+}
+
+@media (max-width: 600px) {
+    .intro img {
+        width: 280px;
+    }
+}
 
 /* ---- NAVIGATION BAR ---- */
 

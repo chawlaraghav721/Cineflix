@@ -138,6 +138,27 @@ a {
     border-radius: 4px;
 }
 
+/* Sign-out button */
+.signout-btn {
+    background: transparent;
+    border: 1px solid #e50914;
+    border-radius: 4px;
+    color: #ddd;
+    padding: 8px 16px;
+    font: inherit;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.signout-btn:hover {
+    background: #e50914;
+    color: #ffffff;
+}
+
+.signout-btn:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+}
 
 /* ---- BUTTONS ---- */
 

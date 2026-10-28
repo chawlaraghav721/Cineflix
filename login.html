@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -6,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CineFlix - Login</title>
     <link rel="stylesheet" href="css/style.css">
+    <script src="js/login.js" defer></script>
 </head>
 
 <body>
@@ -47,53 +49,57 @@
 
     <main class="login-page">
 
-    <div class="login-box">
+        <div class="login-box">
 
-        <h1>Sign In</h1>
+            <h1>Sign In</h1>
 
-        <form>
+            <form id="login-form" novalidate>
 
-            <label for="email">Email</label>
-            <input
-                type="email"
-                id="email"
-                placeholder="Enter your email"
-                required
-            >
-
-            <label for="password">Password</label>
-            <input
-                type="password"
-                id="password"
-                placeholder="Enter your password"
-                required
-            >
-
-            <div class="remember">
-
+                <label for="email">Email</label>
                 <input
-                    type="checkbox"
-                    id="remember"
+                    type="email"
+                    id="email"
+                    placeholder="Enter your email"
+                    required
                 >
+                <p id="email-error" class="field-error" aria-live="polite"></p>
 
-                <label for="remember">Remember me</label>
+                <label for="password">Password</label>
+                <input
+                    type="password"
+                    id="password"
+                    placeholder="Enter your password"
+                    required
+                >
+                <p id="password-error" class="field-error" aria-live="polite"></p>
 
-            </div>
+                <div class="remember">
 
-            <button type="submit" class="btn">
-                Sign In
-            </button>
+                    <input
+                        type="checkbox"
+                        id="remember"
+                    >
 
-        </form>
+                    <label for="remember">Remember me</label>
 
-        <p class="login-extra">
-            New to CineFlix?
-            <a href="#">Sign up now</a>
-        </p>
+                </div>
 
-    </div>
+                <button type="submit" class="btn">
+                    Sign In
+                </button>
 
-</main>
+                <p id="login-feedback" role="status" aria-live="polite"></p>
+
+            </form>
+
+            <p class="login-extra">
+                New to CineFlix?
+                <a href="#">Sign up now</a>
+            </p>
+
+        </div>
+
+    </main>
 
     <footer class="footer">
 

@@ -49,6 +49,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             loginLink.textContent = "My Account";
             loginLink.title = demoUser.email;
+            loginLink.classList.add("account-link");
 
             // Create sign-out button
             const signOutItem = document.createElement("li");

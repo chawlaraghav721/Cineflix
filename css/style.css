@@ -140,24 +140,31 @@ a {
 
 /* Sign-out button */
 .signout-btn {
-    background: transparent;
+    background: #e50914;
     border: 1px solid #e50914;
     border-radius: 4px;
-    color: #ddd;
-    padding: 8px 16px;
+    color: #ffffff;
+    padding: 8px 14px;
     font: inherit;
-    font-size: 15px;
+    font-size: 14px;
     cursor: pointer;
+    transition: background 0.2s ease;
 }
 
 .signout-btn:hover {
-    background: #e50914;
-    color: #ffffff;
+    background: #b80710;
+    border-color: #b80710;
 }
 
 .signout-btn:focus-visible {
     outline: 2px solid #ffffff;
     outline-offset: 3px;
+}
+
+/* Display My Account as a normal navigation link */
+.nav-links .login-link.account-link {
+    border: none;
+    padding: 0;
 }
 
 /* ---- BUTTONS ---- */

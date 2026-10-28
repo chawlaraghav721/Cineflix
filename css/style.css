@@ -800,8 +800,7 @@ a {
     border-radius: 3px;
 }
 
-
-/* ---- CONTACT FORM VALIDATION (MEMBER 5) ---- */
+/* ---- CONTACT FORM VALIDATION ---- */
 
 /* Keep labels accessible without changing the design */
 .visually-hidden {
@@ -851,7 +850,7 @@ a {
 }
 
 
-/* ---- ACTIVE NAVIGATION (MEMBER 5) ---- */
+/* ---- ACTIVE NAVIGATION ---- */
 
 .nav-links a.active {
     color: #ff4d52;
@@ -867,3 +866,4 @@ a {
     background: #e50914;
     color: #ffffff;
 }
+

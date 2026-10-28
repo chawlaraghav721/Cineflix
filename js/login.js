@@ -66,9 +66,48 @@ loginForm.addEventListener("submit", function(event) {
 
     // Display final feedback
     if (isValid) {
-        loginFeedback.textContent = "Looks good! This is a demo sign-in.";
+
+        const rememberMe = document.getElementById("remember").checked;
+
+        const demoUser = {
+            email: email,
+            signedInAt: new Date().toISOString()
+        };
+
+        try {
+            const storage = rememberMe ? localStorage : sessionStorage;
+
+            // Save demo session without storing password
+            storage.setItem("cineflixDemoUser", JSON.stringify(demoUser));
+
+            // Remove any previous session from the other storage
+            if (rememberMe) {
+                sessionStorage.removeItem("cineflixDemoUser");
+            } else {
+                localStorage.removeItem("cineflixDemoUser");
+            }
+
+            loginFeedback.textContent =
+                "Demo sign-in successful! Welcome to CineFlix.";
+
+            loginFeedback.style.color = "#4ade80";
+
+            // Clear password after successful sign-in
+            passwordInput.value = "";
+
+        } catch (error) {
+
+            loginFeedback.textContent =
+                "Unable to save your demo session. Please check browser settings.";
+
+            loginFeedback.style.color = "#ff6b6b";
+        }
+
     } else {
+
         loginFeedback.textContent = "Please correct the errors above.";
+        loginFeedback.style.color = "#ff6b6b";
+
     }
 
 });

@@ -771,3 +771,53 @@ a {
     outline-offset: 3px;
     border-radius: 3px;
 }
+
+
+/* ---- CONTACT FORM VALIDATION (MEMBER 5) ---- */
+
+/* Keep labels accessible without changing the design */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Error messages below contact fields */
+.contact-form .contact-error {
+    color: #ff5964;
+    font-size: 14px;
+    text-align: left;
+    margin: -15px 0 20px;
+    line-height: 1.5;
+}
+
+/* Do not reserve space for empty error messages */
+.contact-form .contact-error:empty {
+    display: none;
+}
+
+/* Highlight invalid fields */
+.contact-form [aria-invalid="true"] {
+    border-color: #ff5964;
+}
+
+/* Feedback after pressing Send Message */
+.contact-form #contact-feedback {
+    font-size: 15px;
+    line-height: 1.5;
+    margin-top: 16px;
+}
+
+.contact-form .contact-success {
+    color: #8ee5ad;
+}
+
+.contact-form .contact-failure {
+    color: #ff5964;
+}

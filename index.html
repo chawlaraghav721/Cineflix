@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -6,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CineFlix - Home</title>
     <link rel="stylesheet" href="css/style.css">
+    <script src="js/contact.js" defer></script>
 </head>
 
 <body>
@@ -78,7 +80,7 @@
 
 
     <!-- Main Content -->
-    
+
     <main class="container">
 
 
@@ -285,29 +287,78 @@
 
 
             <!-- Contact Form -->
-            <form class="contact-form">
+            <form
+                class="contact-form"
+                id="contact-form"
+                novalidate
+            >
+
+                <label for="contact-name" class="visually-hidden">
+                    Your Name
+                </label>
 
                 <input
                     type="text"
+                    id="contact-name"
                     placeholder="Your Name"
+                    aria-describedby="contact-name-error"
                     required
                 >
+
+                <p
+                    id="contact-name-error"
+                    class="contact-error"
+                    aria-live="polite"
+                ></p>
+
+
+                <label for="contact-email" class="visually-hidden">
+                    Your Email
+                </label>
 
                 <input
                     type="email"
+                    id="contact-email"
                     placeholder="Your Email"
+                    aria-describedby="contact-email-error"
                     required
                 >
 
+                <p
+                    id="contact-email-error"
+                    class="contact-error"
+                    aria-live="polite"
+                ></p>
+
+
+                <label for="contact-message" class="visually-hidden">
+                    Your Message
+                </label>
+
                 <textarea
+                    id="contact-message"
                     placeholder="Your Message"
                     rows="6"
+                    aria-describedby="contact-message-error"
                     required
                 ></textarea>
+
+                <p
+                    id="contact-message-error"
+                    class="contact-error"
+                    aria-live="polite"
+                ></p>
+
 
                 <button type="submit">
                     SEND MESSAGE
                 </button>
+
+                <p
+                    id="contact-feedback"
+                    role="status"
+                    aria-live="polite"
+                ></p>
 
             </form>
 
@@ -322,7 +373,7 @@
             <div class="footer-links">
 
                 <a href="#">About</a>
-                <a href="#">Contact</a>
+                <a href="#contact-form">Contact</a>
                 <a href="#">Privacy</a>
 
             </div>
@@ -336,8 +387,10 @@
     </footer>
 
 </div>
- <div class="intro">
-        <img src="images/cineflix-logo.png" alt="CineFlix">
-    </div>
+
+<div class="intro">
+    <img src="images/cineflix-logo.png" alt="CineFlix">
+</div>
+
 </body>
 </html>

@@ -56,6 +56,11 @@ contactForm.addEventListener("submit", function(event) {
         messageError.textContent = "Please enter your message.";
         contactMessage.setAttribute("aria-invalid", "true");
         isValid = false;
+    } else if (message.length < 10) {
+        messageError.textContent =
+            "Your message must contain at least 10 characters.";
+        contactMessage.setAttribute("aria-invalid", "true");
+        isValid = false;
     }
 
     // Show feedback

@@ -65,12 +65,28 @@
                 <p id="email-error" class="field-error" aria-live="polite"></p>
 
                 <label for="password">Password</label>
-                <input
-                    type="password"
-                    id="password"
-                    placeholder="Enter your password"
-                    required
-                >
+
+                <div class="password-container">
+
+                    <input
+                        type="password"
+                        id="password"
+                        placeholder="Enter your password"
+                        required
+                    >
+
+                    <button
+                        type="button"
+                        id="toggle-password"
+                        class="toggle-password"
+                        aria-label="Show password"
+                        aria-pressed="false"
+                    >
+                        Show
+                    </button>
+
+                </div>
+
                 <p id="password-error" class="field-error" aria-live="polite"></p>
 
                 <div class="remember">

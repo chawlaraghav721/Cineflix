@@ -8,6 +8,30 @@ const emailError = document.getElementById("email-error");
 const passwordError = document.getElementById("password-error");
 const loginFeedback = document.getElementById("login-feedback");
 
+const togglePassword = document.getElementById("toggle-password");
+
+// Show or hide password when button is clicked
+togglePassword.addEventListener("click", function() {
+
+    if (passwordInput.type === "password") {
+
+        passwordInput.type = "text";
+        togglePassword.textContent = "Hide";
+        togglePassword.setAttribute("aria-label", "Hide password");
+        togglePassword.setAttribute("aria-pressed", "true");
+
+    } else {
+
+        passwordInput.type = "password";
+        togglePassword.textContent = "Show";
+        togglePassword.setAttribute("aria-label", "Show password");
+        togglePassword.setAttribute("aria-pressed", "false");
+
+    }
+
+});
+
+// Validate login form
 loginForm.addEventListener("submit", function(event) {
 
     event.preventDefault();
@@ -42,9 +66,9 @@ loginForm.addEventListener("submit", function(event) {
 
     // Display final feedback
     if (isValid) {
-    loginFeedback.textContent = "Looks good! This is a demo sign-in.";
-} else {
-    loginFeedback.textContent = "Please correct the errors above.";
-}
+        loginFeedback.textContent = "Looks good! This is a demo sign-in.";
+    } else {
+        loginFeedback.textContent = "Please correct the errors above.";
+    }
 
 });

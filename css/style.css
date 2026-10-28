@@ -282,8 +282,10 @@ a {
     color: #ddd;
 }
 
+
 .login-box input[type="email"],
-.login-box input[type="password"] {
+.login-box input[type="password"],
+.login-box input[type="text"] {
     width: 100%;
     padding: 11px;
     background: #292c33;
@@ -291,6 +293,7 @@ a {
     color: white;
     border-radius: 4px;
 }
+
 
 .login-box .btn {
     border: 0;
@@ -733,4 +736,38 @@ a {
     font-size: 14px;
     line-height: 1.5;
     margin-top: 12px;
+}
+
+/* ---- SHOW / HIDE PASSWORD  ---- */
+
+.login-box .password-container {
+    position: relative;
+}
+
+.login-box .password-container input {
+    padding-right: 70px;
+}
+
+.login-box .toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #ff5964;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 6px;
+}
+
+.login-box .toggle-password:hover {
+    color: #ffffff;
+}
+
+.login-box .toggle-password:focus-visible {
+    outline: 2px solid #ff5964;
+    outline-offset: 3px;
+    border-radius: 3px;
 }

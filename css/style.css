@@ -138,6 +138,34 @@ a {
     border-radius: 4px;
 }
 
+/* Sign-out button */
+.signout-btn {
+    background: #e50914;
+    border: 1px solid #e50914;
+    border-radius: 4px;
+    color: #ffffff;
+    padding: 8px 14px;
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.signout-btn:hover {
+    background: #b80710;
+    border-color: #b80710;
+}
+
+.signout-btn:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+}
+
+/* Display My Account as a normal navigation link */
+.nav-links .login-link.account-link {
+    border: none;
+    padding: 0;
+}
 
 /* ---- BUTTONS ---- */
 
@@ -282,8 +310,10 @@ a {
     color: #ddd;
 }
 
+
 .login-box input[type="email"],
-.login-box input[type="password"] {
+.login-box input[type="password"],
+.login-box input[type="text"] {
     width: 100%;
     padding: 11px;
     background: #292c33;
@@ -291,6 +321,7 @@ a {
     color: white;
     border-radius: 4px;
 }
+
 
 .login-box .btn {
     border: 0;
@@ -715,4 +746,123 @@ a {
 .add-movie-card:hover .plus-icon {
     color: #e50914;
     border-color: #e50914;
+}
+
+
+
+/* ---- LOGIN VALIDATION FEEDBACK  ---- */
+
+.login-box .field-error {
+    color: #ff5964;
+    font-size: 13px;
+    line-height: 1.4;
+    margin: 6px 0 12px;
+}
+
+.login-box #login-feedback {
+    color: #ddd;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-top: 12px;
+}
+
+/* ---- SHOW / HIDE PASSWORD  ---- */
+
+.login-box .password-container {
+    position: relative;
+}
+
+.login-box .password-container input {
+    padding-right: 70px;
+}
+
+.login-box .toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #ff5964;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 6px;
+}
+
+.login-box .toggle-password:hover {
+    color: #ffffff;
+}
+
+.login-box .toggle-password:focus-visible {
+    outline: 2px solid #ff5964;
+    outline-offset: 3px;
+    border-radius: 3px;
+}
+
+/* ---- CONTACT FORM VALIDATION ---- */
+
+/* Keep labels accessible without changing the design */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Error messages below contact fields */
+.contact-form .contact-error {
+    color: #ff5964;
+    font-size: 14px;
+    text-align: left;
+    margin: -15px 0 20px;
+    line-height: 1.5;
+}
+
+/* Do not reserve space for empty error messages */
+.contact-form .contact-error:empty {
+    display: none;
+}
+
+/* Highlight invalid fields */
+.contact-form [aria-invalid="true"] {
+    border-color: #ff5964;
+}
+
+/* Feedback after pressing Send Message */
+.contact-form #contact-feedback {
+    font-size: 15px;
+    line-height: 1.5;
+    margin-top: 16px;
+}
+
+.contact-form .contact-success {
+    color: #8ee5ad;
+}
+
+.contact-form .contact-failure {
+    color: #ff5964;
+}
+
+
+/* ---- ACTIVE NAVIGATION ---- */
+
+.nav-links a.active {
+    color: #ff4d52;
+    font-weight: bold;
+}
+
+.nav-links a.active:not(.login-link) {
+    border-bottom: 2px solid #ff4d52;
+    padding-bottom: 5px;
+}
+
+.nav-links a.active.login-link {
+    background: #e50914;
+    color: #ffffff;
 }

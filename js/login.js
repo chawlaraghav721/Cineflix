@@ -18,20 +18,33 @@ loginForm.addEventListener("submit", function(event) {
 
     let isValid = true;
 
-    if (emailInput.value.trim() === "") {
+    const email = emailInput.value.trim();
+
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    // Check if email is empty
+    if (email === "") {
         emailError.textContent = "Please enter your email.";
         isValid = false;
     }
 
+    // Check if email format is incorrect
+    else if (!emailPattern.test(email)) {
+        emailError.textContent = "Please enter a valid email address.";
+        isValid = false;
+    }
+
+    // Check if password is empty
     if (passwordInput.value.trim() === "") {
         passwordError.textContent = "Please enter your password.";
         isValid = false;
     }
 
+    // Display final feedback
     if (isValid) {
-        loginFeedback.textContent = "Both fields are filled!";
-    } else {
-        loginFeedback.textContent = "Please correct the errors above.";
-    }
+    loginFeedback.textContent = "Looks good! This is a demo sign-in.";
+} else {
+    loginFeedback.textContent = "Please correct the errors above.";
+}
 
 });

@@ -716,3 +716,21 @@ a {
     color: #e50914;
     border-color: #e50914;
 }
+
+
+
+/* ---- LOGIN VALIDATION FEEDBACK  ---- */
+
+.login-box .field-error {
+    color: #ff5964;
+    font-size: 13px;
+    line-height: 1.4;
+    margin: 6px 0 12px;
+}
+
+.login-box #login-feedback {
+    color: #ddd;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-top: 12px;
+}

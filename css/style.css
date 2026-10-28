@@ -821,3 +821,21 @@ a {
 .contact-form .contact-failure {
     color: #ff5964;
 }
+
+
+/* ---- ACTIVE NAVIGATION (MEMBER 5) ---- */
+
+.nav-links a.active {
+    color: #ff4d52;
+    font-weight: bold;
+}
+
+.nav-links a.active:not(.login-link) {
+    border-bottom: 2px solid #ff4d52;
+    padding-bottom: 5px;
+}
+
+.nav-links a.active.login-link {
+    background: #e50914;
+    color: #ffffff;
+}

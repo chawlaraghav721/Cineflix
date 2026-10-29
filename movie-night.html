@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineFlix - Movie Night</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/movie-night.css">
+    <script src="js/navigation.js" defer></script>
+    <script src="js/movie-night.js" defer></script>
+</head>
+<body data-page="movie-night">
+    <header class="navbar">
+        <a href="index.html" class="logo">
+            <img src="images/cineflix-icon.png" alt="CineFlix Logo">
+            CineFlix
+        </a>
+        <nav aria-label="Main navigation">
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="movies.html">Movies</a></li>
+                <li><a href="shows.html">TV Shows</a></li>
+                <li><a href="mylist.html">My List</a></li>
+                <li><a href="movie-night.html" aria-current="page" class="active">Movie Night</a></li>
+                <li><a href="login.html" class="login-link">Login</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container movie-night">
+        <p class="night-eyebrow">CINEFLIX SOCIAL</p>
+        <h1 class="page-title">Movie Night Voting</h1>
+        <p class="page-intro">Can't decide what to watch? Choose 3 movies, then let everyone vote on one device.</p>
+
+        <section class="night-panel" id="night-setup" aria-labelledby="night-setup-title">
+            <h2 id="night-setup-title">1. Choose three movies</h2>
+            <p class="night-help">Select movie posters from the existing Movies page.</p>
+            <div id="night-selected-movies" class="night-selected-grid"></div>
+            <a class="night-button night-button-outline" href="movies.html?movieNight=1">Choose movies</a>
+
+            <div class="night-participants">
+                <label for="night-voters">2. Number of voters (2–10)</label>
+                <input id="night-voters" type="number" min="2" max="10" value="4" step="1">
+            </div>
+            <button class="night-button" type="button" id="night-start">Start voting</button>
+        </section>
+
+        <section class="night-panel" id="night-voting" aria-labelledby="night-voting-title" hidden>
+            <h2 id="night-voting-title">Cast your vote</h2>
+            <p class="night-help">Pass the device to each participant. Each turn allows one vote.</p>
+            <p id="night-progress" class="night-progress" role="status" aria-live="polite"></p>
+            <div id="night-options" class="night-option-grid"></div>
+        </section>
+
+        <section class="night-panel" id="night-results" aria-labelledby="night-results-title" hidden>
+            <h2 id="night-results-title">Voting results</h2>
+            <p id="night-winner" class="night-winner" role="status" aria-live="polite"></p>
+            <div id="night-tally"></div>
+        </section>
+
+        <button class="night-button night-button-outline night-reset" type="button" id="night-reset">Reset Movie Night</button>
+        <p id="night-feedback" class="night-feedback" role="status" aria-live="polite"></p>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-bottom">
+            <h3>CineFlix</h3>
+            <div class="footer-links">
+                <a href="index.html">Home</a>
+                <a href="movies.html">Movies</a>
+                <a href="movie-night.html">Movie Night</a>
+            </div>
+            <p>© 2026 CineFlix. College Project.</p>
+        </div>
+    </footer>
+</body>
+</html>

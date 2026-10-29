@@ -1,0 +1,243 @@
+/* Movie Night uses its own classes to avoid changing the existing site styles. */
+.movie-night {
+    max-width: 1050px;
+    min-height: 65vh;
+}
+
+.night-eyebrow {
+    color: #ff5964;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    margin-bottom: 12px;
+    font-size: 12px;
+}
+
+.night-panel {
+    background: #1b1e25;
+    border: 1px solid #343843;
+    border-radius: 12px;
+    padding: 26px;
+    margin: 22px 0;
+}
+
+.movie-night [hidden] {
+    display: none !important;
+}
+
+.night-panel h2 {
+    margin-bottom: 10px;
+    font-size: 23px;
+}
+
+.night-help {
+    color: #bac0cb;
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+
+.night-selected-grid,
+.night-option-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 24px;
+}
+
+.night-movie,
+.night-vote-card {
+    border: 1px solid #444955;
+    background: #232731;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.night-movie img,
+.night-vote-card img {
+    width: 100%;
+    height: 230px;
+    object-fit: cover;
+    display: block;
+}
+
+.night-movie-text,
+.night-vote-body {
+    padding: 13px;
+}
+
+.night-movie-text h3,
+.night-vote-body h3 {
+    font-size: 16px;
+    margin-bottom: 6px;
+}
+
+.night-movie-text p {
+    font-size: 13px;
+    color: #aeb5c1;
+}
+
+.night-empty {
+    background: #232731;
+    border: 1px dashed #646a76;
+    border-radius: 10px;
+    padding: 35px 14px;
+    text-align: center;
+    color: #aeb5c1;
+}
+
+.night-button {
+    background: #e50914;
+    color: #fff;
+    border: 1px solid #e50914;
+    border-radius: 6px;
+    padding: 12px 20px;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-block;
+    text-align: center;
+    transition: background .2s ease;
+}
+
+.night-button:hover:not(:disabled) {
+    background: #b80710;
+}
+
+.night-button-outline {
+    background: transparent;
+    color: #fff;
+}
+
+.night-button-outline:hover:not(:disabled) {
+    background: #30343d;
+}
+
+.night-button:disabled {
+    cursor: not-allowed;
+    opacity: .5;
+}
+
+.night-button:focus-visible,
+.night-participants input:focus-visible,
+.movie-night-pick .movie-card:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 3px;
+}
+
+.night-participants {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    margin: 26px 0 18px;
+    max-width: 250px;
+}
+
+.night-participants label {
+    font-weight: 700;
+}
+
+.night-participants input {
+    background: #2c303a;
+    border: 1px solid #545968;
+    border-radius: 6px;
+    color: #fff;
+    font: inherit;
+    padding: 12px;
+    width: 100%;
+}
+
+.night-progress,
+.night-winner {
+    color: #fff;
+    font-weight: 700;
+    font-size: 19px;
+    margin-bottom: 22px;
+}
+
+.night-vote-card .night-button {
+    width: 100%;
+    margin-top: 12px;
+}
+
+.night-result-row {
+    margin: 18px 0;
+}
+
+.night-result-heading {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    gap: 12px;
+}
+
+.night-bar {
+    height: 12px;
+    background: #383e48;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.night-bar-fill {
+    background: #e50914;
+    height: 100%;
+    border-radius: 20px;
+}
+
+.night-reset {
+    margin-bottom: 14px;
+}
+
+.night-feedback {
+    color: #ffb4b8;
+    margin: 12px 0;
+    min-height: 20px;
+}
+
+/* Styles used only on Movies when opened in movie-selection mode. */
+.night-select-banner {
+    margin: 18px 0 26px;
+    padding: 18px;
+    border: 1px solid #e50914;
+    border-radius: 10px;
+    background: #211c22;
+}
+
+.night-select-banner p {
+    margin: 10px 0 14px;
+    color: #ddd;
+}
+
+.night-select-banner .night-button {
+    margin-right: 10px;
+    margin-top: 8px;
+}
+
+.movie-night-pick .movie-card {
+    position: relative;
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+
+.movie-night-pick .movie-card.night-selected {
+    border-color: #e50914;
+}
+
+.movie-night-pick .movie-card.night-selected::after {
+    content: "✓ Selected";
+    background: #e50914;
+    color: #fff;
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 5px 7px;
+    font-size: 12px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+@media (max-width: 650px) {
+    .night-panel { padding: 18px; }
+    .night-selected-grid,
+    .night-option-grid { grid-template-columns: 1fr; }
+    .night-movie img,
+    .night-vote-card img { height: 260px; }
+}

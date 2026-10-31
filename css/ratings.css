@@ -1,0 +1,93 @@
+/* PERSONAL STAR RATING */
+
+.personal-rating {
+    background: #1b1d24;
+    padding: 25px;
+    border-radius: 12px;
+    margin: 25px 0;
+    border: 1px solid #333;
+}
+
+.personal-rating h2 {
+    color: #ffffff;
+    font-size: 22px;
+    margin-bottom: 12px;
+}
+
+.personal-rating p {
+    color: #bbbbbb;
+    font-size: 15px;
+    margin-bottom: 15px;
+}
+
+/* STAR BUTTONS */
+
+.rating-stars {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.rating-stars button {
+    background: none;
+    border: none;
+    color: #ffd700;
+    font-size: 38px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+/* STAR HOVER EFFECT */
+
+.rating-stars button:hover {
+    transform: scale(1.2);
+}
+
+.rating-stars button:focus-visible {
+    outline: 2px solid #ffd700;
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+/* RATING MESSAGE */
+
+.personal-rating #rating-message {
+    color: #ffd700;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* CLEAR RATING BUTTON */
+
+#clear-rating {
+    background: #e50914;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#clear-rating:hover {
+    background: #b20710;
+}
+
+#clear-rating:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* MOBILE RESPONSIVENESS */
+
+@media (max-width: 600px) {
+
+    .personal-rating {
+        padding: 18px;
+    }
+
+    .rating-stars button {
+        font-size: 32px;
+    }
+
+}

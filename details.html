@@ -6,7 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CineFlix - The Last Run</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/ratings.css">
     <script src="js/navigation.js" defer></script>
+    <script src="js/ratings.js" defer></script>
 </head>
 
 <body>
@@ -46,7 +48,7 @@
 
     </header>
 
-        <main class="details">
+        <main class="details" data-movie-id="the-last-run">
 
         <img
             src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=500&q=80"
@@ -104,6 +106,38 @@
             <p>
                 © 2026 CineFlix. College Project.
             </p>
+
+            <!-- PERSONAL STAR RATING -->
+
+<section class="personal-rating" aria-label="Personal movie rating">
+
+    <h2>⭐ Your Personal Rating</h2>
+
+    <p>How would you rate this movie?</p>
+
+    <div class="rating-stars" aria-label="Choose a rating">
+
+        <button type="button" data-rating="1" aria-label="1 star">☆</button>
+
+        <button type="button" data-rating="2" aria-label="2 stars">☆</button>
+
+        <button type="button" data-rating="3" aria-label="3 stars">☆</button>
+
+        <button type="button" data-rating="4" aria-label="4 stars">☆</button>
+
+        <button type="button" data-rating="5" aria-label="5 stars">☆</button>
+
+    </div>
+
+    <p id="rating-message" aria-live="polite">
+        No rating selected yet.
+    </p>
+
+    <button type="button" id="clear-rating">
+        Clear Rating
+    </button>
+
+</section>
 
         </div>
 

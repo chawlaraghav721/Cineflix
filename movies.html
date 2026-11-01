@@ -11,6 +11,7 @@
     <script src="js/my-list-storage.js" defer></script>
     <script src="js/navigation.js" defer></script>
     <script src="js/catalogue.js" defer></script>
+    <script src="js/catalogue-browse.js" defer></script>
     <script src="js/browse-utils.js" defer></script>
     <script src="js/movies.js" defer></script>
     <script src="js/movie-night.js" defer></script>
@@ -92,10 +93,14 @@
                 <option value="year-asc">Year: Oldest first</option>
             </select>
         </div>
+        <div class="browse-field browse-actions">
+            <button id="movie-reset-filters" class="browse-reset" type="button" disabled>Clear filters</button>
+        </div>
     </section>
 
     <p id="movies-loading" class="browse-status" role="status">Loading movies...</p>
     <p id="movies-error" class="browse-error" role="alert" hidden></p>
+    <button id="movies-retry" class="browse-reset browse-retry" type="button" hidden>Retry loading movies</button>
     <p id="movie-results" class="browse-results" role="status" aria-live="polite"></p>
     <p id="movies-empty-state" class="browse-empty" role="status" hidden>
         No movies match your search or filters.

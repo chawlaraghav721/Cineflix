@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     let storageReadable = true;
     let state = emptyState();
     let notice = "";
+    let retryingCatalogue = false;
     let refreshView = function () {};
     let showFeedback = function () {};
 
@@ -47,6 +48,10 @@ document.addEventListener("DOMContentLoaded", async function () {
                 let movie = null;
                 if (typeof entry === "string") {
                     movie = getMovie(entry);
+                    if (!movie) {
+                        const matches = catalogue.movies.filter(item => item.title === entry);
+                        if (matches.length === 1) movie = matches[0];
+                    }
                 } else if (entry && typeof entry.id === "string") {
                     movie = getMovie(entry.id);
                 } else if (entry && typeof entry.title === "string") {
@@ -56,11 +61,9 @@ document.addEventListener("DOMContentLoaded", async function () {
                 if (movie && !selected.includes(movie.id) && selected.length < 3) selected.push(movie.id);
             }
 
-            const legacy = saved.selected.some(entry => entry && typeof entry === "object" && !entry.id);
             const votes = saved.votes.map(function (vote) {
                 if (typeof vote !== "string") return null;
                 if (selected.includes(vote)) return vote;
-                if (!legacy) return null;
                 const matches = selected.filter(id => getMovie(id).title === vote);
                 return matches.length === 1 ? matches[0] : null;
             });
@@ -133,16 +136,21 @@ document.addEventListener("DOMContentLoaded", async function () {
         function refreshSelection() {
             count.textContent = !catalogue ? (loadFailed ? "Movie selection is unavailable." : "Loading movie selection…")
                 : state.started ? "Voting has already started. Reset the session before changing movies."
-                    : state.selected.length + " of 3 movies selected. Click a card to select or remove it.";
+                    : state.selected.length + " of 3 movies selected. Use Enter or Space to select or remove a movie.";
             continueButton.disabled = !catalogue || state.selected.length !== 3;
             grid.querySelectorAll(".movie-card").forEach(function (card) {
                 const title = card.querySelector("h3")?.textContent.trim();
                 const selected = state.selected.includes(card.dataset.id);
                 card.classList.toggle("night-selected", selected);
-                card.setAttribute("role", "button");
-                card.setAttribute("aria-pressed", String(selected));
+                card.setAttribute("role", "checkbox");
+                card.setAttribute("aria-checked", String(selected));
                 card.setAttribute("aria-disabled", String(!catalogue || state.started));
-                if (title) card.setAttribute("aria-label", (selected ? "Remove " : "Select ") + title);
+                if (title) {
+                    const meta = card.querySelector(".movie-info p")?.textContent.trim();
+                    const movieLabel = title + (meta ? ", " + meta : "");
+                    card.setAttribute("aria-label", (selected ? "Remove " : "Select ") + movieLabel + " " +
+                        (selected ? "from" : "for") + " Movie Night");
+                }
             });
         }
 
@@ -169,7 +177,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         });
         grid.addEventListener("keydown", function (event) {
             const card = event.target.closest(".movie-card");
-            if (event.key === " " && card && grid.contains(card)) {
+            if ((event.key === " " || event.key === "Spacebar") && card && grid.contains(card)) {
                 event.preventDefault();
                 card.click();
             }
@@ -177,7 +185,23 @@ document.addEventListener("DOMContentLoaded", async function () {
         grid.addEventListener("auxclick", function (event) {
             if (event.target.closest(".movie-card")) event.preventDefault();
         });
-        document.addEventListener("cineflix:movies-rendered", refreshSelection);
+        document.addEventListener("cineflix:movies-rendered", function () {
+            refreshSelection();
+            if (!loadFailed || retryingCatalogue) return;
+
+            retryingCatalogue = true;
+            catalogueApi.loadCatalogue().then(function (loadedCatalogue) {
+                catalogue = loadedCatalogue;
+                loadFailed = false;
+                state = loadState();
+                refreshView();
+                showFeedback(notice);
+            }).catch(function () {
+                refreshSelection();
+            }).finally(function () {
+                retryingCatalogue = false;
+            });
+        });
         refreshView = refreshSelection;
         refreshSelection();
     }

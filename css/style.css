@@ -1264,7 +1264,7 @@ body.trailer-open {
 /* Search, genre and sorting controls share one responsive toolbar. */
 .browse-controls {
     display: grid;
-    grid-template-columns: minmax(0, 1.7fr) repeat(2, minmax(170px, 1fr));
+    grid-template-columns: minmax(0, 1.7fr) repeat(2, minmax(170px, 1fr)) auto;
     align-items: end;
     gap: 14px;
     margin: 24px 0 16px;
@@ -1295,8 +1295,33 @@ body.trailer-open {
     cursor: pointer;
 }
 
+.browse-reset {
+    min-height: 46px;
+    padding: 10px 16px;
+    border: 1px solid #555b68;
+    border-radius: 4px;
+    background: transparent;
+    color: #fff;
+    font: inherit;
+    cursor: pointer;
+}
+
+.browse-actions .browse-reset {
+    width: 100%;
+}
+
+.browse-retry {
+    margin: -4px 0 14px;
+}
+
+.browse-reset:hover:not(:disabled) {
+    border-color: #ff5964;
+    background: #29222a;
+}
+
 .browse-controls .search-box:focus-visible,
-.browse-select:focus-visible {
+.browse-select:focus-visible,
+.browse-reset:focus-visible {
     outline: 2px solid #ff5964;
     outline-offset: 2px;
     border-color: #ff5964;

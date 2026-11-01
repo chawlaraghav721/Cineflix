@@ -9,28 +9,20 @@
         const searchInput = document.getElementById("show-search");
         const genreFilter = document.getElementById("show-genre-filter");
         const sortSelect = document.getElementById("show-sort");
+        const resetButton = document.getElementById("show-reset-filters");
+        const retryButton = document.getElementById("shows-retry");
         const loadingMessage = document.getElementById("shows-loading");
         const errorMessage = document.getElementById("shows-error");
         const resultCount = document.getElementById("show-results");
         const emptyState = document.getElementById("shows-empty-state");
 
-        if (!grid || !searchInput || !genreFilter || !sortSelect ||
+        if (!grid || !searchInput || !genreFilter || !sortSelect || !resetButton || !retryButton ||
             !loadingMessage || !errorMessage || !resultCount || !emptyState) {
             return;
         }
 
-        const controls = [searchInput, genreFilter, sortSelect];
+        const controls = [searchInput, genreFilter, sortSelect, resetButton];
         controls.forEach(function (control) { control.disabled = true; });
-
-        function showLoadError() {
-            loadingMessage.hidden = true;
-            errorMessage.textContent = "TV shows could not be loaded. Please refresh the page and try again.";
-            errorMessage.hidden = false;
-            resultCount.textContent = "TV show catalogue unavailable.";
-            emptyState.hidden = true;
-            grid.replaceChildren();
-            grid.setAttribute("aria-busy", "false");
-        }
 
         function populateGenreOptions(shows) {
             genreFilter.replaceChildren();
@@ -117,42 +109,44 @@
             grid.setAttribute("aria-busy", "false");
         }
 
-        try {
-            if (!window.CineFlixCatalogue ||
-                typeof window.CineFlixCatalogue.loadCatalogue !== "function" ||
-                !window.CineFlixBrowseUtils ||
-                typeof window.CineFlixBrowseUtils.getVisibleItems !== "function") {
-                throw new Error("Required CineFlix browsing scripts are unavailable.");
+        let controlsBound = false;
+        let catalogueShows = [];
+        const loader = window.CineFlixCatalogueBrowse.createLoader({
+            type: "show",
+            controls: controls,
+            loadingMessage: loadingMessage,
+            errorMessage: errorMessage,
+            retryButton: retryButton,
+            resultCount: resultCount,
+            emptyState: emptyState,
+            grid: grid,
+            errorText: "TV shows could not be loaded. Try again.",
+            unavailableText: "TV show catalogue unavailable.",
+            logPrefix: "CineFlix TV Shows could not be initialised:",
+            onLoaded: function (shows) {
+                catalogueShows = shows;
+                populateGenreOptions(catalogueShows);
+                if (!controlsBound) {
+                    searchInput.addEventListener("input", function () {
+                        renderShows(catalogueShows);
+                    });
+                    genreFilter.addEventListener("change", function () {
+                        renderShows(catalogueShows);
+                    });
+                    sortSelect.addEventListener("change", function () {
+                        renderShows(catalogueShows);
+                    });
+                    resetButton.addEventListener("click", function () {
+                        searchInput.value = "";
+                        genreFilter.value = "";
+                        sortSelect.value = "default";
+                        renderShows(catalogueShows);
+                    });
+                    controlsBound = true;
+                }
+                renderShows(catalogueShows);
             }
-
-            const catalogue = await window.CineFlixCatalogue.loadCatalogue();
-            if (!catalogue || !Array.isArray(catalogue.shows)) {
-                throw new Error("The TV show catalogue is invalid.");
-            }
-
-            const shows = catalogue.shows.filter(function (show) {
-                return show && show.type === "show";
-            });
-
-            populateGenreOptions(shows);
-            controls.forEach(function (control) { control.disabled = false; });
-            loadingMessage.hidden = true;
-            errorMessage.hidden = true;
-
-            searchInput.addEventListener("input", function () {
-                renderShows(shows);
-            });
-            genreFilter.addEventListener("change", function () {
-                renderShows(shows);
-            });
-            sortSelect.addEventListener("change", function () {
-                renderShows(shows);
-            });
-
-            renderShows(shows);
-        } catch (error) {
-            console.error("CineFlix TV Shows could not be initialised:", error);
-            showLoadError();
-        }
+        });
+        loader.load();
     }
 }());

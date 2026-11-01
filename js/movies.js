@@ -9,28 +9,20 @@
         const searchInput = document.getElementById("movie-search");
         const genreFilter = document.getElementById("movie-genre-filter");
         const sortSelect = document.getElementById("movie-sort");
+        const resetButton = document.getElementById("movie-reset-filters");
+        const retryButton = document.getElementById("movies-retry");
         const loadingMessage = document.getElementById("movies-loading");
         const errorMessage = document.getElementById("movies-error");
         const resultCount = document.getElementById("movie-results");
         const emptyState = document.getElementById("movies-empty-state");
 
-        if (!grid || !searchInput || !genreFilter || !sortSelect ||
+        if (!grid || !searchInput || !genreFilter || !sortSelect || !resetButton || !retryButton ||
             !loadingMessage || !errorMessage || !resultCount || !emptyState) {
             return;
         }
 
-        const controls = [searchInput, genreFilter, sortSelect];
+        const controls = [searchInput, genreFilter, sortSelect, resetButton];
         controls.forEach(function (control) { control.disabled = true; });
-
-        function showLoadError() {
-            loadingMessage.hidden = true;
-            errorMessage.textContent = "Movies could not be loaded. Please refresh the page and try again.";
-            errorMessage.hidden = false;
-            resultCount.textContent = "Movie catalogue unavailable.";
-            emptyState.hidden = true;
-            grid.replaceChildren();
-            grid.setAttribute("aria-busy", "false");
-        }
 
         function populateGenreOptions(movies) {
             genreFilter.replaceChildren();
@@ -120,42 +112,44 @@
             document.dispatchEvent(new Event("cineflix:movies-rendered"));
         }
 
-        try {
-            if (!window.CineFlixCatalogue ||
-                typeof window.CineFlixCatalogue.loadCatalogue !== "function" ||
-                !window.CineFlixBrowseUtils ||
-                typeof window.CineFlixBrowseUtils.getVisibleItems !== "function") {
-                throw new Error("Required CineFlix browsing scripts are unavailable.");
+        let controlsBound = false;
+        let catalogueMovies = [];
+        const loader = window.CineFlixCatalogueBrowse.createLoader({
+            type: "movie",
+            controls: controls,
+            loadingMessage: loadingMessage,
+            errorMessage: errorMessage,
+            retryButton: retryButton,
+            resultCount: resultCount,
+            emptyState: emptyState,
+            grid: grid,
+            errorText: "Movies could not be loaded. Try again.",
+            unavailableText: "Movie catalogue unavailable.",
+            logPrefix: "CineFlix Movies could not be initialised:",
+            onLoaded: function (movies) {
+                catalogueMovies = movies;
+                populateGenreOptions(catalogueMovies);
+                if (!controlsBound) {
+                    searchInput.addEventListener("input", function () {
+                        renderMovies(catalogueMovies);
+                    });
+                    genreFilter.addEventListener("change", function () {
+                        renderMovies(catalogueMovies);
+                    });
+                    sortSelect.addEventListener("change", function () {
+                        renderMovies(catalogueMovies);
+                    });
+                    resetButton.addEventListener("click", function () {
+                        searchInput.value = "";
+                        genreFilter.value = "";
+                        sortSelect.value = "default";
+                        renderMovies(catalogueMovies);
+                    });
+                    controlsBound = true;
+                }
+                renderMovies(catalogueMovies);
             }
-
-            const catalogue = await window.CineFlixCatalogue.loadCatalogue();
-            if (!catalogue || !Array.isArray(catalogue.movies)) {
-                throw new Error("The movie catalogue is invalid.");
-            }
-
-            const movies = catalogue.movies.filter(function (movie) {
-                return movie && movie.type === "movie";
-            });
-
-            populateGenreOptions(movies);
-            controls.forEach(function (control) { control.disabled = false; });
-            loadingMessage.hidden = true;
-            errorMessage.hidden = true;
-
-            searchInput.addEventListener("input", function () {
-                renderMovies(movies);
-            });
-            genreFilter.addEventListener("change", function () {
-                renderMovies(movies);
-            });
-            sortSelect.addEventListener("change", function () {
-                renderMovies(movies);
-            });
-
-            renderMovies(movies);
-        } catch (error) {
-            console.error("CineFlix Movies could not be initialised:", error);
-            showLoadError();
-        }
+        });
+        loader.load();
     }
 }());

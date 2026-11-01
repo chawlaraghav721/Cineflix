@@ -81,6 +81,9 @@ class Element {
     getAttribute(name) { return this.attributes[name] ?? null; }
     removeAttribute(name) { delete this.attributes[name]; }
     matches(selector) {
+        if (selector === ".movie-info p") {
+            return this.tagName.toLowerCase() === "p" && this.parentNode?.classList.contains("movie-info");
+        }
         if (selector.startsWith(".")) return this.classes.has(selector.slice(1));
         return this.tagName.toLowerCase() === selector.toLowerCase();
     }

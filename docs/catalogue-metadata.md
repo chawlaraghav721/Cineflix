@@ -1,7 +1,8 @@
 # Catalogue metadata provenance
 
 Research and network checks: 2026-11-02. Catalogue IDs, titles, order, classifications,
-years, genres and poster URLs are unchanged from `a801fa4`.
+years and genres are unchanged from `a801fa4`. Poster references are unchanged
+except for the original `show-006` placeholder described below.
 
 ## Coverage and interpretation
 
@@ -70,8 +71,43 @@ titles is needed before attaching further metadata.
 | movie-007 | Red Horizon (2024) | Results include Bloody Summer Camp II: Red Horizon, a differently titled horror production, not a confirmed match for this action entry. |
 | movie-008 | Paper Hearts (2025) | [A same-year short](https://letterboxd.com/film/paper-hearts/crew/) exists, but the generic image supplies no evidence that this is that production. Also avoid Paper Heart (2009) and Paper Hearts (1993). |
 | movie-009 | Final Signal (2024) | No reliable exact title/year sci-fi production match located. Do not infer a cast or video from similarly named shorts or music. |
-| movie-010 | The Weekend (2023) | Same-title productions and platform dates conflict; [Stella Meghie's comedy](https://en.wikipedia.org/wiki/Stella_Meghie) premiered in 2018. No identifying credit or official source connects it to this 2023 entry. |
+| movie-010 | The Weekend (2023) | [Tubi lists a 2023 film directed by Kevin Flynn](https://tubitv.com/movies/100003325/the-weekend), with Jalisa A. Williams, Xfactor Johnson, Zahirah Muhammad and Kevin Flynn, and Drama/Thriller/Comedy genres. It is a plausible candidate, but the generic original catalogue entry provides no independent identity evidence connecting it to that production. The team must confirm the intended production before those credits are attached. |
 | show-004 | Spiderman (2019) | Classification/year do not uniquely identify a series. [Spider-Man television adaptations](https://en.wikipedia.org/wiki/Spider-Man_in_other_media) include a 2017 series; Spider-Man: Far From Home (2019) is a movie. Neither was silently substituted. |
+
+## Completion assessment
+
+Both original specifications were located in the Downloads handoff bundle and
+read in full. They explicitly allow empty descriptions and unavailable optional
+cast, director and trailer data. The original Catalogue + Home implementation
+passes its requirements. Full optional metadata coverage remains partial because
+eleven identities need team content decisions, not additional programming.
+
+The nineteen populated records were cross-checked against plot/premise and credit
+references. Their principal casts matched, and the TV directing credits are
+explicitly scoped rather than inferred from creator credits. No further factual
+correction was warranted. Additional unresolved-title candidates, including
+[Nahuel Cragaris's 2023 Hidden Truth short](https://filmfreeway.com/VerdadOcultaNahuelCragaris),
+do not identify the original generic entries with sufficient confidence.
+
+## Original Run Away placeholder
+
+The old `www.moviedigger.it` image failed DNS and later TLS validation.
+`show-006` now uses `images/run-away-placeholder.svg`, original project artwork
+made only from plain rectangles, circles, a short line and text. It depicts no
+people, production artwork, third-party logos or recognizable characters. Its
+title is Run Away and its visible notice says Poster unavailable. The 600 x 900
+SVG has no scripts, external references or embedded images.
+
+Existing project assets were inspected first; they are CineFlix branding rather
+than a suitable generic poster. A small local placeholder avoids both a broken
+external dependency and redistribution of third-party production artwork.
+
+The publication branch was created from current main, reapplied only the two
+verified metadata/test commits, and never incorporated the blocked poster commit.
+The original audit branch and its three commits remain untouched locally. No
+third-party poster binary is part of the publication changes or their unpublished
+history. The existing safe poster-error mechanisms remain active if the local
+placeholder itself cannot load.
 
 ## External asset verification limits
 
@@ -80,9 +116,10 @@ titles is needed before attaching further metadata.
   playback in every browser, region or account.
 - Wednesday's longer trailer candidate `Q73UhUTs6y0` returned HTTP 403; it was
   excluded in favor of the accessible official 2022 teaser.
-- All 30 poster URLs were requested. Twenty-nine returned HTTP 200 with image
-  content types and image signatures. `show-006` failed DNS resolution for
-  `www.moviedigger.it`; its established URL remains unchanged.
+- Earlier verification requested all 30 original poster URLs; 29 returned image
+  responses and `show-006` failed DNS. This publication replaces only that failed
+  reference with the original local SVG. Existing third-party image references
+  are unchanged; no production images were downloaded or added for publication.
 - Successful image delivery does not establish poster identity. The Unsplash
   references are generic illustrations, including the first ten movies and some
   shows. Replacing them or resolving the ambiguous entries requires curated

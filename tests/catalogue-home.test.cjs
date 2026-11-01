@@ -17,7 +17,7 @@ function loader(fetch) {
     return window.CineFlixCatalogue;
 }
 
-test('catalogue preserves the original entries, identity fields and posters', () => {
+test('catalogue preserves original identity fields and all uncorrected poster references', () => {
     const original = JSON.parse(execFileSync('git', ['show', 'a801fa4:data/catalogue.json'], { cwd: root, encoding: 'utf8' }));
     assert.deepEqual(Object.keys(catalogue), ['movies', 'shows']);
     assert.equal(catalogue.movies.length, 20);
@@ -25,9 +25,11 @@ test('catalogue preserves the original entries, identity fields and posters', ()
     for (const collection of ['movies', 'shows']) {
         assert.deepEqual(catalogue[collection].map(item => item.id), original[collection].map(item => item.id));
         catalogue[collection].forEach((item, index) => {
-            for (const field of ['id', 'title', 'type', 'year', 'genre', 'poster']) {
+            for (const field of ['id', 'title', 'type', 'year', 'genre']) {
                 assert.equal(item[field], original[collection][index][field], item.id + ': ' + field);
             }
+            assert.equal(item.poster, item.id === 'show-006'
+                ? 'images/run-away-placeholder.svg' : original[collection][index].poster, item.id + ': poster');
         });
     }
 });
@@ -43,9 +45,20 @@ test('catalogue has unique IDs and schema-compatible metadata and embed referenc
         assert(item.cast.every(name => typeof name === 'string' && name.trim()));
         assert.equal(typeof item.director, 'string');
         assert.equal(typeof item.trailerUrl, 'string');
-        assert(['http:', 'https:'].includes(new URL(item.poster).protocol));
+        assert(['http:', 'https:'].includes(new URL(item.poster, 'http://localhost/').protocol));
+        if (!/^https?:\/\//.test(item.poster)) assert(fs.existsSync(path.join(root, item.poster)));
         if (item.trailerUrl) assert.match(item.trailerUrl, /^https:\/\/www\.youtube\.com\/embed\/[A-Za-z0-9_-]{11}$/);
     }
+});
+
+test('Run Away placeholder is self-contained vector shapes and text', () => {
+    const poster = catalogue.shows.find(item => item.id === 'show-006').poster;
+    const svg = fs.readFileSync(path.join(root, poster), 'utf8');
+    const allowed = new Set(['svg', 'title', 'desc', 'rect', 'circle', 'path', 'text']);
+    for (const [, tag] of svg.matchAll(/<\/?([A-Za-z][\w:-]*)\b/g)) assert(allowed.has(tag), tag);
+    assert(!/\bhref\s*=|\bon\w+\s*=|url\s*\(|data:/i.test(svg));
+    assert(svg.includes('Run Away'));
+    assert(svg.includes('Poster unavailable'));
 });
 
 test('loader shares one Promise and one request, including after resolution', async () => {

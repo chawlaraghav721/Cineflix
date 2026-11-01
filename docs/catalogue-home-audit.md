@@ -1,175 +1,149 @@
-# Catalogue and Home integration audit
+# Catalogue and Home publication audit
 
-Audit date: 2026-11-02. Integration baseline: `d4c9525` (`origin/main` at fetch).
+Verified on 2026-11-02 against merged main `d9fadc7`.
+Publication branch: `fix/catalogue-metadata-completion`.
 
-## Repository findings
+## Separate completion assessments
 
-- The initial working tree was clean on `feat/catalogue-home` at `dd1941e`.
-- Fetch discovered eight newer commits on its remote branch, ending at
-  `c5d0d6a`, plus later integration work on main.
-- All original commits (`a801fa4`, `d2fdc2b`, `dd1941e`) exist in main's ancestry.
-  Main contains the feature merge `27a7767` and the later feature tip `c5d0d6a`.
-- Continued on new branch `fix/catalogue-metadata-audit` from `origin/main`,
-  preserving the old local feature branch and all existing history. No push,
-  merge into main, reset, amendment or destructive operation was performed.
-- Neither requested planning document was present in tracked files or the
-  Desktop search. Requirements below therefore come from the supplied task and
-  current public interfaces; compliance with unavailable documents is NOT TESTED.
+**Original Catalogue + Home implementation: PASS.** Both original specification
+documents were read completely from the Downloads handoff bundle. They permit
+empty descriptions and unavailable optional cast, director and trailer data.
+The original implementation is complete within that scope.
 
-## Catalogue findings
+**Additional metadata enhancement: PARTIAL for full catalogue coverage.** Nineteen
+identified productions have verified descriptions, principal casts, scoped
+directing credits and trailer references. Eleven identities require content
+decisions; their unavailable fields are intentionally empty. Research and honest
+fallback handling are complete for the evidence available.
 
-The original JSON had 20 movies and 10 shows, one nonempty description, one cast
-array, one director and zero trailers. The populated credits belonged to an
-unverified identity (`movie-004`), rather than to one of the recognized films.
-The integration report was substantially accurate: missing data, rather than a
-missing Details binding, explained the unavailable metadata and trailer button.
+## Original specification requirements
 
-| Metric | Updated catalogue |
+| Requirement | Result | Evidence |
+| --- | --- | --- |
+| Inspect repository, current branch and merged integrations | PASS | Clean original branch inspected; latest remote references fetched; publication starts from current origin/main |
+| Inventory all distinct existing content | PASS | Original cf77972 Home/Movies/Shows/Details headings compared with the canonical 30-title inventory; no missing titles or duplicated objects |
+| JSON root with movies/shows arrays | PASS | data/catalogue.json parses; counts are 20 movies and 10 shows |
+| Stable globally unique IDs and matching classifications | PASS | Automated comparison with original a801fa4; all 30 IDs, order, titles, types, years and genres preserved |
+| Existing image references and honest missing metadata | PASS | 29 poster references unchanged; only the failed Run Away reference uses a new original placeholder; no invented factual metadata |
+| Optional metadata only where supported | PASS | Nineteen researched records; eleven permitted unavailable records; unsupported requested credits removed; legacy demo runtime/rating disclosed as unverified |
+| Exact shared browser-global API | PASS | js/catalogue.js exposes loadCatalogue, getAllItems and getItemById with the agreed Promise, fresh-array and object-or-null contracts |
+| Memoized in-flight fetch without DOM dependencies | PASS | Shared loader tests verify identical Promise and one concurrent request, including cache reuse after completion |
+| HTTP, invalid JSON/data errors and retry | PASS | Table-driven failures and subsequent successful retry; duplicate IDs and incorrect field types rejected |
+| HTTP serving and awaiting catalogue before rendering | PASS | Local HTTP server used for Chromium checks; page consumers await the shared Promise |
+| Dynamic Home card rendering | PASS | index.html contains containers rather than permanent cards; js/home.js creates nodes from catalogue items |
+| Preserve Home layout, classes and section intent | PASS | Trending Now/Popular Movies each resolve five curated IDs; existing movie-section, movie-grid, movie-card and movie-info classes retained |
+| Catalogue-driven featured content | PASS | Selected object drives title, metadata, description/fallback and links; starts with movie-004 |
+| Previous/Next, wraparound and Surprise Me | PASS | Real browser clicks, first/last wraparound, 20 different random selections, single-item and empty-catalogue cases |
+| Safe DOM manipulation and encoded Details links | PASS | createElement/textContent/append/replaceChildren; hostile text and special-character ID fixtures; actual card/featured navigation |
+| Loading, empty, error and retry states | PASS | Held HTTP request, empty fixture, 503 response, visible retry and successful reload |
+| Missing-image fallback | PASS | Failed/empty/unsafe image scenarios; original local placeholder loads in compatible consumers |
+| Contact IDs, navigation and unrelated functionality preserved | PASS | Actual contact validation/demo success, login validation/password toggle, storage choice, sign-out and navigation checks; their scripts unchanged |
+| Responsive and reasonable keyboard accessibility | PASS | Four viewport widths across seven pages; native controls, visible focus styles, live announcements and modal focus behavior reviewed/tested |
+| Document shared contracts and dependencies | PASS | Contract below, provenance report, stable IDs and compatible page consumer scripts |
+| Publish foundation before dependent integration | PASS | Original dataset/loader commits precede Home and dependent integrations in Git; historical team communications cannot be reconstructed |
+| Ownership and existing frontend stack | PASS | No page-specific scripts, shared styles, navigation or forms changed by publication; no framework/backend/API keys added |
+| Professional Git workflow and excluded instructions | PASS | Original branch retained; clean branch from updated main; focused commits; instruction documents and temporary artifacts excluded |
+
+## Contracts and catalogue coverage
+
+JSON is `{ "movies": [], "shows": [] }`. Each item retains stable string `id`,
+`title`, `type`, `genre`, `poster` and `description`, with optional numeric `year`
+and optional metadata. `cast` is string[], and `director`/`trailerUrl` are strings.
+Empty descriptions are allowed. Relative local poster paths are allowed.
+
+- `window.CineFlixCatalogue.loadCatalogue()` returns a cached catalogue Promise.
+- `getAllItems(catalogue)` returns a fresh combined array.
+- `getItemById(catalogue, id)` returns the matching item or null.
+
+Data flows from the JSON file through the fetch Promise and validation into safe
+DOM nodes. Click events change featured selection. Shared list and voting
+integrations persist catalogue IDs rather than duplicated movie objects.
+
+| Coverage | Count |
 | --- | ---: |
 | Movies | 20 |
 | Shows | 10 |
-| Globally unique, preserved IDs | 30 |
-| Nonempty descriptions | 19 |
-| Nonempty principal cast arrays | 19 |
-| Nonempty director information | 19 |
-| Trailer identities and oEmbed markup verified | 19 |
-| Unresolved production identities | 11 |
+| Stable unique IDs | 30 |
+| Descriptions | 19 |
+| Principal cast arrays | 19 |
+| Scoped director information | 19 |
+| Verified trailer identities/references | 19 |
+| Unresolved identities | 11 |
 
-See [metadata provenance](catalogue-metadata.md) for every researched production,
-trailer publisher, unresolved field and reason. Explicit empty values are
-intentional. The legacy `movie-004` rating and duration are unchanged but remain
-unverified; the report does not certify those values as real production facts.
+See [metadata provenance](catalogue-metadata.md) for sources and every unresolved
+field. These identities are movie-001 through movie-010 and show-004. The team
+must identify the intended production before candidate facts are assigned.
+The existing movie-004 demo rating/runtime also need a content decision, not a
+loader or Home code change.
 
-## Requirement-by-requirement review
+## Original placeholder and publication safety
 
-PASS means the bounded behavior described was implemented and actually checked.
-It does not imply exhaustive device, assistive-technology or external-service
-coverage.
+The existing images directory contained CineFlix branding but no suitable generic
+poster. The replacement `images/run-away-placeholder.svg` is an original 600 x 900
+composition of generic shapes and text, with a truthful Poster unavailable notice.
+It contains no copied production artwork, branding, portraits, external references,
+embedded images or scripts. Existing page error fallbacks remain available.
 
-| Requirement | Status | Evidence |
-| --- | --- | --- |
-| JSON root and expected 20/10 entries | PASS | `data/catalogue.json`; automated parse, counts and root-key assertions |
-| IDs unchanged; no removal, reordering or duplicate IDs/titles | PASS | `tests/catalogue-home.test.cjs` compares against original commit `a801fa4`; global ID/title sets |
-| Titles, classifications, years, genres and poster paths preserved | PASS | Automated comparison of all six fields for every entry against original commit |
-| Required and optional field types | PASS | Loader acceptance plus table-driven rejection tests; all requested metadata keys exist with compatible types |
-| Accurate complete metadata for the entire catalogue | PARTIAL | 19 identified productions populated; 11 unresolved identities with explicit empties; legacy rating/runtime noted above |
-| Poster references | PARTIAL | 29 HTTP 200 image responses; `show-006` DNS failure; successful delivery does not certify artwork identity; generic Unsplash images retained |
-| Trailer references and syntactic validity | PASS | All 19 URLs match HTTPS YouTube embed + 11-character ID syntax; independent oEmbed title/publisher/iframe checks |
-| Live playback of every trailer | NOT TESTED | All identities/oEmbed responses checked; actual media playback exercised for Endgame only |
-| Exact shared public interface | PASS | `js/catalogue.js:45`, `:66`, `:70`, `:75`; Promise, fresh array and object-or-null return assertions |
-| Fetch API and HTTP error handling | PASS | `js/catalogue.js:48`; HTTP 503 tests in Node and a served Chromium page |
-| Promise caching and duplicate concurrent requests | PASS | Same Promise before/after completion; one deferred fetch call; successful cache also checked in browser |
-| Invalid JSON/data and retry after failure | PASS | Network rejection, synchronous fetch exception, HTTP failure, JSON parse failure, invalid arrays, duplicate IDs and invalid item fields tested; subsequent success verified |
-| DOM manipulation and safe text rendering | PASS | `js/home.js:33`, `:65`, `:81`; actual browser fixture with HTML-like title/description creates text, no injected elements |
-| Dynamic Trending Now and Popular Movies | PASS | Five cards per grid from JSON; `index.html` contains no permanent movie-card markup; curated IDs remain in `js/home.js` |
-| JSON-backed featured content | PASS | Starts with `movie-004`; title, metadata, description and links come from the selected object; missing description fallback verified |
-| Previous/Next and wraparound | PASS | Real clicks verify forward/backward and first/last wraparound (`js/home.js:95`) |
-| Surprise Me | PASS | 20 consecutive real clicks change selection; single-movie fixture remains stable; empty fixture disables action |
-| Encoded Details URL generation | PASS | All ten rendered links checked; special-character ID fixture verifies `encodeURIComponent`; Movies/Shows card clicks resolve correct items |
-| Loading, empty, failure and retry UI | PASS | Held HTTP request shows busy state/hidden links/disabled controls; 503 exposes retry; real retry renders cards; empty catalogue feedback verified |
-| Missing or failed posters | PASS | Failed external requests produce ten accessible Home fallbacks; absent/unsafe Details posters and metadata fallbacks exercised |
-| Responsive layout | PASS | Chromium widths 320/390/768/1440 across seven pages, 28 checks with no horizontal overflow; Home desktop/mobile screenshots inspected after intro animation |
-| Basic accessibility | PASS | Native controls, disabled/hidden states, live status and fallback labels reviewed; trailer Escape/focus restoration and Tab wrapping exercised |
-| Full assistive-technology and cross-browser accessibility | NOT TESTED | No screen-reader, Firefox, Safari or physical-device certification performed |
-| Details URL lookup and metadata bindings | PASS | `js/details-integration.js:17`; all 30 URL-selected entries render correct title/summary/cast/director and fallback states |
-| Watch Trailer integration | PASS | All 19 stored URLs activate button/modal/iframe; Escape clears source and restores focus; actual Endgame playback reached readyState 4 with increasing currentTime and no media error |
-| Strict rejection of malformed trailer identifiers | PARTIAL | Details allows any non-slash embed path segment; reproduced with `not-a-video-id`. Current catalogue has no such URLs. Existing Details-owner defect; see below |
-| Missing trailer/disallowed provider fallback | PASS | Empty URLs, unsafe protocols, credentials, non-approved host and watch-page URLs hide/disable trailer button |
-| Navigation | PASS | Current-page state reviewed; Home/Movies/Shows/Details/My List links and account/sign-out interactions exercised |
-| Contact form | PASS | Empty submission marks invalid input; valid submission reports demo-only success and sends no message |
-| Login and Remember Me | PASS | Real submissions store demo identity in sessionStorage or localStorage as selected, clear password, omit password from saved identity |
-| Sign-out | PASS | Account link appears on navigation; sign-out clears both stores and returns to login |
-| Movies and Shows regression | PASS | 20/10 cards; title search; actual Details navigation; existing filter/sort/reset/retry tests pass |
-| My List regression | PASS | Actual add, badge count, persisted list render and removal; existing ratings/My List integration tests pass |
-| Personal ratings regression | PASS | Existing suite covers all 30 entries, persistence, migration, invalid data and storage errors |
-| Movie Night regression | PASS | Actual three-ID selection, two votes, winner, reload persistence; existing migration/retry/storage/keyboard tests pass |
-| JavaScript syntax and whitespace | PASS | All production/test JS files checked with Node `--check`; `git diff --check` clean |
-| Original planning-document compliance | NOT TESTED | Requested documents unavailable; no instruction documents added to commits |
+The publication branch starts from origin/main at d9fadc7 and reapplies only
+825a5fa and 1671d74 as separate commits before the original-placeholder correction.
+The original branch stays at 7a0945f. The blocked poster commit is not an ancestor
+of this branch. Publication checks examine every unpublished commit and reachable
+object, including the forbidden image blob, rather than only the final tree.
+No third-party poster binary is included in the publication diff or its new history.
+The original audit branch must not be pushed.
 
 ## Executed verification
 
-1. Ran the original test suite before changes: **51 passed, 0 failed**.
-2. Added 22 durable tests in `tests/catalogue-home.test.cjs`. Full suite after
-   metadata changes: **73 passed, 0 failed**. Tests do not make external requests.
-   Run with Node 18+:
+- Full Node test suite: 74 passed, zero failed. It covers original identity
+  preservation, JSON schema, lookup return contracts, concurrent Promise caching,
+  HTTP/parse/data/network errors and retry, browsing, ratings and Movie Night.
+  A new regression check restricts the SVG placeholder to self-contained vector
+  shapes/text, without scripts, event handlers or external/embedded images.
+- Served Chromium tests use `python -m http.server 8765 --bind 127.0.0.1`, never
+  file://. Ten scenario groups cover Home controls/states/injection-safe text,
+  all 30 Details metadata bindings and fallbacks, 19 trailer modal flows,
+  browsing, My List, contact/login and Movie Night.
+- Responsive check: 28 page/viewport combinations at 320/390/768/1440 pixels.
+- Six supplemental scenario groups cover local placeholder decode in Shows,
+  Details and My List; three Details widths; combined search/filter/sort and
+  empty/reset states; My List malformed storage/deduplication/search/remove/clear;
+  login validation/password toggle; Movie Night reset; badges on all seven pages.
+- Additional browser checks confirm the placeholder loads through Home's movie
+  image renderer in a fixture, and that Home, Shows, Details and My List retain
+  safe fallback behavior when the local SVG returns HTTP 404. SVG XML parsing
+  and a field-by-field comparison with the verified metadata commit also pass.
+- Deterministic browser scenarios deliberately block external resources to test
+  error fallbacks. They verify trailer URL activation, iframe assignment and
+  removal, not playback of all external videos. Earlier verification confirmed
+  all 19 identities through oEmbed and actual Endgame playback; those historical
+  checks must not be presented as a fresh all-trailers playback test.
+- Temporary browser scripts/results/screenshots are outside the repository.
+  JavaScript syntax, JSON parsing and Git whitespace checks are run before push.
 
-   ```powershell
-   node --test tests/*.test.cjs tests/*.test.js
-   ```
+Run the automated tests with Node 18+:
 
-   Node was not on this machine's PATH. Execution used the Node binary bundled
-   with the locally installed Python Playwright driver, without adding project
-   runtime dependencies or package manifests.
-3. Served the repository using `python -m http.server 8765 --bind 127.0.0.1`.
-   All browser tests used HTTP, never `file://`.
-4. Installed Python Playwright and its Chromium browser outside the repository.
-   Executed ten browser scenario groups plus uncaught-error monitoring: all
-   passed, no uncaught page errors. Tests covered 30 Details entries, 19 trailer
-   modal flows, dynamic Home controls/states, browsing, storage/account/contact,
-   Movie Night, and 28 responsive page/width combinations. External resources
-   were deliberately aborted in deterministic scenarios to exercise fallbacks.
-   Supplemental served-browser checks passed for empty, unsafe and missing-file
-   Home poster URLs and actual featured-to-Details link navigation.
-5. Independently requested all 30 poster URLs and all 19 stored video oEmbed
-   endpoints over the network. Results are described above and in provenance.
-6. Ran a separate browser with external resources enabled. Endgame's real
-   embedded player loaded from YouTube, played after an actual click, and
-   reported `paused: false`, `currentTime: 1.645306`, `readyState: 4`, no error.
-   Also verified dialog Tab/Shift+Tab wrapping. This is a representative playback
-   check, not a claim that every external video was played.
-7. Ran JS syntax checks and Git whitespace checks. Temporary browser script,
-   screenshots and network-result files were kept outside the repository under
-   the Windows temporary directory (`cineflix-browser-audit.py`, `cineflix-audit/`).
+```powershell
+node --test tests/*.test.cjs tests/*.test.js
+```
 
-An initial live-browser attempt timed out waiting for the trailer button; a
-subsequent independent attempt loaded correctly and the final playback check
-succeeded. No production fix was inferred from that isolated timeout.
+Node was not on this machine's PATH; execution used the Node binary bundled with
+the installed Python Playwright driver. No project runtime dependency was added.
+Full screen-reader, physical-device and cross-browser certification is not claimed.
 
-## Integration notes and separate ownership
+## Integration notes and review requirements
 
-- **Catalogue identity decisions:** confirm what `movie-001` through `movie-010`
-  and `show-004` represent. Do not rename, renumber, reclassify or replace them
-  automatically. Clarify the legacy rating/runtime for `movie-004` too.
-- **Poster curation:** Run Away's existing host failed DNS. Some working images
-  are generic illustrations rather than production posters. Existing fallback
-  behavior works; no poster paths were silently replaced.
-- **Details validator:** `js/details.js:126` uses `/embed/[^/]+` and
-  `/video/[^/]+`, so an approved host with `not-a-video-id` still shows Watch
-  Trailer. Reproduced through `CineFlixDetails.render`. The owner should validate
-  YouTube IDs with `[A-Za-z0-9_-]{11}` and Vimeo IDs as numeric, and replace the
-  existing `test-video` fixture in `tests/personal-ratings.test.cjs`. This is an
-  existing validation limitation, not introduced by the catalogue changes. No
-  Details-owned implementation was changed.
-- The three `window.CineFlixCatalogue` methods and their return contracts are
-  unchanged. Optional metadata remains backward compatible. Current browsing,
-  Details, My List, ratings and Movie Night all use the same preserved IDs.
-- Home's curated sections intentionally still reference the first ten movies.
-  Until those identities are resolved, their descriptions remain unavailable;
-  featured navigation can also reach the ten fully researched movies.
-
-## Final verdict
-
-**NO: the entire Catalogue + Home assignment cannot yet be certified fully
-complete.** The loader, dynamic Home implementation and tested integrations work.
-The metadata update is compatible and locally verified, but eleven production
-identities, the unverified legacy runtime/rating and poster curation remain open.
-The Details validator correction belongs to its owner. Missing planning documents
-and unexercised external playback across all videos are explicit verification
-limits, not silently passed requirements.
-
-## Pull request summary
-
-Complete verified summaries, principal casts, scoped directing credits and
-official trailer references for 19 catalogue entries. Preserve all 30 IDs and
-existing identity fields and poster paths. Clear unsupported legacy credits for
-The Last Run and document the eleven unresolved identities rather than assigning
-unrelated production metadata.
-
-Add regression coverage for catalogue identity preservation, schema validation,
-the public loader contract, concurrent Promise caching and failure/retry behavior.
-Validation: 73 automated tests passed, served Chromium interaction checks passed,
-28 responsive checks passed, 19 trailer oEmbed identities confirmed, representative
-embedded playback succeeded, JavaScript syntax and whitespace checks passed.
-
-Remaining integration decisions: identify the unresolved productions, curate
-poster assets and have the Details owner tighten malformed video-ID validation.
+- Current merged Movies, Shows, Details, My List, ratings and Movie Night use the
+  preserved IDs and API. Browsing metadata search/filter/sort, list persistence,
+  badge updates and voting regressions pass.
+- Home intentionally renders movies only. Its image renderer is checked with the
+  same local placeholder in a test fixture; production show-006 stays a show.
+- Details' existing approved-host validator accepts malformed video identifiers
+  using `/embed/[^/]+` and `/video/[^/]+`. Its owner should enforce 11-character
+  YouTube IDs and numeric Vimeo IDs and update the existing test-video fixture.
+  All catalogue trailer IDs already pass strict syntax checks. Its code is untouched.
+- An existing role-labelled comment in js/movies.js belongs to its owner for
+  source hygiene cleanup; no such label is introduced by this branch.
+- Generic existing illustrations and unresolved production identities are content
+  decisions. They do not invalidate the original permitted-fallback requirements.
+- No original handoff instruction documents, temporary files or unrelated feature
+  changes are included. Do not merge the Pull Request automatically.

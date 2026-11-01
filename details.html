@@ -4,109 +4,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CineFlix - The Last Run</title>
+    <title>CineFlix - Details</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="js/navigation.js" defer></script>
+    <script src="js/catalogue.js" defer></script>
+    <script src="js/my-list-storage.js" defer></script>
+    <script src="js/details.js" defer></script>
+    <script src="js/details-integration.js" defer></script>
 </head>
 
 <body>
 
     <header class="navbar">
-
         <a href="index.html" class="logo">
             <img src="images/cineflix-icon.png" alt="CineFlix Logo">
             CineFlix
         </a>
-
         <nav>
             <ul class="nav-links">
-
-                <li>
-                    <a href="index.html">Home</a>
-                </li>
-
-                <li>
-                    <a href="movies.html">Movies</a>
-                </li>
-
-                <li>
-                    <a href="shows.html">TV Shows</a>
-                </li>
-
-                <li>
-                    <a href="mylist.html">My List</a>
-                </li>
-
-                <li>
-                    <a href="login.html" class="login-link">Login</a>
-                </li>
-
+                <li><a href="index.html">Home</a></li>
+                <li><a href="movies.html">Movies</a></li>
+                <li><a href="shows.html">TV Shows</a></li>
+                <li><a href="mylist.html">My List</a></li>
+                <li><a href="login.html" class="login-link">Login</a></li>
             </ul>
         </nav>
-
     </header>
 
-        <main class="details">
+    <main class="details" aria-live="polite" aria-busy="true">
+        <p id="details-loading" class="details-loading" role="status">Loading title details…</p>
 
-        <img
-            src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=500&q=80"
-            alt="The Last Run poster"
-        >
+        <section id="details-content" class="details-layout" hidden aria-labelledby="details-title">
+            <div class="details-poster-wrap">
+                <img id="details-poster" class="details-poster" alt="" hidden>
+                <div id="details-poster-fallback" class="details-poster-fallback" hidden role="img" aria-label="Poster unavailable">Poster unavailable</div>
+            </div>
+            <div class="details-content">
+                <h1 id="details-title"></h1>
+                <p id="details-meta" class="details-meta"></p>
+                <p id="details-description" class="details-description"></p>
+                <p class="details-credits"><strong>Cast:</strong> <span id="details-cast"></span></p>
+                <p class="details-credits"><strong>Director:</strong> <span id="details-director"></span></p>
+                <div class="details-actions">
+                    <button id="trailer-button" class="btn" type="button" hidden disabled>Watch Trailer</button>
+                    <button id="watchlist-button" class="btn secondary" type="button" disabled>Add to My List</button>
+                </div>
+            </div>
+        </section>
 
-        <div class="details-content">
-
-            <h1>The Last Run</h1>
-
-            <p class="details-meta">
-                2024 • 2h 08m • Action / Thriller • 8.1/10
-            </p>
-
-            <p>
-                A former street racer is pulled into a dangerous mission
-                after discovering that the people behind his old life
-                are planning something bigger than anyone expected.
-            </p>
-
-            <p class="cast">
-                <strong>Cast:</strong>
-                Arjun Mehta, Sara Khan, Daniel Reed
-                <br>
-                <strong>Director:</strong>
-                Ryan Cole
-            </p>
-
-            <a href="#" class="btn">
-                Watch Now
-            </a>
-
-            <a href="index.html" class="btn secondary">
-                Add to My List
-            </a>
-
-        </div>
-
+        <div id="details-error" class="details-error" role="alert" hidden></div>
     </main>
 
+    <div id="trailer-modal" class="trailer-modal" role="dialog" aria-modal="true" aria-labelledby="trailer-title" hidden>
+        <div class="trailer-dialog">
+            <h2 id="trailer-title" class="trailer-dialog-title">Trailer preview</h2>
+            <button id="close-trailer" class="trailer-close" type="button" aria-label="Close trailer">&times;</button>
+            <div class="trailer-frame-wrap">
+                <iframe id="trailer-frame" title="Movie trailer" tabindex="0" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
     <footer class="footer">
-
         <div class="footer-bottom">
-
             <h3>CineFlix</h3>
-
             <div class="footer-links">
-
                 <a href="#">About</a>
                 <a href="#">Contact</a>
                 <a href="#">Privacy</a>
-
             </div>
-
-            <p>
-                © 2026 CineFlix. College Project.
-            </p>
-
+            <p>© 2026 CineFlix. College Project.</p>
         </div>
-
     </footer>
 
 </body>

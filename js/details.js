@@ -209,6 +209,33 @@
         }
     }
 
+    function trapTrailerFocus(event) {
+        if (event.key !== "Tab" || trailerModal.hidden) return;
+
+        const focusableElements = Array.from(trailerModal.querySelectorAll(
+            'button:not([disabled]), iframe, a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )).filter(function (element) {
+            return !element.hidden && element.getAttribute("aria-hidden") !== "true";
+        });
+        if (!focusableElements.length) {
+            event.preventDefault();
+            closeTrailerButton.focus();
+            return;
+        }
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+        const focusIsOutsideModal = !trailerModal.contains(document.activeElement);
+
+        if (event.shiftKey && (document.activeElement === firstElement || focusIsOutsideModal)) {
+            event.preventDefault();
+            lastElement.focus();
+        } else if (!event.shiftKey && (document.activeElement === lastElement || focusIsOutsideModal)) {
+            event.preventDefault();
+            firstElement.focus();
+        }
+    }
+
     trailerButton.addEventListener("click", function () {
         if (trailerButton.hidden || trailerButton.disabled) return;
         const url = validTrailerUrl(trailerButton.dataset.trailerUrl);
@@ -225,7 +252,12 @@
         if (event.target === trailerModal) closeTrailer();
     });
     document.addEventListener("keydown", function (event) {
-        if (event.key === "Escape" && !trailerModal.hidden) closeTrailer();
+        if (trailerModal.hidden) return;
+        if (event.key === "Escape") closeTrailer();
+        else trapTrailerFocus(event);
+    });
+    document.addEventListener("focusin", function (event) {
+        if (!trailerModal.hidden && !trailerModal.contains(event.target)) closeTrailerButton.focus();
     });
 
     watchlistButton.addEventListener("click", function () {

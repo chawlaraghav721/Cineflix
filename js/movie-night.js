@@ -78,6 +78,8 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
 
+        document.addEventListener("cineflix:movies-rendered", refreshSelection);
+
         if (state.started) {
             count.textContent = "Voting has already started. Reset the session before changing movies.";
             continueButton.disabled = false;

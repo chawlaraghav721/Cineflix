@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     let storageReadable = true;
     let state = emptyState();
     let notice = "";
+    let retryingCatalogue = false;
     let refreshView = function () {};
     let showFeedback = function () {};
 
@@ -184,7 +185,23 @@ document.addEventListener("DOMContentLoaded", async function () {
         grid.addEventListener("auxclick", function (event) {
             if (event.target.closest(".movie-card")) event.preventDefault();
         });
-        document.addEventListener("cineflix:movies-rendered", refreshSelection);
+        document.addEventListener("cineflix:movies-rendered", function () {
+            refreshSelection();
+            if (!loadFailed || retryingCatalogue) return;
+
+            retryingCatalogue = true;
+            catalogueApi.loadCatalogue().then(function (loadedCatalogue) {
+                catalogue = loadedCatalogue;
+                loadFailed = false;
+                state = loadState();
+                refreshView();
+                showFeedback(notice);
+            }).catch(function () {
+                refreshSelection();
+            }).finally(function () {
+                retryingCatalogue = false;
+            });
+        });
         refreshView = refreshSelection;
         refreshSelection();
     }

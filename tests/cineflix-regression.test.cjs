@@ -382,6 +382,37 @@ test("legacy title sessions remain untouched when the catalogue cannot load", as
     });
 });
 
+test("Movie Night selection recovers when the Movies catalogue retry succeeds", async () => {
+    let attempts = 0;
+    const page = await loadMovieNight({
+        catalogue: movieNightCatalogue([
+            { id: "movie-a", title: "Movie A" },
+            { id: "movie-b", title: "Movie B" },
+            { id: "movie-c", title: "Movie C" }
+        ]),
+        loadCatalogue: async () => {
+            attempts += 1;
+            if (attempts === 1) throw new Error("temporary failure");
+            return movieNightCatalogue([
+                { id: "movie-a", title: "Movie A" },
+                { id: "movie-b", title: "Movie B" },
+                { id: "movie-c", title: "Movie C" }
+            ]);
+        }
+    });
+
+    const selectionCount = page.section.parentNode.children[0].children[1];
+    const selectionFeedback = page.section.parentNode.children[0].children[4];
+    assert.equal(selectionCount.textContent, "Movie selection is unavailable.");
+    assert.match(selectionFeedback.textContent, /could not load the catalogue/);
+    page.document.dispatchEvent({ type: "cineflix:movies-rendered" });
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(attempts, 2);
+    assert.equal(selectionCount.textContent,
+        "0 of 3 movies selected. Use Enter or Space to select or remove a movie.");
+    assert.equal(selectionFeedback.textContent, "");
+});
+
 test("an ambiguous legacy title selection or vote is never guessed", async () => {
     const storage = createStorage({
         [storageKey]: JSON.stringify({

@@ -1,6 +1,20 @@
 /* Movie Night voting — frontend-only, same-device demo. */
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
+    "use strict";
+
+    const isMovieNight = document.body.dataset.page === "movie-night";
+    const isSelection = new URLSearchParams(window.location.search).get("movieNight") === "1";
+    if (!isMovieNight && !isSelection) return;
+
     const STORAGE_KEY = "cineflixMovieNightV1";
+    const catalogueApi = window.CineFlixCatalogue;
+    let catalogue = null;
+    let loadFailed = false;
+    let storageReadable = true;
+    let state = emptyState();
+    let notice = "";
+    let refreshView = function () {};
+    let showFeedback = function () {};
 
     // One object contains the complete state of the current voting session.
     function emptyState() {
@@ -8,32 +22,79 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function loadState() {
+        let stored;
         try {
-            const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-            if (saved && Array.isArray(saved.selected) &&
-                Array.isArray(saved.votes) &&
-                Number.isInteger(saved.voters) &&
-                saved.voters >= 2 && saved.voters <= 10 &&
-                typeof saved.started === "boolean") {
-                return saved;
-            }
+            stored = localStorage.getItem(STORAGE_KEY);
         } catch (error) {
-            // Invalid or unavailable browser storage starts a new session.
+            storageReadable = false;
+            notice = "The saved session could not be read. Enable browser storage and refresh the page before making changes.";
+            return emptyState();
+        }
+        try {
+            const saved = JSON.parse(stored);
+            if (saved === null) return emptyState();
+            if (!saved || !Array.isArray(saved.selected) || !Array.isArray(saved.votes) ||
+                !Number.isInteger(saved.voters) || saved.voters < 2 || saved.voters > 10 ||
+                typeof saved.started !== "boolean") {
+                notice = "The saved Movie Night session was invalid. Please choose your movies again.";
+                return emptyState();
+            }
+
+            // Older sessions stored movie objects and title-based votes.
+            // Resolve them here; the next successful action saves only IDs.
+            const selected = [];
+            for (const entry of saved.selected) {
+                let movie = null;
+                if (typeof entry === "string") {
+                    movie = getMovie(entry);
+                } else if (entry && typeof entry.id === "string") {
+                    movie = getMovie(entry.id);
+                } else if (entry && typeof entry.title === "string") {
+                    const matches = catalogue.movies.filter(item => item.title === entry.title);
+                    if (matches.length === 1) movie = matches[0];
+                }
+                if (movie && !selected.includes(movie.id) && selected.length < 3) selected.push(movie.id);
+            }
+
+            const legacy = saved.selected.some(entry => entry && typeof entry === "object" && !entry.id);
+            const votes = saved.votes.map(function (vote) {
+                if (typeof vote !== "string") return null;
+                if (selected.includes(vote)) return vote;
+                if (!legacy) return null;
+                const matches = selected.filter(id => getMovie(id).title === vote);
+                return matches.length === 1 ? matches[0] : null;
+            });
+            const invalidSelection = selected.length !== saved.selected.length;
+            const invalidVotes = votes.includes(null) || votes.length > saved.voters ||
+                (!saved.started && votes.length > 0);
+            const started = saved.started && selected.length === 3 && !invalidSelection && !invalidVotes;
+            if (invalidSelection || invalidVotes || (saved.started && !started)) {
+                notice = "Some saved movies or votes are no longer valid. Voting was cleared; please check your selection before starting again.";
+            }
+            return { selected: selected, voters: saved.voters, votes: started ? votes : [], started: started };
+        } catch (error) {
+            notice = "The saved Movie Night data was invalid. Please choose your movies again.";
         }
         return emptyState();
     }
 
-    function saveState(state) {
+    function getMovie(id) {
+        const item = catalogueApi.getItemById(catalogue, id);
+        return item && item.type === "movie" ? item : null;
+    }
+
+    function saveState(nextState) {
         try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            if (!storageReadable) throw new Error("The saved session could not be read.");
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
+            state = nextState;
+            showFeedback("");
             return true;
         } catch (error) {
-            alert("Browser storage is unavailable. Please enable local storage and try again.");
+            showFeedback("Browser storage is unavailable. Your change was not saved. Please enable local storage and try again.");
             return false;
         }
     }
-
-    const state = loadState();
 
     // The existing Movies page becomes a selectable catalogue only in Movie Night mode.
     function setupMovieSelection() {
@@ -50,6 +111,10 @@ document.addEventListener("DOMContentLoaded", function () {
         const count = document.createElement("p");
         count.setAttribute("role", "status");
         count.setAttribute("aria-live", "polite");
+        const feedback = document.createElement("p");
+        feedback.className = "night-feedback";
+        feedback.setAttribute("role", "status");
+        showFeedback = message => { feedback.textContent = message; };
         const continueButton = document.createElement("button");
         continueButton.type = "button";
         continueButton.className = "night-button";
@@ -62,57 +127,58 @@ document.addEventListener("DOMContentLoaded", function () {
         back.className = "night-button night-button-outline";
         back.textContent = "Back";
 
-        banner.append(heading, count, continueButton, back);
+        banner.append(heading, count, continueButton, back, feedback);
         section.parentNode.insertBefore(banner, section);
 
         function refreshSelection() {
-            count.textContent = state.selected.length + " of 3 movies selected. Click a card to select or remove it.";
-            continueButton.disabled = state.selected.length !== 3;
+            count.textContent = !catalogue ? (loadFailed ? "Movie selection is unavailable." : "Loading movie selection…")
+                : state.started ? "Voting has already started. Reset the session before changing movies."
+                    : state.selected.length + " of 3 movies selected. Click a card to select or remove it.";
+            continueButton.disabled = !catalogue || state.selected.length !== 3;
             grid.querySelectorAll(".movie-card").forEach(function (card) {
                 const title = card.querySelector("h3")?.textContent.trim();
-                const selected = state.selected.some(function (movie) {
-                    return movie.title === title;
-                });
+                const selected = state.selected.includes(card.dataset.id);
                 card.classList.toggle("night-selected", selected);
+                card.setAttribute("role", "button");
+                card.setAttribute("aria-pressed", String(selected));
+                card.setAttribute("aria-disabled", String(!catalogue || state.started));
                 if (title) card.setAttribute("aria-label", (selected ? "Remove " : "Select ") + title);
             });
-        }
-
-        if (state.started) {
-            count.textContent = "Voting has already started. Reset the session before changing movies.";
-            continueButton.disabled = false;
-            grid.style.pointerEvents = "none";
-            return;
         }
 
         grid.addEventListener("click", function (event) {
             const card = event.target.closest(".movie-card");
             if (!card || !grid.contains(card)) return;
             event.preventDefault(); // Do not open details while selecting a movie.
-
-            const title = card.querySelector("h3")?.textContent.trim();
-            const image = card.querySelector("img");
-            if (!title || !image) return;
-
-            const existing = state.selected.findIndex(function (movie) {
-                return movie.title === title;
-            });
+            if (!catalogue || state.started) return;
+            const movie = getMovie(card.dataset.id);
+            if (!movie) return;
+            const selected = state.selected.slice();
+            const existing = selected.indexOf(movie.id);
 
             if (existing !== -1) {
-                state.selected.splice(existing, 1);
-            } else if (state.selected.length < 3) {
-                state.selected.push({
-                    title: title,
-                    poster: image.getAttribute("src"),
-                    meta: card.querySelector(".movie-info p")?.textContent.trim() || ""
-                });
+                selected.splice(existing, 1);
+            } else if (selected.length < 3) {
+                selected.push(movie.id);
             } else {
                 count.textContent = "Only 3 movies are allowed. Remove one before selecting another.";
                 return;
             }
 
-            if (saveState(state)) refreshSelection();
+            if (saveState({ ...state, selected: selected })) refreshSelection();
         });
+        grid.addEventListener("keydown", function (event) {
+            const card = event.target.closest(".movie-card");
+            if (event.key === " " && card && grid.contains(card)) {
+                event.preventDefault();
+                card.click();
+            }
+        });
+        grid.addEventListener("auxclick", function (event) {
+            if (event.target.closest(".movie-card")) event.preventDefault();
+        });
+        document.addEventListener("cineflix:movies-rendered", refreshSelection);
+        refreshView = refreshSelection;
         refreshSelection();
     }
 
@@ -130,13 +196,31 @@ document.addEventListener("DOMContentLoaded", function () {
         const feedback = document.getElementById("night-feedback");
         const startButton = document.getElementById("night-start");
         const resetButton = document.getElementById("night-reset");
+        showFeedback = message => { feedback.textContent = message; };
 
         function makeMovieCard(movie, allowVoting) {
             const card = document.createElement("article");
             card.className = allowVoting ? "night-vote-card" : "night-movie";
             const image = document.createElement("img");
-            image.src = movie.poster;
             image.alt = movie.title + " poster";
+            const fallback = document.createElement("div");
+            fallback.className = "night-poster-fallback";
+            fallback.textContent = "Poster unavailable";
+            fallback.setAttribute("role", "img");
+            fallback.setAttribute("aria-label", "Poster unavailable for " + movie.title);
+            fallback.hidden = true;
+            image.addEventListener("error", function () {
+                image.hidden = true;
+                fallback.hidden = false;
+            }, { once: true });
+            try {
+                const url = new URL(movie.poster, document.baseURI);
+                if (!movie.poster.trim() || !["http:", "https:"].includes(url.protocol)) throw new Error("Invalid poster");
+                image.src = url.href;
+            } catch (error) {
+                image.hidden = true;
+                fallback.hidden = false;
+            }
             const body = document.createElement("div");
             body.className = allowVoting ? "night-vote-body" : "night-movie-text";
             const title = document.createElement("h3");
@@ -147,27 +231,26 @@ document.addEventListener("DOMContentLoaded", function () {
                 button.className = "night-button";
                 button.type = "button";
                 button.textContent = "Vote for " + movie.title;
+                const turnVotes = state.votes;
                 button.addEventListener("click", function () {
-                    if (!state.started || state.votes.length >= state.voters) return;
-                    state.votes.push(movie.title);
-                    if (saveState(state)) render();
-                    else state.votes.pop();
+                    if (!state.started || state.votes !== turnVotes || state.votes.length >= state.voters) return;
+                    if (saveState({ ...state, votes: [...state.votes, movie.id] })) render();
                 });
                 body.appendChild(button);
             } else {
                 const meta = document.createElement("p");
-                meta.textContent = movie.meta;
+                meta.textContent = [movie.year, movie.genre].filter(Boolean).join(" • ");
                 body.appendChild(meta);
             }
-            card.append(image, body);
+            card.append(image, fallback, body);
             return card;
         }
 
         function showResults() {
-            const counts = state.selected.map(function (movie) {
+            const counts = state.selected.map(function (id) {
                 return {
-                    title: movie.title,
-                    count: state.votes.filter(function (vote) { return vote === movie.title; }).length
+                    title: getMovie(id).title,
+                    count: state.votes.filter(function (vote) { return vote === id; }).length
                 };
             });
             const highest = Math.max(...counts.map(function (item) { return item.count; }));
@@ -206,10 +289,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
             if (!state.started) {
                 votersInput.value = state.voters;
-                startButton.disabled = state.selected.length !== 3;
+                startButton.disabled = !catalogue || state.selected.length !== 3;
                 selectedContainer.replaceChildren();
-                state.selected.forEach(function (movie) {
-                    selectedContainer.appendChild(makeMovieCard(movie, false));
+                state.selected.forEach(function (id) {
+                    selectedContainer.appendChild(makeMovieCard(getMovie(id), false));
                 });
                 for (let i = state.selected.length; i < 3; i++) {
                     const slot = document.createElement("div");
@@ -220,8 +303,8 @@ document.addEventListener("DOMContentLoaded", function () {
             } else if (!finished) {
                 progress.textContent = "Vote " + (state.votes.length + 1) + " of " + state.voters;
                 voteContainer.replaceChildren();
-                state.selected.forEach(function (movie) {
-                    voteContainer.appendChild(makeMovieCard(movie, true));
+                state.selected.forEach(function (id) {
+                    voteContainer.appendChild(makeMovieCard(getMovie(id), true));
                 });
             } else {
                 showResults();
@@ -230,37 +313,43 @@ document.addEventListener("DOMContentLoaded", function () {
 
         startButton.addEventListener("click", function () {
             const voters = Number(votersInput.value);
-            if (state.selected.length !== 3 || !Number.isInteger(voters) || voters < 2 || voters > 10) {
+            if (!catalogue || state.selected.length !== 3 || !Number.isInteger(voters) || voters < 2 || voters > 10) {
                 feedback.textContent = "Choose exactly 3 movies and enter 2 to 10 participants.";
                 return;
             }
-            state.voters = voters;
-            state.votes = [];
-            state.started = true;
-            if (saveState(state)) {
+            if (saveState({ ...state, voters: voters, votes: [], started: true })) {
                 feedback.textContent = "";
                 render();
-            } else {
-                state.started = false;
             }
         });
 
         resetButton.addEventListener("click", function () {
             if (!window.confirm("Reset the entire Movie Night and delete all votes?")) return;
-            const fresh = emptyState();
-            Object.assign(state, fresh);
-            if (saveState(state)) {
+            if (saveState(emptyState())) {
                 feedback.textContent = "Movie Night has been reset.";
                 render();
             }
         });
 
+        refreshView = render;
         render();
     }
 
-    if (document.body.dataset.page === "movie-night") {
+    if (isMovieNight) {
         setupMovieNight();
-    } else if (new URLSearchParams(window.location.search).get("movieNight") === "1") {
+    } else {
         setupMovieSelection();
+    }
+    showFeedback("Loading movie catalogue…");
+    try {
+        catalogue = await catalogueApi.loadCatalogue();
+        state = loadState();
+        refreshView();
+        showFeedback(notice);
+    } catch (error) {
+        loadFailed = true;
+        catalogue = null;
+        refreshView();
+        showFeedback("Movie Night could not load the catalogue. Please refresh the page to try again. Your saved session has not been changed.");
     }
 });

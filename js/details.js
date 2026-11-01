@@ -134,8 +134,8 @@
             const youtubeHost = url.hostname === "youtube.com" || url.hostname === "www.youtube.com";
             const privacyHost = url.hostname === "youtube-nocookie.com" || url.hostname === "www.youtube-nocookie.com";
             const vimeoHost = url.hostname === "player.vimeo.com";
-            const validPath = ((youtubeHost || privacyHost) && /^\/embed\/[^/]+\/?$/.test(url.pathname)) ||
-                (vimeoHost && /^\/video\/[^/]+\/?$/.test(url.pathname));
+            const validPath = ((youtubeHost || privacyHost) && /^\/embed\/[A-Za-z0-9_-]{11}\/?$/.test(url.pathname)) ||
+                (vimeoHost && /^\/video\/[0-9]+\/?$/.test(url.pathname));
 
             return validPath ? url.href : "";
         } catch (error) {

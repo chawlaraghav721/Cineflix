@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="900" viewBox="0 0 600 900" role="img" aria-labelledby="title description">
+  <title id="title">Run Away poster placeholder</title>
+  <desc id="description">Generic geometric artwork with the title Run Away. No production poster is provided.</desc>
+  <rect width="600" height="900" fill="#1b1e25"/>
+  <circle cx="485" cy="170" r="220" fill="#242831"/>
+  <circle cx="75" cy="760" r="230" fill="#242831"/>
+  <rect x="58" y="58" width="484" height="784" rx="12" fill="none" stroke="#454b58" stroke-width="2"/>
+  <path d="M250 365h100" stroke="#e50914" stroke-width="6"/>
+  <text x="300" y="450" fill="#f5f5f5" font-family="Arial, sans-serif" font-size="58" font-weight="700" text-anchor="middle">Run Away</text>
+  <text x="300" y="505" fill="#bbb" font-family="Arial, sans-serif" font-size="26" text-anchor="middle">Poster unavailable</text>
+</svg>

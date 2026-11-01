@@ -1,148 +1,117 @@
 # 🎬 CineFlix
 
-A modern movie streaming website project built as a frontend web development project. CineFlix focuses on creating a clean, immersive, and responsive interface for browsing and exploring movies.
+**CineFlix** is a frontend movie and TV show discovery website developed as a collaborative college project using HTML, CSS, JavaScript, and JSON.
 
-The project is being developed in multiple phases, starting with the complete frontend UI and gradually adding interactive functionality using JavaScript.
-
----
-
-## 📌 Project Overview
-
-CineFlix is designed to provide a modern movie-streaming experience with a visually engaging interface, intuitive navigation, and cinematic animations.
-
-The initial development phase focuses on building the complete website structure and user interface using HTML5 and CSS3. Future phases will introduce JavaScript-based functionality and interactive features.
-
----
+The project lets users browse a catalogue, view title details, save movies and shows to a personal list, give star ratings, and organize a Movie Night vote. It is an **educational demo**, not a real streaming service.
 
 ## ✨ Features
 
-- 🎬 Modern movie streaming interface
-- 🌙 Dark-themed user interface
-- 🧭 Navigation bar with multiple pages
-- 🎞️ Movie browsing and content sections
-- 🔐 Login page
-- 📱 Responsive design
-- 🎨 Custom CineFlix branding
-- ✨ Cinematic intro animation
-- 🌫️ Smooth blur and reveal transitions
-- 🖼️ Custom images and visual assets
-- 📄 Multiple website pages
-
----
+- **Home page:** Featured movies, Previous/Next navigation, a *Surprise Me* option, and dynamically generated movie cards.
+- **Movies and TV Shows:** Catalogue-driven listings with live search, genre filtering, title/year sorting, and reset controls.
+- **Details page:** Information for a selected title using its unique catalogue ID, with poster, genre, year, and additional metadata when available. A trailer modal is supported when a valid trailer URL is provided.
+- **My List:** Add or remove movies and shows, search saved titles, clear the list, and see the saved-item count in the navigation bar.
+- **Personal ratings:** Rate individual movies or shows from 1 to 5 stars, update a rating, or clear it.
+- **Movie Night:** Select exactly three movies, choose 2–10 participants, vote one turn at a time, and view vote totals, winners, or ties. Selections and voting progress are saved in the browser.
+- **Demo sign-in:** Client-side form validation, show/hide password, remember-me option, and sign-out.
+- **Contact form:** Validates name, email, and message and displays feedback (demo only; no message is sent).
+- **Responsive design:** Layouts for desktop and mobile, with loading messages, error handling, and poster fallbacks.
 
 ## 🛠️ Technologies Used
 
 | Technology | Purpose |
-|------------|---------|
-| HTML5 | Website structure and content |
-| CSS3 | Styling, layout, responsiveness, and animations |
-| Git | Version control |
-| GitHub | Source code management |
+| --- | --- |
+| HTML5 | Page structure, navigation, and forms |
+| CSS3 | Styling, layouts, responsiveness, and animations |
+| Vanilla JavaScript | DOM updates, events, and application logic |
+| JSON | Shared movie and TV show catalogue |
+| Fetch API | Loading catalogue data into the website |
+| Browser localStorage / sessionStorage | Saving demo sessions, lists, ratings, and votes |
+| Node.js built-in test runner | Running automated JavaScript tests |
+| Git and GitHub | Version control and team collaboration |
+
+No frontend framework, backend server, database, or external movie-data API is required.
+
+## 📁 Project Structure
+
+```text
+Cineflix/
+├── index.html                  # Home page
+├── movies.html                 # Movie catalogue
+├── shows.html                  # TV show catalogue
+├── details.html                # Selected title details and ratings
+├── mylist.html                 # Saved titles
+├── movie-night.html            # Movie Night voting
+├── login.html                  # Demo login
+├── data/
+│   └── catalogue.json          # Shared movies and shows data
+├── css/
+│   ├── style.css               # Main website styles
+│   ├── movie-night.css         # Movie Night styles
+│   └── ratings.css             # Rating controls
+├── js/                         # Catalogue and feature scripts
+├── images/                     # CineFlix branding assets
+├── tests/                      # Automated JavaScript tests
+└── README.md
+```
+
+## 🚀 Getting Started
+
+1. Clone the repository and open the project folder:
+
+   ```bash
+   git clone https://github.com/chawlaraghav721/Cineflix.git
+   cd Cineflix
+   ```
+
+2. Open the folder in **VS Code**.
+3. Use the **Live Server** extension to open `index.html` in your browser.
+
+   Alternatively, if Python is installed, run:
+
+   ```bash
+   python -m http.server 5500
+   ```
+
+   Then visit `http://localhost:5500/`.
+
+**Important:** Use a local HTTP server rather than opening the HTML files directly with a `file://` URL. The Fetch API needs to load `data/catalogue.json` correctly.
+
+No `npm install` or build step is required to run the website.
+
+## ⚙️ How It Works
+
+1. `data/catalogue.json` contains the shared catalogue of **20 movies and 10 TV shows**, each with a unique ID.
+2. `js/catalogue.js` loads and validates the data using `fetch()`.
+3. JavaScript creates and updates the movie/show cards through DOM manipulation.
+4. Clicking a card opens a Details page using a URL such as `details.html?id=movie-011`.
+5. My List, personal ratings, and Movie Night save records against stable catalogue IDs, so users can return to them after refreshing the page.
+
+The saved information belongs to the **current browser**, not an online account, and is not synchronized between devices.
+
+## 🧪 Running Tests
+
+Install Node.js if it is not already available, then run this command from the project root:
+
+```bash
+node --test
+```
+
+The `tests/` folder contains tests for browsing utilities, Movie Night, personal ratings, and integration/regression scenarios. Tests use Node.js's built-in test runner; no extra testing package is required.
+
+## ℹ️ Project Scope and Limitations
+
+- CineFlix is a **frontend demonstration**. It does not stream or host full movies or TV episodes.
+- Login is a **demo session**, not secure server-side authentication.
+- The contact form validates entries but does not deliver emails or messages.
+- Saved lists, ratings, and votes are stored locally in the browser.
+- Catalogue entries may have optional metadata; unavailable fields show fallback text. Trailer playback depends on a compatible embed URL being provided.
+- Some poster images come from external URLs and may be unavailable if their source changes.
+
+## 👥 Collaboration
+
+CineFlix was built as a team college project. Development work was organized using Git feature branches, focused commits, and GitHub pull requests before integration into `main`.
 
 ---
 
-## 📂 Project Structure
-
-```text
-CineFlix/
-│
-├── css/
-│   └── style.css
-│
-├── images/
-│   └── ...
-│
-├── index.html
-├── README.md
-│
-└── ...
-🎨 UI & Design
-
-The CineFlix interface follows a dark, cinematic visual style designed to create an immersive movie-browsing experience.
-
-The website includes:
-
-Dark-themed layouts
-Consistent navigation
-Movie-focused content sections
-Responsive page layouts
-Custom branding
-Smooth CSS animations and transitions
-🎬 Intro Animation
-
-CineFlix includes a cinematic website intro animation.
-
-When the website loads:
-
-The homepage is visible in the background with a blur effect.
-The CineFlix logo smoothly appears in the center.
-The logo becomes sharp and remains visible briefly.
-The logo smoothly fades and scales out.
-The background blur is removed.
-The complete website becomes clear and ready to use.
-
-The animation is implemented using CSS without external animation libraries.
-
-🚀 Getting Started
-1. Clone the repository
-git clone https://github.com/chawlaraghav721/Cineflix.git
-2. Navigate to the project directory
-cd Cineflix
-3. Open the project
-
-Open index.html in your preferred web browser.
-
-No additional dependencies or installation steps are currently required.
-
-📈 Development Phases
-Phase A1 — UI Development
-
-Status: Completed ✅
-
-Website structure
-Multiple pages
-Navigation
-Login page
-Movie/content sections
-Responsive styling
-CineFlix branding
-CSS animations
-Cinematic intro animation
-Phase A2 — JavaScript Functionality
-
-Status: In Progress 🚧
-
-Planned functionality includes adding JavaScript-based interactions and dynamic behaviour to the existing interface.
-
-🔮 Future Improvements
-
-The project will continue to evolve with features such as:
-
-Interactive movie cards
-Search functionality
-Dynamic content
-Interactive navigation
-Form validation
-User interactions
-Additional JavaScript functionality
-📚 Learning Objectives
-
-This project is being developed to gain practical experience with:
-
-Semantic HTML
-CSS layouts and positioning
-Flexbox and responsive design
-CSS animations and transitions
-Multi-page website development
-JavaScript-based interactivity
-Git and GitHub workflow
-Frontend project organization
-👨‍💻 Project Status
-
-CineFlix is an actively developing frontend project.
-
-The initial UI and styling phase has been completed, and development is continuing with JavaScript functionality and interactive features.
-
-📄 License
-
-This project is created for educational and learning purposes.
+**Project type:** B.Tech CSE college frontend project  
+**Status:** Frontend functionality implemented; demo content can be expanded further.

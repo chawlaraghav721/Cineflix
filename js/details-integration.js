@@ -15,6 +15,7 @@
     window.addEventListener("pageshow", refreshMyListConnection);
 
     async function loadDetails() {
+        window.CineFlixRatings?.connectItem(null);
         const id = details.getSelectedId();
         if (!id || !id.trim()) {
             details.showError("No title ID was provided. Browse the catalogue to choose a movie or TV show.");
@@ -30,6 +31,7 @@
                 return;
             }
             details.render(item);
+            window.CineFlixRatings?.connectItem(item);
         } catch (error) {
             details.showError("Title details could not be loaded. Check your connection and refresh the page to try again.");
         }

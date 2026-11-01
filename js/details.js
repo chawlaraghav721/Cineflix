@@ -64,6 +64,44 @@
         return value === null || value === undefined ? "" : String(value).trim();
     }
 
+    function renderPoster(source, itemTitle) {
+        const nextPoster = document.createElement("img");
+        nextPoster.id = "details-poster";
+        nextPoster.className = "details-poster";
+        nextPoster.alt = itemTitle ? itemTitle + " poster" : "Poster unavailable";
+        nextPoster.hidden = true;
+        poster.replaceWith(nextPoster);
+        poster = nextPoster;
+        posterFallback.hidden = false;
+
+        const posterSource = optionalText(source);
+        if (!posterSource) return;
+
+        let posterUrl;
+        try {
+            posterUrl = new URL(posterSource, document.baseURI);
+        } catch (error) {
+            return;
+        }
+        if ((posterUrl.protocol !== "https:" && posterUrl.protocol !== "http:") || posterUrl.username || posterUrl.password) return;
+
+        nextPoster.onload = function () {
+            if (poster !== nextPoster) return;
+            nextPoster.onerror = null;
+            nextPoster.hidden = false;
+            posterFallback.hidden = true;
+        };
+        nextPoster.onerror = function () {
+            if (poster !== nextPoster) return;
+            nextPoster.onload = null;
+            nextPoster.onerror = null;
+            nextPoster.removeAttribute("src");
+            nextPoster.hidden = true;
+            posterFallback.hidden = false;
+        };
+        nextPoster.setAttribute("src", posterUrl.href);
+    }
+
     function setMeta(item) {
         const values = [];
         const year = optionalText(item.year);
@@ -113,17 +151,7 @@
         director.textContent = optionalText(item.director) || "Information unavailable.";
         setMeta(item);
 
-        const posterSource = optionalText(item.poster);
-        if (posterSource) {
-            poster.setAttribute("src", posterSource);
-            poster.setAttribute("alt", title.textContent + " poster");
-            poster.hidden = false;
-            posterFallback.hidden = true;
-        } else {
-            poster.removeAttribute("src");
-            poster.hidden = true;
-            posterFallback.hidden = false;
-        }
+        renderPoster(item.poster, title.textContent);
 
         refreshWatchlistButton();
 

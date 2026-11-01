@@ -1237,3 +1237,145 @@ body.trailer-open {
         font-size: 35px;
     }
 }
+
+/* ---- MOVIES AND TV SHOWS BROWSING ---- */
+
+/* Search, genre and sorting controls share one responsive toolbar. */
+.browse-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1.7fr) repeat(2, minmax(170px, 1fr));
+    align-items: end;
+    gap: 14px;
+    margin: 24px 0 16px;
+}
+
+.browse-field {
+    min-width: 0;
+}
+
+/* Override the generic search-box spacing inside the browsing toolbar. */
+.browse-controls .search-box {
+    width: 100%;
+    min-height: 46px;
+    margin: 0;
+    padding: 12px 14px;
+    font: inherit;
+}
+
+.browse-select {
+    width: 100%;
+    min-height: 46px;
+    padding: 10px 36px 10px 14px;
+    background: #1c1f26;
+    border: 1px solid #3b3e46;
+    border-radius: 4px;
+    color: #fff;
+    font: inherit;
+    cursor: pointer;
+}
+
+.browse-controls .search-box:focus-visible,
+.browse-select:focus-visible {
+    outline: 2px solid #ff5964;
+    outline-offset: 2px;
+    border-color: #ff5964;
+}
+
+.browse-controls :disabled {
+    cursor: wait;
+    opacity: 0.65;
+}
+
+/* Loading and result feedback remain visually distinct from the card grid. */
+.browse-status,
+.browse-error,
+.browse-results,
+.browse-empty {
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.browse-status {
+    margin: 16px 0;
+    color: #aaa;
+}
+
+.browse-results {
+    margin: 18px 0 12px;
+    color: #aaa;
+    font-size: 14px;
+}
+
+.browse-error,
+.browse-empty {
+    margin: 16px 0;
+    padding: 14px 16px;
+    border-radius: 6px;
+}
+
+.browse-error {
+    border: 1px solid rgba(255, 89, 100, 0.4);
+    background: rgba(229, 9, 20, 0.1);
+    color: #ff9297;
+}
+
+.browse-empty {
+    border: 1px solid #343843;
+    background: #1b1e25;
+    color: #bbb;
+    text-align: center;
+}
+
+.browse-status[hidden],
+.browse-error[hidden],
+.browse-empty[hidden] {
+    display: none;
+}
+
+/* Used when a catalogue item has no poster or its image cannot load. */
+.movie-poster-fallback {
+    display: flex;
+    width: 100%;
+    height: 265px;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: #292c33;
+    color: #bbb;
+    text-align: center;
+}
+
+.movie-poster-fallback[hidden] {
+    display: none;
+}
+
+.container .movie-card:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 4px;
+}
+
+@media (max-width: 900px) {
+    .browse-controls {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .browse-controls .browse-field:first-child {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 600px) {
+    .browse-controls {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
+        margin-top: 20px;
+    }
+
+    .browse-controls .browse-field:first-child {
+        grid-column: auto;
+    }
+
+    .movie-poster-fallback {
+        height: 220px;
+    }
+}

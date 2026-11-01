@@ -85,7 +85,9 @@ document.addEventListener("DOMContentLoaded", function () {
         const selectedById = new Set(state.selected.map(movieIdentity));
         state.votes = state.votes.map(function (vote) {
             if (selectedById.has(vote)) return vote;
-            const selectedMovie = state.selected.find(function (movie) { return movie.title === vote; });
+            const selectedMovie = state.selected.find(function (movie) {
+                return movie.title === vote || movieIdentity(movie) === vote;
+            });
             if (selectedMovie) {
                 changed = true;
                 return movieIdentity(selectedMovie);
@@ -266,12 +268,14 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         function showResults() {
-            const counts = state.selected.map(function (movie) {
+            const counts = state.selected.map(function (movie, index) {
+                const firstWithTitle = state.selected.findIndex(function (selectedMovie) {
+                    return selectedMovie.title === movie.title;
+                }) === index;
                 return {
-                    id: movieIdentity(movie),
                     title: movie.title,
                     count: state.votes.filter(function (vote) {
-                        return vote === movieIdentity(movie);
+                        return vote === movieIdentity(movie) || (firstWithTitle && vote === movie.title);
                     }).length
                 };
             });

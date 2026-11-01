@@ -7,6 +7,9 @@
     <title>CineFlix - My List</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="js/navigation.js" defer></script>
+    <script src="js/catalogue.js" defer></script>
+    <script src="js/my-list-storage.js" defer></script>
+    <script src="js/mylist.js" defer></script>
 </head>
 
 <body>
@@ -51,7 +54,7 @@
 
     <!-- My List -->
 
-    <main class="container">
+    <main class="container my-list-page">
 
           <h1 class="page-title">My List</h1>
 
@@ -61,55 +64,27 @@
 
           <!-- Search Box -->
           <input
+               id="mylist-search"
                class="search-box"
                type="text"
+               aria-label="Search saved titles"
                placeholder="Search your list..."
+               disabled
           >
 
-          <section class="movie-section">
+          <div class="mylist-actions">
+               <button id="mylist-clear" class="btn secondary" type="button" disabled>Clear My List</button>
+               <button id="mylist-retry" class="btn" type="button" hidden>Try Again</button>
+          </div>
+          <p id="mylist-status" class="mylist-message" role="status">Loading your list…</p>
+          <p id="mylist-error" class="mylist-message" role="alert"></p>
 
-               <div class="movie-grid">
+          <section class="movie-section" aria-label="Saved movies and shows">
 
-                    <!-- Movie 1 -->
-                    <a class="movie-card" href="details.html">
-
-                         <img
-                              src="https://image.tmdb.org/t/p/w500/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg"
-                              alt="Inception poster"
-                         >
-
-                         <div class="movie-info">
-
-                              <h3>Inception</h3>
-
-                              <p>2010 • Thriller</p>
-
-                         </div>
-
-                    </a>
-
-
-                    <!-- Movie 2 -->
-                    <a class="movie-card" href="details.html">
-
-                         <img
-                              src="https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg"
-                              alt="Interstellar poster"
-                         >
-
-                         <div class="movie-info">
-
-                              <h3>Interstellar</h3>
-
-                              <p>2014 • Sci-Fi</p>
-
-                         </div>
-
-                    </a>
-
+               <div id="mylist-grid" class="movie-grid" aria-busy="true">
 
                     <!-- Add Movie -->
-                    <a href="movies.html" class="add-movie-card">
+                    <a id="mylist-add" href="movies.html" class="add-movie-card">
 
                          <div class="plus-icon">+</div>
 

@@ -916,6 +916,86 @@ body.trailer-open {
     min-height: 70vh;
 }
 
+.my-list-page [hidden] {
+    display: none;
+}
+
+.my-list-page .mylist-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.my-list-page button {
+    border: 1px solid #555;
+    border-radius: 4px;
+    font: inherit;
+    cursor: pointer;
+}
+
+.my-list-page button:disabled {
+    opacity: .5;
+    cursor: default;
+}
+
+.my-list-page .mylist-message {
+    color: #bbb;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.my-list-page #mylist-error {
+    color: #ff5964;
+}
+
+.my-list-page .mylist-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.my-list-page .mylist-details-link {
+    display: block;
+    flex: 1;
+}
+
+.my-list-page .mylist-remove {
+    margin: 0 12px 12px;
+    padding: 10px;
+    color: white;
+    background: #30343e;
+}
+
+.my-list-page .mylist-remove:hover {
+    background: #494f5c;
+}
+
+.my-list-page a:focus-visible,
+.my-list-page button:focus-visible,
+.my-list-page input:focus-visible {
+    outline: 2px solid white;
+    outline-offset: -2px;
+}
+
+.my-list-page .mylist-poster-fallback {
+    height: 265px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    color: #bbb;
+    background: #292c33;
+    text-align: center;
+}
+
+@media (max-width: 600px) {
+    .my-list-page .mylist-poster-fallback {
+        height: 220px;
+    }
+}
+
 /* Add Movie Card */
 
 .add-movie-card {

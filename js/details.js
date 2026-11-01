@@ -12,10 +12,15 @@
     const director = document.getElementById("details-director");
     const errorMessage = document.getElementById("details-error");
     const watchlistButton = document.getElementById("watchlist-button");
+    const trailerButton = document.getElementById("trailer-button");
+    const trailerModal = document.getElementById("trailer-modal");
+    const closeTrailerButton = document.getElementById("close-trailer");
+    const trailerFrame = document.getElementById("trailer-frame");
     const main = document.querySelector("main.details");
 
     let currentItem = null;
     let myList = null;
+    let previouslyFocused = null;
 
     function getSelectedId() {
         return new URLSearchParams(window.location.search).get("id");
@@ -32,6 +37,10 @@
         currentItem = null;
         watchlistButton.disabled = true;
         watchlistButton.textContent = "Add to My List";
+        trailerButton.hidden = true;
+        trailerButton.disabled = true;
+        trailerButton.dataset.trailerUrl = "";
+        closeTrailer(false);
         loading.hidden = true;
         content.hidden = true;
         errorMessage.replaceChildren();
@@ -114,6 +123,24 @@
         meta.hidden = false;
     }
 
+    function validTrailerUrl(value) {
+        if (typeof value !== "string" || !value.trim()) return "";
+        try {
+            const url = new URL(value);
+            if (url.protocol !== "https:" || url.username || url.password || (url.port && url.port !== "443")) return "";
+
+            const youtubeHost = url.hostname === "youtube.com" || url.hostname === "www.youtube.com";
+            const privacyHost = url.hostname === "youtube-nocookie.com" || url.hostname === "www.youtube-nocookie.com";
+            const vimeoHost = url.hostname === "player.vimeo.com";
+            const validPath = ((youtubeHost || privacyHost) && /^\/embed\/[^/]+\/?$/.test(url.pathname)) ||
+                (vimeoHost && /^\/video\/[^/]+\/?$/.test(url.pathname));
+
+            return validPath ? url.href : "";
+        } catch (error) {
+            return "";
+        }
+    }
+
     function refreshWatchlistButton() {
         const connected = isMyListConnected() && currentItem;
         watchlistButton.disabled = !connected;
@@ -143,6 +170,7 @@
             return;
         }
 
+        closeTrailer(false);
         currentItem = item;
         title.textContent = optionalText(item.title) || "Untitled";
         description.textContent = optionalText(item.description) || "Information unavailable.";
@@ -153,6 +181,10 @@
 
         renderPoster(item.poster, title.textContent);
 
+        const trailerUrl = validTrailerUrl(item.trailerUrl);
+        trailerButton.hidden = !trailerUrl;
+        trailerButton.disabled = !trailerUrl;
+        trailerButton.dataset.trailerUrl = trailerUrl;
         refreshWatchlistButton();
 
         loading.hidden = true;
@@ -165,6 +197,36 @@
         myList = api || null;
         refreshWatchlistButton();
     }
+
+    function closeTrailer(restoreFocus) {
+        trailerModal.hidden = true;
+        trailerFrame.removeAttribute("src");
+        document.body.classList.remove("trailer-open");
+        if (restoreFocus !== false && trailerButton && !trailerButton.hidden && typeof trailerButton.focus === "function") {
+            trailerButton.focus();
+        } else if (restoreFocus !== false && previouslyFocused && typeof previouslyFocused.focus === "function") {
+            previouslyFocused.focus();
+        }
+    }
+
+    trailerButton.addEventListener("click", function () {
+        if (trailerButton.hidden || trailerButton.disabled) return;
+        const url = validTrailerUrl(trailerButton.dataset.trailerUrl);
+        if (!url) return;
+        previouslyFocused = document.activeElement;
+        trailerFrame.setAttribute("src", url);
+        trailerModal.hidden = false;
+        document.body.classList.add("trailer-open");
+        closeTrailerButton.focus();
+    });
+
+    closeTrailerButton.addEventListener("click", closeTrailer);
+    trailerModal.addEventListener("click", function (event) {
+        if (event.target === trailerModal) closeTrailer();
+    });
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && !trailerModal.hidden) closeTrailer();
+    });
 
     watchlistButton.addEventListener("click", function () {
         if (!isMyListConnected() || !currentItem) return;

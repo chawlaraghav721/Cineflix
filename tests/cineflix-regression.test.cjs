@@ -72,7 +72,10 @@ class Element {
     }
     click() {
         if (this.disabled) return;
-        this.dispatch("click");
+        const event = { target: this, preventDefault() {} };
+        for (let item = this; item; item = item.parentNode) {
+            for (const listener of item.listeners.click || []) listener(event);
+        }
     }
     setAttribute(name, value) { this.attributes[name] = String(value); }
     getAttribute(name) { return this.attributes[name] ?? null; }
@@ -157,6 +160,7 @@ async function loadBrowsePage(type, options = {}) {
     const listeners = {};
     const body = new Element("body");
     const document = {
+        baseURI: "http://localhost/movie-night.html",
         body,
         addEventListener(type, listener) { (listeners[type] ||= []).push(listener); },
         dispatchEvent(event) { (listeners[event.type] || []).forEach(listener => listener(event)); },
@@ -216,10 +220,15 @@ async function loadMovieNight(options = {}) {
         localStorage: saved,
         location: { search: options.page === "movie-night" ? "" : "?movieNight=1", href: "" },
         confirm: () => true,
-        CineFlixCatalogue: { loadCatalogue: options.loadCatalogue || (async () => catalogue) }
+        CineFlixCatalogue: {
+            loadCatalogue: options.loadCatalogue || (async () => catalogue),
+            getItemById(data, id) {
+                return [...(data.movies || []), ...(data.shows || [])].find(item => item.id === id) || null;
+            }
+        }
     };
     const context = vm.createContext({
-        document, window, localStorage: saved, URLSearchParams,
+        document, window, localStorage: saved, URL, URLSearchParams,
         Event: class { constructor(type) { this.type = type; } },
         alert() {}, console
     });
@@ -230,7 +239,11 @@ async function loadMovieNight(options = {}) {
 }
 
 test("Movie Night stores catalogue IDs and keeps same-title movies distinct", async () => {
-    const page = await loadMovieNight();
+    const page = await loadMovieNight({ catalogue: movieNightCatalogue([
+        { id: "movie-a", title: "Twin Title" },
+        { id: "movie-b", title: "Twin Title" },
+        { id: "movie-c", title: "Third Movie" }
+    ]) });
     const first = makeMovieCard("movie-a", "Twin Title");
     const second = makeMovieCard("movie-b", "Twin Title");
     const third = makeMovieCard("movie-c", "Third Movie");
@@ -241,8 +254,7 @@ test("Movie Night stores catalogue IDs and keeps same-title movies distinct", as
     page.grid.dispatch("click", { target: third });
 
     const saved = JSON.parse(page.storage.getItem(storageKey));
-    assert.deepEqual(saved.selected.map(movie => movie.id), ["movie-a", "movie-b", "movie-c"]);
-    assert.equal(saved.selected[0].title, saved.selected[1].title);
+    assert.deepEqual(saved.selected, ["movie-a", "movie-b", "movie-c"]);
 });
 
 test("legacy title selections and votes migrate to stable catalogue IDs", async () => {
@@ -253,28 +265,31 @@ test("legacy title selections and votes migrate to stable catalogue IDs", async 
                 { title: "Second Movie", poster: "/old-b.jpg", meta: "old" },
                 { title: "Third Movie", poster: "/old-c.jpg", meta: "old" }
             ],
-            voters: 2,
+            voters: 3,
             votes: ["Twin Title", "Second Movie"],
             started: true
         })
     });
     const catalogue = movieNightCatalogue([
         { id: "movie-twin-1", title: "Twin Title" },
-        { id: "movie-twin-2", title: "Twin Title" },
         { id: "movie-second", title: "Second Movie" },
         { id: "movie-third", title: "Third Movie" }
     ]);
     const page = await loadMovieNight({ page: "movie-night", catalogue, storage });
+    page.elements["night-options"].querySelectorAll("button")[2].click();
 
     const saved = JSON.parse(storage.getItem(storageKey));
-    assert.deepEqual(saved.selected.map(movie => movie.id), ["movie-twin-1", "movie-second", "movie-third"]);
-    assert.deepEqual(saved.votes, ["movie-twin-1", "movie-second"]);
+    assert.deepEqual(saved.selected, ["movie-twin-1", "movie-second", "movie-third"]);
+    assert.deepEqual(saved.votes, ["movie-twin-1", "movie-second", "movie-third"]);
     assert.equal(page.elements["night-tally"].children[0].children[0].children[1].textContent, "1 vote(s)");
     assert.equal(page.elements["night-tally"].children[1].children[0].children[1].textContent, "1 vote(s)");
 });
 
 test("Movie Night selection is keyboard operable, announced, and limited to three", async () => {
-    const page = await loadMovieNight();
+    const page = await loadMovieNight({ catalogue: movieNightCatalogue([
+        { id: "movie-a", title: "Movie A" }, { id: "movie-b", title: "Movie B" },
+        { id: "movie-c", title: "Movie C" }, { id: "movie-d", title: "Movie D" }
+    ]) });
     const cards = [
         makeMovieCard("movie-a", "Movie A"),
         makeMovieCard("movie-b", "Movie B"),
@@ -293,14 +308,14 @@ test("Movie Night selection is keyboard operable, announced, and limited to thre
     assert.equal(prevented, true);
     assert.equal(cards[0].getAttribute("role"), "checkbox");
     assert.equal(cards[0].getAttribute("aria-checked"), "true");
-    assert.equal(cards[0].getAttribute("aria-label"), "Remove Movie A from Movie Night");
+    assert.equal(cards[0].getAttribute("aria-label"), "Remove Movie A, 2025 • Drama from Movie Night");
     page.grid.dispatch("click", { target: cards[3] });
     assert.equal(JSON.parse(page.storage.getItem(storageKey)).selected.length, 3);
     assert.equal(cards[3].getAttribute("aria-checked"), "false");
 });
 
 test("Movie Night restores selection state after dynamic card rendering", async () => {
-    const page = await loadMovieNight();
+    const page = await loadMovieNight({ catalogue: movieNightCatalogue([{ id: "movie-a", title: "Movie A" }]) });
     const original = makeMovieCard("movie-a", "Movie A");
     page.grid.replaceChildren(original);
     page.document.dispatchEvent({ type: "cineflix:movies-rendered" });
@@ -343,7 +358,7 @@ test("votes and results distinguish movies with duplicate titles by ID", async (
     assert.equal(rows[1].children[0].children[1].textContent, "2 vote(s)");
 });
 
-test("legacy title sessions remain usable when the catalogue cannot load", async () => {
+test("legacy title sessions remain untouched when the catalogue cannot load", async () => {
     const storage = createStorage({
         [storageKey]: JSON.stringify({
             selected: ["Alpha", "Beta", "Gamma"],
@@ -357,17 +372,14 @@ test("legacy title sessions remain usable when the catalogue cannot load", async
         storage,
         loadCatalogue: async () => { throw new Error("offline"); }
     });
-    const buttons = page.elements["night-options"].querySelectorAll("button");
-    assert.equal(buttons.length, 3);
-    buttons[1].click();
-    const saved = JSON.parse(storage.getItem(storageKey));
-    assert.deepEqual(saved.votes, ["Alpha", "legacy:Beta"]);
-    const rows = page.elements["night-tally"].children;
-    assert.equal(rows[0].children[0].children[1].textContent, "1 vote(s)");
-    assert.equal(rows[1].children[0].children[1].textContent, "1 vote(s)");
+    assert.equal(page.elements["night-start"].disabled, true);
+    assert.match(page.elements["night-feedback"].textContent, /could not load the catalogue/);
+    assert.deepEqual(JSON.parse(storage.getItem(storageKey)), {
+        selected: ["Alpha", "Beta", "Gamma"], voters: 2, votes: ["Alpha"], started: true
+    });
 });
 
-test("an unresolved legacy title vote cannot count for two duplicate movies", async () => {
+test("an ambiguous legacy title selection or vote is never guessed", async () => {
     const storage = createStorage({
         [storageKey]: JSON.stringify({
             selected: [
@@ -380,14 +392,16 @@ test("an unresolved legacy title vote cannot count for two duplicate movies", as
             started: true
         })
     });
-    const page = await loadMovieNight({
-        page: "movie-night",
-        storage,
-        loadCatalogue: async () => { throw new Error("offline"); }
-    });
-    const rows = page.elements["night-tally"].children;
-    assert.equal(rows[0].children[0].children[1].textContent, "1 vote(s)");
-    assert.equal(rows[1].children[0].children[1].textContent, "0 vote(s)");
+    const catalogue = movieNightCatalogue([
+        { id: "movie-twin-a", title: "Twin" },
+        { id: "movie-twin-b", title: "Twin" },
+        { id: "movie-other", title: "Other" }
+    ]);
+    const page = await loadMovieNight({ page: "movie-night", storage, catalogue });
+    assert.equal(page.elements["night-setup"].hidden, false);
+    assert.equal(page.elements["night-results"].hidden, true);
+    assert.match(page.elements["night-feedback"].textContent, /no longer valid/);
+    assert.deepEqual(JSON.parse(storage.getItem(storageKey)).votes, ["Twin", "movie-other"]);
 });
 
 test("malformed Movie Night storage falls back to an empty, selectable session", async () => {

@@ -64,6 +64,17 @@
     padding: 13px;
 }
 
+.night-poster-fallback {
+    height: 230px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #2c303a;
+    color: #bac0cb;
+    text-align: center;
+    padding: 14px;
+}
+
 .night-movie-text h3,
 .night-vote-body h3 {
     font-size: 16px;
@@ -217,6 +228,11 @@
     border: 2px solid transparent;
 }
 
+.movie-night-pick .movie-card [hidden],
+.night-select-banner .night-feedback:empty {
+    display: none;
+}
+
 .movie-night-pick .movie-card.night-selected {
     border-color: #e50914;
 }
@@ -240,4 +256,5 @@
     .night-option-grid { grid-template-columns: 1fr; }
     .night-movie img,
     .night-vote-card img { height: 260px; }
+    .night-poster-fallback { height: 260px; }
 }

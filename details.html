@@ -6,10 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CineFlix - Details</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/ratings.css">
+    <script src="js/my-list-storage.js" defer></script>
     <script src="js/navigation.js" defer></script>
     <script src="js/catalogue.js" defer></script>
-    <script src="js/my-list-storage.js" defer></script>
     <script src="js/details.js" defer></script>
+    <script src="js/ratings.js" defer></script>
     <script src="js/details-integration.js" defer></script>
 </head>
 
@@ -49,6 +51,19 @@
                     <button id="trailer-button" class="btn" type="button" hidden disabled>Watch Trailer</button>
                     <button id="watchlist-button" class="btn secondary" type="button" disabled>Add to My List</button>
                 </div>
+                <section class="personal-rating" aria-labelledby="personal-rating-title" hidden>
+                    <h2 id="personal-rating-title">Your Personal Rating</h2>
+                    <p>How would you rate this title?</p>
+                    <div class="rating-stars" role="group" aria-label="Choose a rating from 1 to 5 stars">
+                        <button type="button" data-rating="1" aria-label="1 star" aria-pressed="false">☆</button>
+                        <button type="button" data-rating="2" aria-label="2 stars" aria-pressed="false">☆</button>
+                        <button type="button" data-rating="3" aria-label="3 stars" aria-pressed="false">☆</button>
+                        <button type="button" data-rating="4" aria-label="4 stars" aria-pressed="false">☆</button>
+                        <button type="button" data-rating="5" aria-label="5 stars" aria-pressed="false">☆</button>
+                    </div>
+                    <p id="rating-message" role="status" aria-live="polite">No rating selected yet.</p>
+                    <button type="button" id="clear-rating" disabled>Clear Rating</button>
+                </section>
             </div>
         </section>
 

@@ -10,8 +10,13 @@
         details.connectMyList(myList);
     }
 
+    function handleStorageChange(event) {
+        if (event.key === null || event.key === "cineflixMyList") refreshMyListConnection();
+    }
+
     refreshMyListConnection();
     window.addEventListener("cineflix:list-updated", refreshMyListConnection);
+    window.addEventListener("storage", handleStorageChange);
     window.addEventListener("pageshow", refreshMyListConnection);
 
     async function loadDetails() {

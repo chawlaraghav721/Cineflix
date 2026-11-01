@@ -82,6 +82,14 @@
     function render() {
         if (!catalogue) return;
         errorMessage.textContent = "";
+        if (typeof myList.isStorageAvailable === "function" && !myList.isStorageAvailable()) {
+            grid.replaceChildren(addCard);
+            clearButton.disabled = true;
+            status.textContent = "";
+            errorMessage.textContent = "Browser storage is unavailable. Enable browser storage to load your saved titles.";
+            return;
+        }
+
         const ids = myList.getMyListIds();
         const items = ids.map(id => catalogueApi.getItemById(catalogue, id)).filter(Boolean);
         const query = search.value.trim().toLowerCase();
@@ -135,5 +143,9 @@
         search.focus();
     });
     window.addEventListener("cineflix:list-updated", render);
+    window.addEventListener("pageshow", render);
+    window.addEventListener("storage", function (event) {
+        if (event.key === null || event.key === "cineflixMyList") render();
+    });
     loadMyList();
 }());

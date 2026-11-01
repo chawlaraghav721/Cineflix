@@ -248,12 +248,12 @@ test("My List add/remove and Details metadata remain independent of personal rat
 
 test("trailer open and close still work alongside ratings", async () => {
     const data = JSON.parse(JSON.stringify(catalogue));
-    data.movies.find(item => item.id === "movie-004").trailerUrl = "https://www.youtube.com/embed/test-video";
+    data.movies.find(item => item.id === "movie-004").trailerUrl = "https://www.youtube.com/embed/YoHD9XEInc0";
     const page = await loadPage({ catalogue: data });
     page.stars[3].click();
     page.elements["trailer-button"].click();
     assert.equal(page.elements["trailer-modal"].hidden, false);
-    assert.equal(page.elements["trailer-frame"].getAttribute("src"), "https://www.youtube.com/embed/test-video");
+    assert.equal(page.elements["trailer-frame"].getAttribute("src"), "https://www.youtube.com/embed/YoHD9XEInc0");
     page.elements["close-trailer"].click();
     assert.equal(page.elements["trailer-modal"].hidden, true);
     assert.equal(page.elements["trailer-frame"].getAttribute("src"), undefined);
@@ -264,4 +264,27 @@ test("Details still renders when the optional ratings script is unavailable", as
     const page = await loadPage({ ratings: false });
     assert.equal(page.elements["details-content"].hidden, false);
     assert.equal(page.elements["details-title"].textContent, "The Last Run");
+});
+
+
+test("Details rejects malformed and unapproved trailer URLs", async () => {
+    for (const trailerUrl of [
+        "https://www.youtube.com/embed/not-a-video-id",
+        "https://www.youtube.com/embed/short",
+        "https://www.youtube.com/embed/YoHD9XEInc%30",
+        "https://player.vimeo.com/video/not-a-number",
+        "https://www.youtube.com:8443/embed/YoHD9XEInc0",
+        "http://www.youtube.com/embed/YoHD9XEInc0",
+        "https://www.youtube.com.evil.example/embed/YoHD9XEInc0",
+        "https://user@www.youtube.com/embed/YoHD9XEInc0",
+        "javascript:alert(1)"
+    ]) {
+        const data = structuredClone(catalogue);
+        data.movies.find(item => item.id === "movie-004").trailerUrl = trailerUrl;
+        const page = await loadPage({ catalogue: data });
+        assert.equal(page.elements["trailer-button"].hidden, true, trailerUrl);
+        assert.equal(page.elements["trailer-button"].disabled, true, trailerUrl);
+        page.elements["trailer-button"].click();
+        assert.equal(page.elements["trailer-modal"].hidden, true, trailerUrl);
+    }
 });

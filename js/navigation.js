@@ -21,6 +21,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (!myList || typeof myList.getMyListIds !== "function") {
                     throw new Error("My List storage API is unavailable.");
                 }
+                if (typeof myList.isStorageAvailable === "function" && !myList.isStorageAvailable()) {
+                    throw new Error("Browser storage is unavailable.");
+                }
                 count = myList.getMyListIds().length;
             } catch (error) {
                 badge.textContent = "\u2014";
@@ -37,7 +40,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (badge.dataset.countInitialized !== "true") {
             window.addEventListener("cineflix:list-updated", updateMyListCount);
-            window.addEventListener("storage", updateMyListCount);
+            window.addEventListener("storage", function (event) {
+                if (event.key === null || event.key === "cineflixMyList") updateMyListCount();
+            });
             window.addEventListener("pageshow", updateMyListCount);
             badge.dataset.countInitialized = "true";
         }
@@ -66,59 +71,69 @@ document.addEventListener("DOMContentLoaded", function () {
 
     });
 
-    // Check for an existing demo sign-in session
-    let demoUser = null;
-
-    try {
-        const savedUser =
-            localStorage.getItem("cineflixDemoUser") ||
-            sessionStorage.getItem("cineflixDemoUser");
-
-        if (savedUser) {
-            demoUser = JSON.parse(savedUser);
+    // Read the stores independently: a blocked or corrupt persistent store must
+    // not hide a valid tab session. Demo sessions never contain passwords.
+    function readDemoUser() {
+        for (const storageName of ["localStorage", "sessionStorage"]) {
+            try {
+                const user = JSON.parse(window[storageName].getItem("cineflixDemoUser"));
+                if (user && typeof user === "object" && !Array.isArray(user) &&
+                    typeof user.email === "string" && user.email.trim()) return user;
+            } catch (error) {
+                // Missing, corrupt and unavailable demo sessions are signed out.
+            }
         }
-
-    } catch (error) {
-        console.error("Unable to read demo session:", error);
+        return null;
     }
 
-    // Update navigation when a demo user is signed in
-    if (demoUser) {
-
+    function updateDemoSession() {
         const loginLink = document.querySelector(".login-link");
         const navList = document.querySelector(".nav-links");
+        if (!loginLink || !navList) return;
+        const demoUser = readDemoUser();
+        const existingSignOut = navList.querySelector(".signout-btn");
 
-        if (loginLink && navList) {
-
-            loginLink.textContent = "My Account";
-            loginLink.title = demoUser.email;
-            loginLink.classList.add("account-link");
-
-            if (navList.querySelector(".signout-btn")) return;
-
-            // Create sign-out button
-            const signOutItem = document.createElement("li");
-            const signOutButton = document.createElement("button");
-
-            signOutButton.type = "button";
-            signOutButton.textContent = "Sign Out";
-            signOutButton.className = "signout-btn";
-
-            // Clear demo session on sign-out
-            signOutButton.addEventListener("click", function () {
-
-                localStorage.removeItem("cineflixDemoUser");
-                sessionStorage.removeItem("cineflixDemoUser");
-
-                window.location.href = "login.html";
-
-            });
-
-            signOutItem.appendChild(signOutButton);
-            navList.appendChild(signOutItem);
-
+        if (!demoUser) {
+            loginLink.textContent = "Login";
+            loginLink.removeAttribute("title");
+            loginLink.classList.remove("account-link");
+            if (existingSignOut) existingSignOut.parentNode.remove();
+            return;
         }
 
+        loginLink.textContent = "My Account";
+        loginLink.title = demoUser.email;
+        loginLink.classList.add("account-link");
+        if (existingSignOut) return;
+
+        const signOutItem = document.createElement("li");
+        const signOutButton = document.createElement("button");
+        signOutButton.type = "button";
+        signOutButton.textContent = "Sign Out";
+        signOutButton.className = "signout-btn";
+        signOutButton.addEventListener("click", function () {
+            let failed = false;
+            for (const storageName of ["localStorage", "sessionStorage"]) {
+                try {
+                    window[storageName].removeItem("cineflixDemoUser");
+                } catch (error) {
+                    failed = true;
+                }
+            }
+            if (failed) {
+                window.alert("Unable to clear your demo session. Check browser storage settings and try again.");
+                return;
+            }
+            window.location.href = "login.html";
+        });
+        signOutItem.appendChild(signOutButton);
+        navList.appendChild(signOutItem);
     }
 
+    window.addEventListener("cineflix:session-updated", updateDemoSession);
+    window.addEventListener("pageshow", updateDemoSession);
+    window.addEventListener("storage", function (event) {
+        if (event.key === null || event.key === "cineflixDemoUser") updateDemoSession();
+    });
+    updateDemoSession();
 });

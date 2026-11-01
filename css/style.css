@@ -866,3 +866,68 @@ a {
     background: #e50914;
     color: #ffffff;
 }
+
+/* Home catalogue controls and feedback */
+.home-page [hidden] {
+    display: none;
+}
+
+.home-page .home-featured-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.home-page button.btn {
+    border: 0;
+    font: inherit;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.home-page .home-featured-controls .btn {
+    margin-right: 0;
+}
+
+.home-page button:disabled {
+    opacity: .5;
+    cursor: default;
+}
+
+.home-page .btn:focus-visible,
+.home-page .movie-card:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 4px;
+}
+
+.home-page .movie-card {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.home-page .home-grid-message {
+    grid-column: 1 / -1;
+    color: #bbb;
+}
+
+.home-page .home-poster-fallback {
+    height: 265px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: #bbb;
+    background: #292c33;
+    text-align: center;
+}
+
+@media (max-width: 600px) {
+    .home-page .home-poster-fallback {
+        height: 220px;
+    }
+
+    .home-page .footer-content h2 {
+        font-size: 35px;
+    }
+}

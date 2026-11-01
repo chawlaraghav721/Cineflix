@@ -422,6 +422,16 @@ a {
     cursor: not-allowed;
 }
 
+.details-watchlist-status {
+    color: #aaa;
+    line-height: 1.5;
+    margin-top: 12px;
+}
+
+.details-watchlist-status:empty {
+    display: none;
+}
+
 .trailer-modal {
     position: fixed;
     inset: 0;

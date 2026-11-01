@@ -42,6 +42,15 @@
         return readIds() || [];
     }
 
+    function isStorageAvailable() {
+        try {
+            window.localStorage.getItem(STORAGE_KEY);
+            return true;
+        } catch (error) {
+            return false;
+        }
+    }
+
     function addToMyList(id) {
         if (!isValidId(id)) return false;
         const ids = readIds();
@@ -72,6 +81,7 @@
         addToMyList,
         removeFromMyList,
         clearMyList,
-        isInMyList
+        isInMyList,
+        isStorageAvailable
     };
 }());

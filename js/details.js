@@ -12,6 +12,7 @@
     const director = document.getElementById("details-director");
     const errorMessage = document.getElementById("details-error");
     const watchlistButton = document.getElementById("watchlist-button");
+    const watchlistStatus = document.getElementById("watchlist-status");
     const trailerButton = document.getElementById("trailer-button");
     const trailerModal = document.getElementById("trailer-modal");
     const closeTrailerButton = document.getElementById("close-trailer");
@@ -35,6 +36,7 @@
 
     function showError(message, type) {
         currentItem = null;
+        setWatchlistStatus("");
         watchlistButton.disabled = true;
         watchlistButton.textContent = "Add to My List";
         trailerButton.hidden = true;
@@ -142,16 +144,29 @@
     }
 
     function refreshWatchlistButton() {
-        const connected = isMyListConnected() && currentItem;
-        watchlistButton.disabled = !connected;
-        if (!connected) {
+        if (!isMyListConnected() || !currentItem) {
+            watchlistButton.disabled = true;
             watchlistButton.textContent = "Add to My List";
             watchlistButton.setAttribute("aria-label", "Add to My List (unavailable)");
             return;
         }
+
+        if (!isMyListStorageAvailable()) {
+            watchlistButton.disabled = true;
+            watchlistButton.textContent = "My List unavailable";
+            watchlistButton.setAttribute("aria-label", "My List unavailable");
+            setWatchlistStatus("Browser storage is unavailable. Enable browser storage to use My List.");
+            return;
+        }
+
+        watchlistButton.disabled = false;
         const saved = myList.isInMyList(currentItem.id);
         watchlistButton.textContent = saved ? "Remove from My List" : "Add to My List";
         watchlistButton.setAttribute("aria-label", watchlistButton.textContent);
+    }
+
+    function setWatchlistStatus(message) {
+        watchlistStatus.textContent = message;
     }
 
     function isMyListConnected() {
@@ -160,6 +175,15 @@
             typeof myList.addToMyList === "function" &&
             typeof myList.removeFromMyList === "function" &&
             typeof myList.isInMyList === "function";
+    }
+
+    function isMyListStorageAvailable() {
+        try {
+            if (typeof myList.isStorageAvailable === "function") return myList.isStorageAvailable();
+            return Boolean(window.localStorage);
+        } catch (error) {
+            return false;
+        }
     }
 
     function render(item) {
@@ -172,6 +196,7 @@
 
         closeTrailer(false);
         currentItem = item;
+        setWatchlistStatus("");
         title.textContent = optionalText(item.title) || "Untitled";
         description.textContent = optionalText(item.description) || "Information unavailable.";
         cast.textContent = Array.isArray(item.cast) ? item.cast.map(optionalText).filter(Boolean).join(", ") : optionalText(item.cast);
@@ -195,6 +220,7 @@
 
     function connectMyList(api) {
         myList = api || null;
+        setWatchlistStatus("");
         refreshWatchlistButton();
     }
 
@@ -262,9 +288,39 @@
 
     watchlistButton.addEventListener("click", function () {
         if (!isMyListConnected() || !currentItem) return;
-        const saved = myList.isInMyList(currentItem.id);
-        const result = saved ? myList.removeFromMyList(currentItem.id) : myList.addToMyList(currentItem.id);
-        if (result !== false) refreshWatchlistButton();
+
+        if (!isMyListStorageAvailable()) {
+            refreshWatchlistButton();
+            return;
+        }
+
+        let wasSaved = false;
+        let succeeded = false;
+        try {
+            wasSaved = myList.isInMyList(currentItem.id);
+            succeeded = wasSaved
+                ? myList.removeFromMyList(currentItem.id)
+                : myList.addToMyList(currentItem.id);
+        } catch (error) {
+            succeeded = false;
+        }
+
+        if (succeeded !== true) {
+            if (!isMyListStorageAvailable()) {
+                setWatchlistStatus("Browser storage is unavailable. Enable browser storage to use My List.");
+            } else {
+                setWatchlistStatus(wasSaved
+                    ? "Could not remove this title from My List. Please try again."
+                    : "Could not add this title to My List. Please try again.");
+            }
+            refreshWatchlistButton();
+            return;
+        }
+
+        refreshWatchlistButton();
+        setWatchlistStatus(wasSaved
+            ? (optionalText(currentItem.title) || "This title") + " was removed from My List."
+            : (optionalText(currentItem.title) || "This title") + " was added to My List.");
     });
 
     // Integration API: getSelectedId(), render(item), showLoading(), and showError(message, type?).

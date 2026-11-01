@@ -21,6 +21,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (!myList || typeof myList.getMyListIds !== "function") {
                     throw new Error("My List storage API is unavailable.");
                 }
+                if (typeof myList.isStorageAvailable === "function" && !myList.isStorageAvailable()) {
+                    throw new Error("Browser storage is unavailable.");
+                }
                 count = myList.getMyListIds().length;
             } catch (error) {
                 badge.textContent = "\u2014";
@@ -37,7 +40,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (badge.dataset.countInitialized !== "true") {
             window.addEventListener("cineflix:list-updated", updateMyListCount);
-            window.addEventListener("storage", updateMyListCount);
+            window.addEventListener("storage", function (event) {
+                if (event.key === null || event.key === "cineflixMyList") updateMyListCount();
+            });
             window.addEventListener("pageshow", updateMyListCount);
             badge.dataset.countInitialized = "true";
         }

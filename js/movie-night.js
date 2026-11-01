@@ -15,7 +15,16 @@ document.addEventListener("DOMContentLoaded", function () {
                 Number.isInteger(saved.voters) &&
                 saved.voters >= 2 && saved.voters <= 10 &&
                 typeof saved.started === "boolean") {
-                return saved;
+                return {
+                    selected: saved.selected.map(function (movie) {
+                        return typeof movie === "string" ? { title: movie } : movie;
+                    }).filter(function (movie) {
+                        return movie && typeof movie.title === "string" && movie.title.trim();
+                    }),
+                    voters: saved.voters,
+                    votes: saved.votes.filter(function (vote) { return typeof vote === "string"; }),
+                    started: saved.started
+                };
             }
         } catch (error) {
             // Invalid or unavailable browser storage starts a new session.
@@ -34,6 +43,73 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     const state = loadState();
+
+    function movieIdentity(movie) {
+        return typeof movie.id === "string" && movie.id
+            ? movie.id
+            : "legacy:" + movie.title;
+    }
+
+    function normalizeSelectionsWithCatalogue(movies) {
+        const usedIds = new Set();
+        let changed = false;
+        const catalogueById = new Map(movies.map(function (movie) { return [movie.id, movie]; }));
+
+        state.selected = state.selected.map(function (savedMovie) {
+            const title = savedMovie.title.trim();
+            let catalogueMovie = typeof savedMovie.id === "string"
+                ? catalogueById.get(savedMovie.id)
+                : null;
+            if (!catalogueMovie) {
+                const normalizedTitle = title.toLocaleLowerCase();
+                catalogueMovie = movies.find(function (movie) {
+                    return movie.title.trim().toLocaleLowerCase() === normalizedTitle && !usedIds.has(movie.id);
+                });
+            }
+
+            const movie = catalogueMovie || {};
+            const normalized = {
+                id: movie.id || (typeof savedMovie.id === "string" ? savedMovie.id : null),
+                title: movie.title || title,
+                poster: savedMovie.poster || movie.poster || "",
+                meta: savedMovie.meta || [movie.year, movie.genre].filter(Boolean).join(" • ")
+            };
+            if (normalized.id) usedIds.add(normalized.id);
+            if (normalized.id !== savedMovie.id || normalized.title !== savedMovie.title ||
+                normalized.poster !== savedMovie.poster || normalized.meta !== savedMovie.meta) {
+                changed = true;
+            }
+            return normalized;
+        });
+
+        const selectedById = new Set(state.selected.map(movieIdentity));
+        state.votes = state.votes.map(function (vote) {
+            if (selectedById.has(vote)) return vote;
+            const selectedMovie = state.selected.find(function (movie) { return movie.title === vote; });
+            if (selectedMovie) {
+                changed = true;
+                return movieIdentity(selectedMovie);
+            }
+            return vote;
+        });
+
+        if (changed) saveState(state);
+    }
+
+    function loadMovieCatalogueForMigration() {
+        if (!window.CineFlixCatalogue || typeof window.CineFlixCatalogue.loadCatalogue !== "function") {
+            return Promise.resolve();
+        }
+        return window.CineFlixCatalogue.loadCatalogue().then(function (catalogue) {
+            if (catalogue && Array.isArray(catalogue.movies)) {
+                normalizeSelectionsWithCatalogue(catalogue.movies.filter(function (movie) {
+                    return movie && movie.type === "movie" && typeof movie.id === "string";
+                }));
+            }
+        }).catch(function () {
+            // Legacy title-based sessions remain usable if catalogue loading fails.
+        });
+    }
 
     // The existing Movies page becomes a selectable catalogue only in Movie Night mode.
     function setupMovieSelection() {
@@ -70,8 +146,9 @@ document.addEventListener("DOMContentLoaded", function () {
             continueButton.disabled = state.selected.length !== 3;
             grid.querySelectorAll(".movie-card").forEach(function (card) {
                 const title = card.querySelector("h3")?.textContent.trim();
+                const id = card.dataset.id;
                 const selected = state.selected.some(function (movie) {
-                    return movie.title === title;
+                    return (id && movie.id === id) || (!movie.id && movie.title === title);
                 });
                 card.classList.toggle("night-selected", selected);
                 if (title) card.setAttribute("aria-label", (selected ? "Remove " : "Select ") + title);
@@ -79,6 +156,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         document.addEventListener("cineflix:movies-rendered", refreshSelection);
+        loadMovieCatalogueForMigration().then(refreshSelection);
 
         if (state.started) {
             count.textContent = "Voting has already started. Reset the session before changing movies.";
@@ -93,17 +171,19 @@ document.addEventListener("DOMContentLoaded", function () {
             event.preventDefault(); // Do not open details while selecting a movie.
 
             const title = card.querySelector("h3")?.textContent.trim();
+            const id = card.dataset.id;
             const image = card.querySelector("img");
-            if (!title || !image) return;
+            if (!title || !id || !image) return;
 
             const existing = state.selected.findIndex(function (movie) {
-                return movie.title === title;
+                return movieIdentity(movie) === id;
             });
 
             if (existing !== -1) {
                 state.selected.splice(existing, 1);
             } else if (state.selected.length < 3) {
                 state.selected.push({
+                    id: id,
                     title: title,
                     poster: image.getAttribute("src"),
                     meta: card.querySelector(".movie-info p")?.textContent.trim() || ""
@@ -151,7 +231,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 button.textContent = "Vote for " + movie.title;
                 button.addEventListener("click", function () {
                     if (!state.started || state.votes.length >= state.voters) return;
-                    state.votes.push(movie.title);
+                    state.votes.push(movieIdentity(movie));
                     if (saveState(state)) render();
                     else state.votes.pop();
                 });
@@ -168,8 +248,11 @@ document.addEventListener("DOMContentLoaded", function () {
         function showResults() {
             const counts = state.selected.map(function (movie) {
                 return {
+                    id: movieIdentity(movie),
                     title: movie.title,
-                    count: state.votes.filter(function (vote) { return vote === movie.title; }).length
+                    count: state.votes.filter(function (vote) {
+                        return vote === movieIdentity(movie);
+                    }).length
                 };
             });
             const highest = Math.max(...counts.map(function (item) { return item.count; }));
@@ -258,6 +341,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         render();
+        loadMovieCatalogueForMigration().then(render);
     }
 
     if (document.body.dataset.page === "movie-night") {

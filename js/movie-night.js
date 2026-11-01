@@ -142,7 +142,9 @@ document.addEventListener("DOMContentLoaded", function () {
         section.parentNode.insertBefore(banner, section);
 
         function refreshSelection() {
-            count.textContent = state.selected.length + " of 3 movies selected. Click a card to select or remove it.";
+            count.textContent = state.started
+                ? "Voting has already started. Reset the session before changing movies."
+                : state.selected.length + " of 3 movies selected. Use Enter or Space to select or remove a movie.";
             continueButton.disabled = state.selected.length !== 3;
             grid.querySelectorAll(".movie-card").forEach(function (card) {
                 const title = card.querySelector("h3")?.textContent.trim();
@@ -151,32 +153,25 @@ document.addEventListener("DOMContentLoaded", function () {
                     return (id && movie.id === id) || (!movie.id && movie.title === title);
                 });
                 card.classList.toggle("night-selected", selected);
-                if (title) card.setAttribute("aria-label", (selected ? "Remove " : "Select ") + title);
+                card.setAttribute("role", "checkbox");
+                card.setAttribute("aria-checked", selected ? "true" : "false");
+                card.setAttribute("aria-disabled", state.started ? "true" : "false");
+                if (title) {
+                    card.setAttribute("aria-label", (selected ? "Remove " : "Select ") + title + " " +
+                        (selected ? "from" : "for") + " Movie Night");
+                }
             });
         }
 
-        document.addEventListener("cineflix:movies-rendered", refreshSelection);
-        loadMovieCatalogueForMigration().then(refreshSelection);
-
-        if (state.started) {
-            count.textContent = "Voting has already started. Reset the session before changing movies.";
-            continueButton.disabled = false;
-            grid.style.pointerEvents = "none";
-            return;
-        }
-
-        grid.addEventListener("click", function (event) {
-            const card = event.target.closest(".movie-card");
-            if (!card || !grid.contains(card)) return;
-            event.preventDefault(); // Do not open details while selecting a movie.
-
+        function toggleMovieSelection(card) {
+            if (state.started) return;
             const title = card.querySelector("h3")?.textContent.trim();
             const id = card.dataset.id;
             const image = card.querySelector("img");
             if (!title || !id || !image) return;
 
             const existing = state.selected.findIndex(function (movie) {
-                return movieIdentity(movie) === id;
+                return movieIdentity(movie) === id || (!movie.id && movie.title === title);
             });
 
             if (existing !== -1) {
@@ -194,6 +189,31 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             if (saveState(state)) refreshSelection();
+        }
+
+        document.addEventListener("cineflix:movies-rendered", refreshSelection);
+        loadMovieCatalogueForMigration().then(refreshSelection);
+
+        if (state.started) {
+            continueButton.disabled = false;
+            grid.style.pointerEvents = "none";
+            refreshSelection();
+            return;
+        }
+
+        grid.addEventListener("click", function (event) {
+            const card = event.target.closest(".movie-card");
+            if (!card || !grid.contains(card)) return;
+            event.preventDefault(); // Do not open details while selecting a movie.
+            toggleMovieSelection(card);
+        });
+
+        grid.addEventListener("keydown", function (event) {
+            if (event.key !== " " && event.key !== "Spacebar") return;
+            const card = event.target.closest(".movie-card");
+            if (!card || !grid.contains(card)) return;
+            event.preventDefault();
+            toggleMovieSelection(card);
         });
         refreshSelection();
     }

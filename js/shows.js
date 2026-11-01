@@ -9,17 +9,18 @@
         const searchInput = document.getElementById("show-search");
         const genreFilter = document.getElementById("show-genre-filter");
         const sortSelect = document.getElementById("show-sort");
+        const resetButton = document.getElementById("show-reset-filters");
         const loadingMessage = document.getElementById("shows-loading");
         const errorMessage = document.getElementById("shows-error");
         const resultCount = document.getElementById("show-results");
         const emptyState = document.getElementById("shows-empty-state");
 
-        if (!grid || !searchInput || !genreFilter || !sortSelect ||
+        if (!grid || !searchInput || !genreFilter || !sortSelect || !resetButton ||
             !loadingMessage || !errorMessage || !resultCount || !emptyState) {
             return;
         }
 
-        const controls = [searchInput, genreFilter, sortSelect];
+        const controls = [searchInput, genreFilter, sortSelect, resetButton];
         controls.forEach(function (control) { control.disabled = true; });
 
         function showLoadError() {
@@ -146,6 +147,12 @@
                 renderShows(shows);
             });
             sortSelect.addEventListener("change", function () {
+                renderShows(shows);
+            });
+            resetButton.addEventListener("click", function () {
+                searchInput.value = "";
+                genreFilter.value = "";
+                sortSelect.value = "default";
                 renderShows(shows);
             });
 

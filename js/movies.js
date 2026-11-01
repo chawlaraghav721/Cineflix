@@ -9,17 +9,18 @@
         const searchInput = document.getElementById("movie-search");
         const genreFilter = document.getElementById("movie-genre-filter");
         const sortSelect = document.getElementById("movie-sort");
+        const resetButton = document.getElementById("movie-reset-filters");
         const loadingMessage = document.getElementById("movies-loading");
         const errorMessage = document.getElementById("movies-error");
         const resultCount = document.getElementById("movie-results");
         const emptyState = document.getElementById("movies-empty-state");
 
-        if (!grid || !searchInput || !genreFilter || !sortSelect ||
+        if (!grid || !searchInput || !genreFilter || !sortSelect || !resetButton ||
             !loadingMessage || !errorMessage || !resultCount || !emptyState) {
             return;
         }
 
-        const controls = [searchInput, genreFilter, sortSelect];
+        const controls = [searchInput, genreFilter, sortSelect, resetButton];
         controls.forEach(function (control) { control.disabled = true; });
 
         function showLoadError() {
@@ -149,6 +150,12 @@
                 renderMovies(movies);
             });
             sortSelect.addEventListener("change", function () {
+                renderMovies(movies);
+            });
+            resetButton.addEventListener("click", function () {
+                searchInput.value = "";
+                genreFilter.value = "";
+                sortSelect.value = "default";
                 renderMovies(movies);
             });
 

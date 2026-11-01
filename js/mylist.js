@@ -143,6 +143,7 @@
         search.focus();
     });
     window.addEventListener("cineflix:list-updated", render);
+    window.addEventListener("pageshow", render);
     window.addEventListener("storage", function (event) {
         if (event.key === null || event.key === "cineflixMyList") render();
     });

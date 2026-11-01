@@ -96,6 +96,8 @@ a {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
     padding: 12px 6%;
     position: sticky;
     top: 0;
@@ -117,8 +119,14 @@ a {
     object-fit: contain;
 }
 
+.navbar nav {
+    min-width: 0;
+}
+
 .nav-links {
     display: flex;
+    flex-wrap: wrap;
+    align-items: center;
     gap: 25px;
     list-style: none;
 }
@@ -657,6 +665,10 @@ body.trailer-open {
 
 .movie-card:hover {
     transform: translateY(-4px);
+}
+
+.movie-card img[hidden] {
+    display: none;
 }
 
 .movie-card img {

@@ -39,6 +39,8 @@ loginForm.addEventListener("submit", function(event) {
     emailError.textContent = "";
     passwordError.textContent = "";
     loginFeedback.textContent = "";
+    emailInput.removeAttribute("aria-invalid");
+    passwordInput.removeAttribute("aria-invalid");
 
     let isValid = true;
 
@@ -49,18 +51,21 @@ loginForm.addEventListener("submit", function(event) {
     // Check if email is empty
     if (email === "") {
         emailError.textContent = "Please enter your email.";
+        emailInput.setAttribute("aria-invalid", "true");
         isValid = false;
     }
 
     // Check if email format is incorrect
     else if (!emailPattern.test(email)) {
         emailError.textContent = "Please enter a valid email address.";
+        emailInput.setAttribute("aria-invalid", "true");
         isValid = false;
     }
 
     // Check if password is empty
     if (passwordInput.value.trim() === "") {
         passwordError.textContent = "Please enter your password.";
+        passwordInput.setAttribute("aria-invalid", "true");
         isValid = false;
     }
 
@@ -91,6 +96,8 @@ loginForm.addEventListener("submit", function(event) {
                 "Demo sign-in successful! Welcome to CineFlix.";
 
             loginFeedback.style.color = "#4ade80";
+
+            window.dispatchEvent(new Event("cineflix:session-updated"));
 
             // Clear password after successful sign-in
             passwordInput.value = "";

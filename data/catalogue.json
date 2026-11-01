@@ -7,7 +7,10 @@
       "year": 2025,
       "genre": "Thriller",
       "poster": "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=500&q=80",
-      "description": ""
+      "description": "",
+      "cast": [],
+      "director": "",
+      "trailerUrl": ""
     },
     {
       "id": "movie-002",
@@ -16,7 +19,10 @@
       "year": 2024,
       "genre": "Sci-Fi",
       "poster": "https://images.unsplash.com/photo-1446776877081-d282a0f896e2?auto=format&fit=crop&w=500&q=80",
-      "description": ""
+      "description": "",
+      "cast": [],
+      "director": "",
+      "trailerUrl": ""
     },
     {
       "id": "movie-003",
@@ -25,7 +31,10 @@
       "year": 2025,
       "genre": "Drama",
       "poster": "https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=500&q=80",
-      "description": ""
+      "description": "",
+      "cast": [],
+      "director": "",
+      "trailerUrl": ""
     },
     {
       "id": "movie-004",
@@ -34,15 +43,12 @@
       "year": 2024,
       "genre": "Action / Thriller",
       "poster": "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=500&q=80",
-      "description": "A former street racer is pulled into a dangerous mission after discovering that the people behind his old life are planning something bigger than anyone expected.",
+      "description": "",
       "rating": 8.1,
-      "cast": [
-        "Arjun Mehta",
-        "Sara Khan",
-        "Daniel Reed"
-      ],
-      "director": "Ryan Cole",
-      "duration": "2h 08m"
+      "cast": [],
+      "director": "",
+      "duration": "2h 08m",
+      "trailerUrl": ""
     },
     {
       "id": "movie-005",
@@ -51,7 +57,10 @@
       "year": 2025,
       "genre": "Comedy",
       "poster": "https://images.unsplash.com/photo-1485095329183-d0797cdc5676?auto=format&fit=crop&w=500&q=80",
-      "description": ""
+      "description": "",
+      "cast": [],
+      "director": "",
+      "trailerUrl": ""
     },
     {
       "id": "movie-006",
@@ -60,7 +69,10 @@
       "year": 2023,
       "genre": "Mystery",
       "poster": "https://images.unsplash.com/photo-1516339901601-2e1b62dc0c45?auto=format&fit=crop&w=500&q=80",
-      "description": ""
+      "description": "",
+      "cast": [],
+      "director": "",
+      "trailerUrl": ""
     },
     {
       "id": "movie-007",
@@ -69,7 +81,10 @@
       "year": 2024,
       "genre": "Action",
       "poster": "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=500&q=80",
-      "description": ""
+      "description": "",
+      "cast": [],
+      "director": "",
+      "trailerUrl": ""
     },
     {
       "id": "movie-008",
@@ -78,7 +93,10 @@
       "year": 2025,
       "genre": "Romance",
       "poster": "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=500&q=80",
-      "description": ""
+      "description": "",
+      "cast": [],
+      "director": "",
+      "trailerUrl": ""
     },
     {
       "id": "movie-009",
@@ -87,7 +105,10 @@
       "year": 2024,
       "genre": "Sci-Fi",
       "poster": "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=500&q=80",
-      "description": ""
+      "description": "",
+      "cast": [],
+      "director": "",
+      "trailerUrl": ""
     },
     {
       "id": "movie-010",
@@ -96,7 +117,10 @@
       "year": 2023,
       "genre": "Comedy",
       "poster": "https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=500&q=80",
-      "description": ""
+      "description": "",
+      "cast": [],
+      "director": "",
+      "trailerUrl": ""
     },
     {
       "id": "movie-011",
@@ -105,7 +129,15 @@
       "year": 2010,
       "genre": "Thriller",
       "poster": "https://image.tmdb.org/t/p/w500/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg",
-      "description": ""
+      "description": "A thief who steals secrets from dreams is offered a chance to return home if his team can plant an idea in a target's subconscious.",
+      "cast": [
+        "Leonardo DiCaprio",
+        "Joseph Gordon-Levitt",
+        "Elliot Page",
+        "Tom Hardy"
+      ],
+      "director": "Christopher Nolan",
+      "trailerUrl": "https://www.youtube.com/embed/Qwe6qXFTdgc"
     },
     {
       "id": "movie-012",
@@ -114,7 +146,15 @@
       "year": 2014,
       "genre": "Sci-Fi",
       "poster": "https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
-      "description": ""
+      "description": "With Earth becoming uninhabitable, a former pilot joins a mission through a wormhole to search for a new home for humanity.",
+      "cast": [
+        "Matthew McConaughey",
+        "Anne Hathaway",
+        "Jessica Chastain",
+        "Michael Caine"
+      ],
+      "director": "Christopher Nolan",
+      "trailerUrl": "https://www.youtube.com/embed/zSWdZVtXT7E"
     },
     {
       "id": "movie-013",
@@ -123,7 +163,15 @@
       "year": 2008,
       "genre": "Drama",
       "poster": "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
-      "description": ""
+      "description": "Batman, Lieutenant Gordon and district attorney Harvey Dent confront the Joker, whose campaign of chaos tests Gotham's hopes for justice.",
+      "cast": [
+        "Christian Bale",
+        "Heath Ledger",
+        "Aaron Eckhart",
+        "Gary Oldman"
+      ],
+      "director": "Christopher Nolan",
+      "trailerUrl": "https://www.youtube.com/embed/kmJLuwP3MbY"
     },
     {
       "id": "movie-014",
@@ -132,7 +180,15 @@
       "year": 2019,
       "genre": "Action",
       "poster": "https://image.tmdb.org/t/p/w500/or06FN3Dka5tukK1e9sl16pB3iy.jpg",
-      "description": ""
+      "description": "The surviving Avengers attempt to reverse Thanos's devastating victory and bring back the lives lost across the universe.",
+      "cast": [
+        "Robert Downey Jr.",
+        "Chris Evans",
+        "Scarlett Johansson",
+        "Mark Ruffalo"
+      ],
+      "director": "Anthony Russo, Joe Russo",
+      "trailerUrl": "https://www.youtube.com/embed/TcMBFSGVi1c"
     },
     {
       "id": "movie-015",
@@ -141,7 +197,16 @@
       "year": 2019,
       "genre": "Comedy",
       "poster": "https://m.media-amazon.com/images/M/MV5BYWZjMjk3ZTItODQ2ZC00NTY5LWE0ZDYtZTI3MjcwN2Q5NTVkXkEyXkFqcGdeQXVyODk4OTc3MTY@._V1_SY1000_CR0,0,674,1000_AL_.jpg",
-      "description": ""
+      "description": "Members of a struggling Seoul family secure jobs in a wealthy household, setting off a dangerous collision of class, deception and hidden lives.",
+      "cast": [
+        "Song Kang-ho",
+        "Lee Sun-kyun",
+        "Cho Yeo-jeong",
+        "Choi Woo-shik",
+        "Park So-dam"
+      ],
+      "director": "Bong Joon Ho",
+      "trailerUrl": "https://www.youtube.com/embed/isOGD_7hNIY"
     },
     {
       "id": "movie-016",
@@ -150,7 +215,14 @@
       "year": 2001,
       "genre": "Fantasy",
       "poster": "https://image.tmdb.org/t/p/w500/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg",
-      "description": ""
+      "description": "After her parents are transformed into pigs, Chihiro must work in a bathhouse for spirits and find a way to return her family to the human world.",
+      "cast": [
+        "Rumi Hiiragi",
+        "Miyu Irino",
+        "Mari Natsuki"
+      ],
+      "director": "Hayao Miyazaki",
+      "trailerUrl": "https://www.youtube.com/embed/fDUFP7EeXLE"
     },
     {
       "id": "movie-017",
@@ -159,7 +231,15 @@
       "year": 1997,
       "genre": "Romance",
       "poster": "https://image.tmdb.org/t/p/w500/9xjZS2rlVxm8SFx8kPC3aIGCOYQ.jpg",
-      "description": ""
+      "description": "A young aristocrat and a penniless artist fall in love aboard the Titanic, as its maiden voyage turns into a struggle for survival.",
+      "cast": [
+        "Leonardo DiCaprio",
+        "Kate Winslet",
+        "Billy Zane",
+        "Kathy Bates"
+      ],
+      "director": "James Cameron",
+      "trailerUrl": "https://www.youtube.com/embed/tXsyGFXjzcY"
     },
     {
       "id": "movie-018",
@@ -168,7 +248,15 @@
       "year": 2009,
       "genre": "Adventure",
       "poster": "https://image.tmdb.org/t/p/w500/kyeqWdyUXW608qlYkRqosgbbJyK.jpg",
-      "description": ""
+      "description": "A former Marine operating an avatar on Pandora becomes torn between a human mining mission and the Na'vi people whose home it threatens.",
+      "cast": [
+        "Sam Worthington",
+        "Zoe Saldaña",
+        "Sigourney Weaver",
+        "Stephen Lang"
+      ],
+      "director": "James Cameron",
+      "trailerUrl": "https://www.youtube.com/embed/5PSNL1qE6VY"
     },
     {
       "id": "movie-019",
@@ -177,7 +265,15 @@
       "year": 2023,
       "genre": "Biography",
       "poster": "https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
-      "description": ""
+      "description": "Physicist J. Robert Oppenheimer leads the wartime effort to develop the atomic bomb and later faces scrutiny over his political ties and influence.",
+      "cast": [
+        "Cillian Murphy",
+        "Emily Blunt",
+        "Matt Damon",
+        "Robert Downey Jr."
+      ],
+      "director": "Christopher Nolan",
+      "trailerUrl": "https://www.youtube.com/embed/uYPbbksJxIg"
     },
     {
       "id": "movie-020",
@@ -186,7 +282,15 @@
       "year": 1999,
       "genre": "Action",
       "poster": "https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
-      "description": ""
+      "description": "A computer hacker discovers that his everyday world is a simulation and joins a rebellion against the machines controlling humanity.",
+      "cast": [
+        "Keanu Reeves",
+        "Laurence Fishburne",
+        "Carrie-Anne Moss",
+        "Hugo Weaving"
+      ],
+      "director": "Lana Wachowski, Lilly Wachowski",
+      "trailerUrl": "https://www.youtube.com/embed/nUEQNVV3Gfs"
     }
   ],
   "shows": [
@@ -197,7 +301,15 @@
       "year": 2016,
       "genre": "Sci-Fi",
       "poster": "https://images.unsplash.com/photo-1534447677768-be436bb09401",
-      "description": ""
+      "description": "When a boy disappears in Hawkins, Indiana, his friends and family uncover secret experiments, a girl with extraordinary powers and a dangerous parallel world.",
+      "cast": [
+        "Winona Ryder",
+        "David Harbour",
+        "Millie Bobby Brown",
+        "Finn Wolfhard"
+      ],
+      "director": "The Duffer Brothers, Shawn Levy (season 1)",
+      "trailerUrl": "https://www.youtube.com/embed/b9EkMc79ZSU"
     },
     {
       "id": "show-002",
@@ -206,7 +318,15 @@
       "year": 2022,
       "genre": "Mystery",
       "poster": "https://images.unsplash.com/photo-1505635552518-3448ff116af3",
-      "description": ""
+      "description": "At Nevermore Academy, Wednesday Addams investigates a series of murders while learning to control her psychic abilities and unravel her family's past.",
+      "cast": [
+        "Jenna Ortega",
+        "Emma Myers",
+        "Gwendoline Christie",
+        "Catherine Zeta-Jones"
+      ],
+      "director": "Tim Burton, Gandja Monteiro, James Marshall (season 1)",
+      "trailerUrl": "https://www.youtube.com/embed/Di310WS8zLk"
     },
     {
       "id": "show-003",
@@ -215,7 +335,15 @@
       "year": 2023,
       "genre": "Drama / Horror",
       "poster": "https://movie.7days.ru/images/5b/5b6b035385888121e4932975bf6fe2d0bfe9d409.jpg",
-      "description": ""
+      "description": "Twenty years after a fungal outbreak devastates civilization, Joel escorts teenager Ellie across the United States on a journey that may change humanity's future.",
+      "cast": [
+        "Pedro Pascal",
+        "Bella Ramsey",
+        "Gabriel Luna",
+        "Anna Torv"
+      ],
+      "director": "Craig Mazin (pilot)",
+      "trailerUrl": "https://www.youtube.com/embed/uLtkt8BonwM"
     },
     {
       "id": "show-004",
@@ -224,7 +352,10 @@
       "year": 2019,
       "genre": "Action",
       "poster": "https://images.unsplash.com/photo-1635805737707-575885ab0820",
-      "description": ""
+      "description": "",
+      "cast": [],
+      "director": "",
+      "trailerUrl": ""
     },
     {
       "id": "show-005",
@@ -233,7 +364,15 @@
       "year": 2021,
       "genre": "Thriller",
       "poster": "https://img.koreatimes.co.kr/upload/newsV2/images/202108/cfa51f267af849608dd121e5a9f336e1.jpg",
-      "description": ""
+      "description": "People facing severe financial hardship enter a competition for a huge cash prize, only to discover that its childhood games carry deadly consequences.",
+      "cast": [
+        "Lee Jung-jae",
+        "Park Hae-soo",
+        "Jung Ho-yeon",
+        "Wi Ha-joon"
+      ],
+      "director": "Hwang Dong-hyuk",
+      "trailerUrl": "https://www.youtube.com/embed/oqxAJKy0ii4"
     },
     {
       "id": "show-006",
@@ -242,7 +381,16 @@
       "year": 2026,
       "genre": "Thriller",
       "poster": "https://www.moviedigger.it/wp-content/uploads/2025/12/Fuga-poster-miniserie-netflix.jpeg",
-      "description": ""
+      "description": "A father searching for his runaway daughter is drawn into a violent underworld and a murder investigation that expose secrets threatening his family.",
+      "cast": [
+        "James Nesbitt",
+        "Ruth Jones",
+        "Minnie Driver",
+        "Alfred Enoch",
+        "Ellie de Lange"
+      ],
+      "director": "Nimer Rashed (episodes 1-3, 7-8)",
+      "trailerUrl": "https://www.youtube.com/embed/-qSZJD2CrQY"
     },
     {
       "id": "show-007",
@@ -251,7 +399,15 @@
       "year": 2026,
       "genre": "Drama",
       "poster": "https://s4.afisha.ru/mediastorage/90/c6/a6f94df440fa4016a4833652c690.jpg",
-      "description": ""
+      "description": "An estranged journalist and detective investigate a murder in their Georgia hometown, each suspecting the other while confronting secrets from their past.",
+      "cast": [
+        "Tessa Thompson",
+        "Jon Bernthal",
+        "Pablo Schreiber",
+        "Sunita Mani"
+      ],
+      "director": "William Oldroyd, Anja Marquardt",
+      "trailerUrl": "https://www.youtube.com/embed/8_szlvBLll0"
     },
     {
       "id": "show-008",
@@ -260,7 +416,15 @@
       "year": 2026,
       "genre": "Mystery",
       "poster": "https://d32qys9a6wm9no.cloudfront.net/images/tvs/poster/da/f29ec3274bfae024f5e009af59cd81e7_original.jpg",
-      "description": ""
+      "description": "After her boyfriend disappears from a train in France, Alice searches for him and uncovers dangerous secrets about the man she thought she knew.",
+      "cast": [
+        "Kaley Cuoco",
+        "Sam Claflin",
+        "Matthias Schweighöfer",
+        "Karin Viard"
+      ],
+      "director": "Barnaby Thompson",
+      "trailerUrl": "https://www.youtube.com/embed/NkO3NPYvBgY"
     },
     {
       "id": "show-009",
@@ -269,7 +433,17 @@
       "year": 2026,
       "genre": "Action",
       "poster": "https://cdn.moviefone.com/admin-uploads/highlights/images/neagley-season-1-official-poster_1784748038.webp",
-      "description": ""
+      "description": "Chicago private investigator Frances Neagley investigates a friend's suspicious death, drawing on her military experience as she pursues those responsible.",
+      "cast": [
+        "Maria Sten",
+        "Greyston Holt",
+        "Adeline Rudolph",
+        "Jasper Jones",
+        "Matthew Del Negro",
+        "Damon Herriman"
+      ],
+      "director": "Sam Hill (episode 1)",
+      "trailerUrl": "https://www.youtube.com/embed/BOzNaa_o9_g"
     },
     {
       "id": "show-010",
@@ -278,7 +452,15 @@
       "year": 2026,
       "genre": "Horror",
       "poster": "https://www.cinemacafe.net/imgs/ogp_f/821850.jpg",
-      "description": ""
+      "description": "An isolated teenager raised by a controlling religious mother discovers telekinetic powers as bullying and cruelty push her toward a devastating confrontation.",
+      "cast": [
+        "Summer H. Howell",
+        "Samantha Sloyan",
+        "Siena Agudong",
+        "Amber Midthunder"
+      ],
+      "director": "Mike Flanagan (episodes 1-2, 7-8), Kate Siegel (episode 3), Axelle Carolyn (episode 4), Kyra Sedgwick (episode 5), Hiromi Kamata (episode 6)",
+      "trailerUrl": "https://www.youtube.com/embed/jkUw2nh6fT0"
     }
   ]
 }

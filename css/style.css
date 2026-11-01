@@ -1310,6 +1310,10 @@ body.trailer-open {
     width: 100%;
 }
 
+.browse-retry {
+    margin: -4px 0 14px;
+}
+
 .browse-reset:hover:not(:disabled) {
     border-color: #ff5964;
     background: #29222a;

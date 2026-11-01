@@ -9,6 +9,7 @@
     <script src="js/my-list-storage.js" defer></script>
     <script src="js/navigation.js" defer></script>
     <script src="js/catalogue.js" defer></script>
+    <script src="js/catalogue-browse.js" defer></script>
     <script src="js/browse-utils.js" defer></script>
     <script src="js/shows.js" defer></script>
 </head>
@@ -93,6 +94,7 @@
 
         <p id="shows-loading" class="browse-status" role="status">Loading TV shows...</p>
         <p id="shows-error" class="browse-error" role="alert" hidden></p>
+        <button id="shows-retry" class="browse-reset browse-retry" type="button" hidden>Retry loading TV shows</button>
         <p id="show-results" class="browse-results" role="status" aria-live="polite"></p>
         <p id="shows-empty-state" class="browse-empty" role="status" hidden>
             No TV shows match your search or filters.

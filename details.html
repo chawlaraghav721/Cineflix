@@ -57,11 +57,31 @@
                     <h2 id="personal-rating-title">Your Personal Rating</h2>
                     <p>How would you rate this title?</p>
                     <div class="rating-stars" role="group" aria-label="Choose a rating from 1 to 5 stars">
-                        <button type="button" data-rating="1" aria-label="1 star" aria-pressed="false">☆</button>
-                        <button type="button" data-rating="2" aria-label="2 stars" aria-pressed="false">☆</button>
-                        <button type="button" data-rating="3" aria-label="3 stars" aria-pressed="false">☆</button>
-                        <button type="button" data-rating="4" aria-label="4 stars" aria-pressed="false">☆</button>
-                        <button type="button" data-rating="5" aria-label="5 stars" aria-pressed="false">☆</button>
+                        <button type="button" data-rating="1" aria-label="1 star — Not for me" aria-pressed="false">
+                            <span class="rating-emoji" aria-hidden="true">😠</span>
+                            <span class="rating-value">1 star</span>
+                            <span class="rating-label">Not for me</span>
+                        </button>
+                        <button type="button" data-rating="2" aria-label="2 stars — It was okay" aria-pressed="false">
+                            <span class="rating-emoji" aria-hidden="true">😐</span>
+                            <span class="rating-value">2 stars</span>
+                            <span class="rating-label">It was okay</span>
+                        </button>
+                        <button type="button" data-rating="3" aria-label="3 stars — Good" aria-pressed="false">
+                            <span class="rating-emoji" aria-hidden="true">🙂</span>
+                            <span class="rating-value">3 stars</span>
+                            <span class="rating-label">Good</span>
+                        </button>
+                        <button type="button" data-rating="4" aria-label="4 stars — Loved it" aria-pressed="false">
+                            <span class="rating-emoji" aria-hidden="true">😍</span>
+                            <span class="rating-value">4 stars</span>
+                            <span class="rating-label">Loved it</span>
+                        </button>
+                        <button type="button" data-rating="5" aria-label="5 stars — Absolutely fantastic!" aria-pressed="false">
+                            <span class="rating-emoji" aria-hidden="true">🤩</span>
+                            <span class="rating-value">5 stars</span>
+                            <span class="rating-label">Absolutely fantastic!</span>
+                        </button>
                     </div>
                     <p id="rating-message" role="status" aria-live="polite">No rating selected yet.</p>
                     <button type="button" id="clear-rating" disabled>Clear Rating</button>

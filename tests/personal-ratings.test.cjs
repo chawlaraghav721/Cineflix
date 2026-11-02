@@ -14,7 +14,7 @@ class Element {
     constructor() {
         this.hidden = false;
         this.disabled = false;
-        this.textContent = "";
+        this._textContent = "";
         this.dataset = {};
         this.attributes = {};
         this.children = [];
@@ -24,6 +24,13 @@ class Element {
             add: name => this.classes.add(name),
             remove: name => this.classes.delete(name)
         };
+    }
+    get textContent() {
+        return this._textContent + this.children.map(child => child.textContent).join("");
+    }
+    set textContent(value) {
+        this._textContent = value;
+        this.children = [];
     }
     setAttribute(name, value) { this.attributes[name] = value; }
     getAttribute(name) { return this.attributes[name]; }
@@ -66,9 +73,15 @@ async function loadPage(options = {}) {
         elements[match[1]].hidden = /\bhidden\b/.test(match[0]);
         elements[match[1]].disabled = /\bdisabled\b/.test(match[0]);
     }
-    const stars = [...html.matchAll(/<button[^>]+data-rating="(\d+)"[^>]*>/g)].map(match => {
+    const stars = [...html.matchAll(/<button[^>]+data-rating="(\d+)"[^>]*>([\s\S]*?)<\/button>/g)].map(match => {
         const star = new Element();
         star.dataset.rating = match[1];
+        star.setAttribute("aria-label", match[0].match(/aria-label="([^"]+)"/)[1]);
+        for (const span of match[2].matchAll(/<span[^>]*>([^<]*)<\/span>/g)) {
+            const child = new Element();
+            child.textContent = span[1];
+            star.appendChild(child);
+        }
         return star;
     });
     const section = new Element();
@@ -125,7 +138,7 @@ test("each catalogue movie and show can save every rating from 1 to 5", async ()
         for (let rating = 1; rating <= 5; rating++) {
             page.stars[rating - 1].click();
             assert.equal(JSON.parse(page.storage.getItem(key))[item.id], rating);
-            assert.equal(page.stars.filter(star => star.textContent === "★").length, rating);
+            assert.equal(page.stars.filter(star => star.getAttribute("aria-pressed") === "true").length, 1);
             assert.equal(page.stars[rating - 1].getAttribute("aria-pressed"), "true");
             assert.equal(page.elements["clear-rating"].disabled, false);
         }
@@ -183,13 +196,53 @@ test("failed catalogue loading leaves ratings hidden and Details error visible",
     assert.equal(page.main.getAttribute("aria-busy"), "false");
 });
 
-test("malformed storage and invalid rating values do not crash or select stars", async () => {
+test("malformed storage and invalid rating values do not crash or select emoji cards", async () => {
     for (const raw of ["broken", "null", "[]", '{"movie-004":9}', '{"movie-004":2.5}', '{"movie-004":"5"}']) {
         const page = await loadPage({ storage: storage({ [key]: raw }) });
-        assert.equal(page.stars.filter(star => star.textContent === "★").length, 0);
+        assert.equal(page.stars.filter(star => star.getAttribute("aria-pressed") === "true").length, 0);
         page.stars[0].click();
         assert.equal(JSON.parse(page.storage.getItem(key))["movie-004"], 1);
     }
+});
+
+test("emoji cards keep exact labels and accessible names after selection and clearing", async () => {
+    const choices = [
+        ["😠", "1 star", "Not for me"],
+        ["😐", "2 stars", "It was okay"],
+        ["🙂", "3 stars", "Good"],
+        ["😍", "4 stars", "Loved it"],
+        ["🤩", "5 stars", "Absolutely fantastic!"]
+    ];
+    const page = await loadPage();
+    function assertLabelsUnchanged() {
+        page.stars.forEach((card, index) => {
+            assert.deepEqual(card.children.map(child => child.textContent), choices[index]);
+            assert.equal(card.getAttribute("aria-label"), choices[index][1] + " — " + choices[index][2]);
+        });
+    }
+    assertLabelsUnchanged();
+    for (const card of page.stars) {
+        card.click();
+        assertLabelsUnchanged();
+    }
+    page.elements["clear-rating"].click();
+    assertLabelsUnchanged();
+    assert(page.stars.every(card => card.getAttribute("aria-pressed") === "false"));
+});
+
+test("changing and restoring numeric ratings selects only the matching emoji card", async () => {
+    const saved = storage({ [key]: '{"movie-004":4,"show-001":2}' });
+    const page = await loadPage({ storage: saved });
+    assert.equal(page.stars[3].getAttribute("aria-pressed"), "true");
+    page.stars[0].click();
+    assert.equal(page.stars[0].getAttribute("aria-pressed"), "true");
+    assert.equal(page.stars[3].getAttribute("aria-pressed"), "false");
+    assert.deepEqual(JSON.parse(saved.getItem(key)), { "movie-004": 1, "show-001": 2 });
+    const refreshed = await loadPage({ storage: saved });
+    assert.equal(refreshed.stars[0].getAttribute("aria-pressed"), "true");
+    refreshed.elements["clear-rating"].click();
+    assert(refreshed.stars.every(card => card.getAttribute("aria-pressed") === "false"));
+    assert.deepEqual(JSON.parse(saved.getItem(key)), { "show-001": 2 });
 });
 
 test("failed reads never overwrite existing ratings and keep Details working", async () => {

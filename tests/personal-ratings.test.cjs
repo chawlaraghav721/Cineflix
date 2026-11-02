@@ -245,6 +245,51 @@ test("changing and restoring numeric ratings selects only the matching emoji car
     assert.deepEqual(JSON.parse(saved.getItem(key)), { "show-001": 2 });
 });
 
+test("all existing numeric star ratings restore the matching movie and show emoji", async () => {
+    for (const id of ["movie-004", "show-001"]) {
+        for (let rating = 1; rating <= 5; rating++) {
+            const raw = JSON.stringify({ [id]: rating });
+            const page = await loadPage({ id, storage: storage({ [key]: raw }) });
+            assert.equal(page.storage.getItem(key), raw);
+            assert.deepEqual(
+                page.stars.map(card => card.getAttribute("aria-pressed")),
+                page.stars.map((card, index) => String(index === rating - 1))
+            );
+        }
+    }
+});
+
+test("cross-tab changes and clears refresh emoji selection without losing labels", async () => {
+    const page = await loadPage();
+    const labels = page.stars.map(card => card.textContent);
+    page.stars[0].click();
+    page.storage.setItem(key, '{"movie-004":5,"show-001":2}');
+    page.window.dispatchEvent({ type: "storage", key });
+    assert.equal(page.stars[0].getAttribute("aria-pressed"), "false");
+    assert.equal(page.stars[4].getAttribute("aria-pressed"), "true");
+    assert.equal(page.elements["clear-rating"].disabled, false);
+    page.storage.setItem(key, "{}");
+    page.window.dispatchEvent({ type: "storage", key: null });
+    assert(page.stars.every(card => card.getAttribute("aria-pressed") === "false"));
+    assert.equal(page.elements["clear-rating"].disabled, true);
+    assert.deepEqual(page.stars.map(card => card.textContent), labels);
+});
+
+test("disconnecting ratings disables all cards and reconnecting restores selection", async () => {
+    const page = await loadPage();
+    page.stars[2].click();
+    const saved = page.storage.getItem(key);
+    page.window.CineFlixRatings.connectItem(null);
+    assert.equal(page.section.hidden, true);
+    assert(page.stars.every(card => card.disabled));
+    page.stars[4].click();
+    assert.equal(page.storage.getItem(key), saved);
+    page.window.CineFlixRatings.connectItem(catalogue.movies.find(item => item.id === "movie-004"));
+    assert.equal(page.section.hidden, false);
+    assert(page.stars.every(card => !card.disabled));
+    assert.equal(page.stars[2].getAttribute("aria-pressed"), "true");
+});
+
 test("failed reads never overwrite existing ratings and keep Details working", async () => {
     const raw = '{"show-001":4}';
     const saved = storage({ [key]: raw });

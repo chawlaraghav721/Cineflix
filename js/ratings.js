@@ -31,7 +31,6 @@
     function displayRating(rating) {
         stars.forEach(function (star) {
             const starValue = Number(star.dataset.rating);
-            star.textContent = starValue <= rating ? "★" : "☆";
             star.setAttribute("aria-pressed", String(starValue === rating));
             star.disabled = !itemId;
         });

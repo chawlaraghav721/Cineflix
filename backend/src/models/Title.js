@@ -8,7 +8,7 @@ const titleSchema = new mongoose.Schema({
     title: { type: String, required: true, trim: true },
     genre: { type: String, required: true, trim: true },
     poster: { type: String, required: true },
-    description: { type: String, required: true },
+    description: { type: String, default: "" },
     year: { type: Number, min: 1 },
     rating: { type: Number, min: 0, max: 10 },
     cast: { type: [String], default: undefined },

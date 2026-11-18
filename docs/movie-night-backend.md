@@ -87,6 +87,15 @@ constitute an actual Express/cookie/JWT/CSRF integration test.
 
 ## Test commands
 
+The dormant `js/movie-night-api.js` exports a fetch client and room poller. No HTML
+loads it and no existing frontend file is changed. Creation payloads contain only
+configuration; cookies remain same-origin and no JWT or identity is stored/read.
+Mutations are never automatically replayed. Errors/204/abort are explicit.
+Polling is serial, backs off on transient errors (2.5s normal / 15s cap), ignores
+older revisions, stops on completion/access failure and aborts on stop. Consumers
+must stop it on logout/navigation and explicitly restart after a completed round
+is reset. It does not imply any unavailable backend is active.
+
 ```powershell
 node --test backend/tests/movie-night-rules.test.cjs backend/tests/movie-night-session-service.test.cjs backend/tests/movie-night-voting-service.test.cjs
 node --test

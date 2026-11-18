@@ -4,6 +4,7 @@ const express = require("express");
 const path = require("node:path");
 const { errorHandler, notFoundHandler } = require("./middleware/errorHandler");
 const healthRoutes = require("./routes/healthRoutes");
+const titleRoutes = require("./routes/titleRoutes");
 
 const repositoryRoot = path.resolve(__dirname, "../..");
 
@@ -34,6 +35,7 @@ function createApp() {
     app.use(express.json({ limit: "100kb" }));
 
     app.use("/api", healthRoutes);
+    app.use("/api", titleRoutes);
     app.get("/api", (req, res) => res.json({ message: "CineFlix API" }));
     app.use(express.static(repositoryRoot, {
         dotfiles: "deny",

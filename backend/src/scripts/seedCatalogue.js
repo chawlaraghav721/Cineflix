@@ -2,6 +2,7 @@
 
 const fs = require("node:fs/promises");
 const path = require("node:path");
+require("dotenv").config({ path: path.resolve(__dirname, "../../.env") });
 const { connectDatabase, disconnectDatabase } = require("../config/db");
 const Title = require("../models/Title");
 

@@ -2,18 +2,31 @@
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const path = require("node:path");
 const request = require("supertest");
 const { MongoMemoryServer } = require("mongodb-memory-server");
 const mongoose = require("mongoose");
 const { createApp } = require("../src/app");
 const { connectDatabase, disconnectDatabase, getDatabaseStatus } = require("../src/config/db");
 const Title = require("../src/models/Title");
+const dotenv = require("dotenv");
+const originalDotenvConfig = dotenv.config;
+let seedEnvPath;
+dotenv.config = options => {
+    seedEnvPath = options.path;
+    return originalDotenvConfig(options);
+};
 const { seedCatalogue } = require("../src/scripts/seedCatalogue");
+dotenv.config = originalDotenvConfig;
 
 let mongo;
 const app = createApp();
 
 test("backend API integration", { concurrency: false }, async t => {
+    await t.test("seed script loads backend/.env relative to its own file", () => {
+        assert.equal(seedEnvPath, path.resolve(__dirname, "../.env"));
+    });
+
     await t.before(async () => {
         mongo = await MongoMemoryServer.create();
         await connectDatabase(mongo.getUri());

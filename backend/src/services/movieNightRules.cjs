@@ -31,29 +31,34 @@ function validateVoterCount(voterCount) {
     }
 }
 
-/**
- * Validate creation input against trusted catalogue records supplied by the caller.
- * Integration must obtain records from M1's Title model, never from the request.
- * Returns only session configuration; ownership belongs to the authenticated controller.
- */
-function validateSessionInput(input, catalogueTitles) {
+// Validate shape before a service asks the catalogue repository to resolve IDs.
+function validateSessionConfiguration(input) {
     if (!input || typeof input !== "object" || Array.isArray(input)) {
         throw new MovieNightRuleError("INVALID_SESSION", "Provide selectedIds and voterCount.");
     }
     const { selectedIds, voterCount } = input;
     validateSelectedIds(selectedIds);
     validateVoterCount(voterCount);
+    return { selectedIds: [...selectedIds], voterCount };
+}
 
+/**
+ * Validate creation input against trusted catalogue records supplied by the caller.
+ * Integration must obtain records from M1's Title model, never from the request.
+ * Returns only session configuration; ownership belongs to the authenticated controller.
+ */
+function validateSessionInput(input, catalogueTitles) {
+    const configuration = validateSessionConfiguration(input);
     if (!Array.isArray(catalogueTitles)) {
         throw new TypeError("Trusted catalogue title records are required.");
     }
-    for (const id of selectedIds) {
+    for (const id of configuration.selectedIds) {
         const title = catalogueTitles.find(item => item && item.id === id);
         if (!title || title.type !== "movie") {
             throw new MovieNightRuleError("INVALID_SELECTED_IDS", "Every selected ID must identify an existing catalogue movie.");
         }
     }
-    return { selectedIds: [...selectedIds], voterCount };
+    return configuration;
 }
 
 // State is configuration plus an ordered list of stable movie IDs. Identity and
@@ -107,6 +112,7 @@ function calculateResults(state) {
 
 module.exports = {
     MovieNightRuleError,
+    validateSessionConfiguration,
     validateSessionInput,
     validateNextVote,
     calculateResults

@@ -2,15 +2,18 @@
 
 ## Scope and current milestone
 
-Work belongs on `feature/backend-movie-night`. The approved first milestone is
-dependency-free business rules and isolated tests. It does not mount routes,
-connect to MongoDB, authenticate users, or modify the existing browser experience.
-There is no second Express server or database connection module.
+Work belongs on `feature/backend-movie-night`. Completed independent work covers
+business rules and repository-injected session management with isolated tests.
+It does not mount routes, connect to MongoDB, authenticate users, or modify the
+existing browser experience. There is no second Express server or database
+connection module.
 
 Implemented files:
 
 - `backend/src/services/movieNightRules.cjs`
 - `backend/tests/movie-night-rules.test.cjs`
+- `backend/src/services/movieNightSessionService.cjs`
+- `backend/tests/movie-night-session-service.test.cjs`
 
 The explicit `.cjs` extension allows the rules to run without a package manifest
 and avoids deciding Member 1's shared CommonJS/ES module configuration. A future
@@ -19,6 +22,9 @@ its default import. Member 1 still owns the shared dependency setup.
 
 ## Rule interface
 
+- `validateSessionConfiguration(input)` checks request shape and returns a copy of
+  `selectedIds` and `voterCount` before repository access. It does not check title
+  existence; `validateSessionInput` must still run against trusted title records.
 - `validateSessionInput(input, catalogueTitles)` validates exactly three distinct
   stable IDs and an integer voter count from 2 through 10. Every ID must match a
   trusted catalogue record with `type: "movie"`. The returned configuration is a
@@ -48,20 +54,79 @@ This is not an approved HTTP serialization contract. Likewise, provisional error
 code names and incomplete-results semantics must be reviewed before integration.
 No revision header, room route, or shared contract extension is implemented here.
 
+## Session-management service and internal repository contract
+
+`createMovieNightSessionService({sessionRepository,titleRepository})` requires
+explicit dependencies, with no default or in-memory production implementation.
+All methods are asynchronous. A future controller must pass only Member 2's
+verified `req.user` as `actor`; request bodies, query parameters, demo storage,
+or arbitrary browser user IDs must never supply this argument.
+
+The service rejects missing/malformed `actor.id` with an internal 401 error. This
+is a caller precondition, not token verification or authentication middleware.
+An arbitrary well-shaped identity is not proven authentic by this service.
+
+| Service method | Behavior | Future agreed endpoint |
+| --- | --- | --- |
+| `createSession(actor,input)` | Validate configuration, resolve trusted movies, create an empty host-owned session | `POST /api/movie-night/sessions` (201) |
+| `getSession(actor,sessionId)` | Retrieve an owned record | `GET /api/movie-night/sessions/:sessionId` |
+| `listSessions(actor)` | Return `{sessions:[...]}` for that host | `GET /api/movie-night/sessions` |
+| `resetSession(actor,sessionId)` | Clear votes, retain host/selection/count/record identity | `POST /api/movie-night/sessions/:sessionId/reset` |
+| `deleteSession(actor,sessionId)` | Delete only the owned record, return no payload | `DELETE /api/movie-night/sessions/:sessionId` (204) |
+
+No endpoints or HTTP response handling are implemented yet. Internal repository
+records normalize `_id` and `hostUser` to strings, retain stable catalogue IDs,
+and otherwise carry session fields/timestamps. This does not change MongoDB's
+agreed ObjectId ownership field or freeze the eventual public response schema.
+The service's current internal active-state value is `voting`; any public status
+enum/serialization still needs review alongside the model and route contracts.
+
+| Required repository method | Internal contract |
+| --- | --- |
+| `titleRepository.findByIds(selectedIds)` | Return trusted title records as an array; no client-supplied catalogue data |
+| `sessionRepository.create(record)` | Persist the allowlisted configuration, trusted `hostUser`, empty votes and active status; return the created record with ID/timestamps |
+| `sessionRepository.findOwned({sessionId,hostUser})` | Return the exact host-owned record, or `null` |
+| `sessionRepository.listOwned({hostUser})` | Return an array containing only that host's sessions; an empty list is `[]` |
+| `sessionRepository.updateOwned({sessionId,hostUser},changes)` | Apply only the supplied reset fields (`votes`, `status`) to the matched record; maintain timestamps; return updated record or `null` |
+| `sessionRepository.deleteOwned({sessionId,hostUser})` | Delete the matched record only; return exactly `true` if deleted, `false` if absent |
+
+The future Mongoose adapter must put both `_id: sessionId` and `hostUser` into
+every targeted database read/update/delete filter. It must normalize/validate
+database identifiers and translate query/update results into the interface above.
+No unscoped fetch-then-write ownership check is acceptable. Reset must use an
+update, not replacement of the entire session. The service never accepts reset
+changes or ownership overrides from a browser body.
+
+Foreign and missing sessions both result in `SESSION_NOT_FOUND` (404), avoiding an
+existence distinction. There is no admin ownership bypass. The service also
+rejects accidentally returned foreign/mismatched records rather than exposing
+them; such adapter violations and unexpected errors go to the future shared safe
+500 handler. These defensive result checks cannot undo an unsafe repository write.
+
+Test repositories and identity fixtures live exclusively under `backend/tests/`.
+The tests verify use-case behavior and host-scoped adapter calls, including
+negative access attempts. They do not prove real authorization, database filters,
+MongoDB persistence, timestamps, or race safety. Reset-versus-vote concurrency
+still awaits the approved voting precondition; no revision mechanism is added.
+
 ## Verification
 
 From the repository root:
 
 ```powershell
 node --test backend/tests/movie-night-rules.test.cjs
+node --test backend/tests/movie-night-session-service.test.cjs
 node --test
 ```
 
-The first command runs the isolated rule tests without installing dependencies.
-The second includes these tests and the existing frontend regression suite.
-Tests cover strict configuration validation, actual catalogue IDs, show/unknown-ID
+The first two commands run isolated tests without installing dependencies.
+The last includes these tests and the existing frontend regression suite.
+Rule tests cover strict configuration validation, actual catalogue IDs, show/unknown-ID
 rejection, trusted-record lookup, invalid/excess votes, completion bounds, zero
 counts, partial results, winners, two/three-way ties, and immutable inputs.
+Service tests cover creation, retrieval, listing, reset, deletion, caller identity
+preconditions, foreign ownership, scoped write arguments, adapter contract
+violations, and repository failure propagation without fallback writes.
 
 These tests do not prove database atomicity, authentication, ownership isolation,
 or persistence. Those checks belong to later integration milestones.
@@ -75,9 +140,9 @@ Never push, merge, or deploy without the user's permission.
 1. **Session model:** Mongoose schema and executed validation tests, after Member 1
    establishes dependencies. Proposed commit: `feat(movie-night): add host-owned
    session model`.
-2. **Session APIs:** host-scoped create/list/get/delete/reset, with injected
-   repository tests first. Proposed commit: `feat(movie-night): implement
-   host-scoped session APIs`.
+2. **Session APIs:** the independent host-scoped create/list/get/delete/reset
+   service and injected-repository tests are implemented. HTTP controllers and
+   routes still need M1/M2 integration; this is not a working API milestone yet.
 3. **Atomic voting:** conditional persistence with actual concurrency verification.
    Proposed commit: `feat(movie-night): persist sequential votes atomically`.
 4. **Shared integration:** Member 1's route mount, Title model, shared connection,
@@ -145,5 +210,7 @@ Planned room commits, each with its own relevant tests:
 6. `feat(movie-night): add multi-device room interface`
 7. `test(movie-night): verify multi-device voting lifecycle`
 
-The next milestone is the Phase 1 session model where dependencies permit, not
-Phase 2 implementation or a replacement shared backend.
+This milestone stops at the session service. Next work is the Phase 1 session model
+and persistence adapter where shared dependencies permit, followed by real
+authenticated HTTP integration, not a replacement shared backend. Phase 2 remains
+a planned project goal pending coordination.

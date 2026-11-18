@@ -94,6 +94,13 @@ test("backend API integration", { concurrency: false }, async t => {
         assert(next.body.items[0].title.localeCompare(next.body.items[1].title) >= 0);
         const years = await request(app).get("/api/titles?type=show&sort=year_desc&limit=1").expect(200);
         assert.equal(years.body.items[0].year, 2026);
+        await Title.create({ id: "yearless-test", type: "show", title: "Yearless Test", genre: "Drama", poster: "/poster.svg", description: "" });
+        try {
+            const ascending = await request(app).get("/api/titles?type=show&sort=year_asc&limit=50").expect(200);
+            assert.equal(ascending.body.items.at(-1).id, "yearless-test");
+        } finally {
+            await Title.deleteOne({ id: "yearless-test" });
+        }
     });
 
     await t.test("invalid queries are rejected with consistent JSON errors", async () => {

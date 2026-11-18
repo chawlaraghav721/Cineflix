@@ -79,10 +79,18 @@ async function queryTitles(req, res, next) {
         filter.genre = new RegExp("(^|\\s/\\s)" + escapeRegex(options.genre.trim()) + "(\\s/\\s|$)", "i");
     }
     try {
-        const [items, total] = await Promise.all([
-            Title.find(filter).sort(SORTS[options.sort]).skip((options.page - 1) * options.limit).limit(options.limit).lean(),
-            Title.countDocuments(filter)
-        ]);
+        const offset = (options.page - 1) * options.limit;
+        const itemsPromise = options.sort.startsWith("year_")
+            ? Title.aggregate([
+                { $match: filter },
+                { $addFields: { __yearMissing: { $cond: [{ $in: [{ $type: "$year" }, ["missing", "null"]] }, 1, 0] } } },
+                { $sort: { __yearMissing: 1, year: SORTS[options.sort].year, title: 1, id: 1 } },
+                { $skip: offset },
+                { $limit: options.limit },
+                { $project: { __yearMissing: 0 } }
+            ])
+            : Title.find(filter).sort(SORTS[options.sort]).skip(offset).limit(options.limit).lean();
+        const [items, total] = await Promise.all([itemsPromise, Title.countDocuments(filter)]);
         return res.json({ items: items.map(publicTitle), total, page: options.page, limit: options.limit });
     } catch (error) { return next(error); }
 }

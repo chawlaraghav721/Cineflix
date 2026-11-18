@@ -55,7 +55,7 @@ Factories require explicit dependencies. Repository records normalize `_id` and
 | `deleteOwned({sessionId,hostUser})` | Boolean deletion result |
 
 Conditional scopes contain `sessionId`, `hostUser`, and `expectedRevision`.
-The old unconditional reset update is removed. Future adapters must filter actual
+The old unconditional reset update is removed. The prepared adapters filter actual
 writes by host and revision; vote filters also require active status, selected ID
 membership, and remaining capacity. Appending the vote, marking completion and
 incrementing revision must occur in one operation. No in-process lock or unscoped
@@ -64,8 +64,6 @@ Deleting a session never permits a stale vote to recreate it.
 
 MongoDB documents single-document atomicity and expected-value update filters:
 https://www.mongodb.com/docs/manual/core/write-operations-atomicity/
-
-## Verification and limitations
 
 ## HTTP preparation
 
@@ -85,7 +83,7 @@ also requires the supplied Origin/CSRF protection. Rooms require explicit
 HTTP tests invoke handlers with test-only request/response fixtures. They do not
 constitute an actual Express/cookie/JWT/CSRF integration test.
 
-## Test commands
+## Dormant frontend helpers
 
 The dormant `js/movie-night-api.js` exports a fetch client and room poller. No HTML
 loads it and no existing frontend file is changed. Creation payloads contain only
@@ -95,6 +93,8 @@ Polling is serial, backs off on transient errors (2.5s normal / 15s cap), ignore
 older revisions, stops on completion/access failure and aborts on stop. Consumers
 must stop it on logout/navigation and explicitly restart after a completed round
 is reset. It does not imply any unavailable backend is active.
+
+## Test commands
 
 ```powershell
 node --test backend/tests/movie-night-rules.test.cjs backend/tests/movie-night-session-service.test.cjs backend/tests/movie-night-voting-service.test.cjs
@@ -107,7 +107,7 @@ not real MongoDB atomicity, persistence, verified authentication, or CSRF protec
 Future database tests must use authorized isolated infrastructure, never destructive
 resets of the shared Atlas database.
 
-## Continuous independent work
+## Model and persistence preparation
 
 Model preparation now lives in `backend/src/models/MovieNightSession.cjs`.
 Its factory requires M1's existing connection; it never opens one. Document
@@ -124,9 +124,10 @@ Set `CINEFLIX_MONGOOSE_PATH` to its module directory to include those checks.
 No shared package manifest/lockfile is created. Recheck compatibility against
 M1's eventual dependency version and perform real database verification later.
 
-Next milestones prepare a dependency-injected model and persistence adapter,
-multi-device room rules/services, HTTP controllers, dormant frontend API/polling
-helpers, and their tests. Each completed tested unit gets a focused local commit.
+The model/adapters, room rules/services, HTTP controllers, dormant client/poller
+and their isolated tests are now prepared. No remaining shared dependency is
+substituted with production mocks. See `movie-night-integration-handoff.md` for
+the file inventory, exact verification evidence, and integration gates.
 Do not push, merge or deploy without permission.
 
 Multi-device rooms remain a planned goal. Proposed room routes, schema/index

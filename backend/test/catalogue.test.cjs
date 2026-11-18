@@ -42,6 +42,14 @@ test("backend API integration", { concurrency: false }, async t => {
         await request(app).get("/node_modules/express/package.json").expect(404);
     });
 
+    await t.test("API misses and malformed JSON use the shared error response", async () => {
+        const missing = await request(app).get("/api/not-a-route").expect(404);
+        assert.equal(missing.body.error.code, "NOT_FOUND");
+        const malformed = await request(app).post("/api/titles").set("Content-Type", "application/json").send('{"title":').expect(400);
+        assert.equal(malformed.body.error.code, "INVALID_JSON");
+        assert.equal(typeof malformed.body.error.message, "string");
+    });
+
     await t.test("seeding twice upserts the same 30 stable catalogue IDs", async () => {
         const first = await seedCatalogue();
         const second = await seedCatalogue();
@@ -78,6 +86,8 @@ test("backend API integration", { concurrency: false }, async t => {
         const genre = await request(app).get("/api/titles?genre=Thriller").expect(200);
         assert(genre.body.items.some(item => item.id === "movie-004"));
         assert(!genre.body.items.some(item => item.id === "movie-004" && item.genre !== "Action / Thriller"));
+        const literal = await request(app).get("/api/titles?q=.*").expect(200);
+        assert.equal(literal.body.total, 0);
         const noResults = await request(app).get("/api/titles?q=not-a-real-title").expect(200);
         assert.deepEqual(noResults.body.items, []);
         assert.equal(noResults.body.total, 0);

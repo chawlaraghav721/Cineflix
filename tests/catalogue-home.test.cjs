@@ -64,8 +64,9 @@ test('Run Away placeholder is self-contained vector shapes and text', () => {
 test('loader shares one Promise and one request, including after resolution', async () => {
     let requests = 0;
     let finish;
-    const api = loader(url => {
-        assert.equal(url, 'data/catalogue.json');
+    const api = loader((url, options) => {
+        assert.equal(url, '/api/catalogue');
+        assert.equal(options.credentials, 'same-origin');
         requests++;
         return new Promise(resolve => { finish = resolve; });
     });

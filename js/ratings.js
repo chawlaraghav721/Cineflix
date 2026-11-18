@@ -7,6 +7,8 @@
     const clearButton = document.getElementById("clear-rating");
     const storageKey = "cineflixPersonalRatings";
     let itemId = null;
+    let currentItem = null;
+    let accountView = null;
 
     if (!section || !stars.length || !ratingMessage || !clearButton) return;
 
@@ -41,6 +43,7 @@
     }
 
     function restoreRating() {
+        if (accountView) return accountView.refresh();
         if (!itemId) return;
         try {
             const ratings = getSavedRatings();
@@ -65,6 +68,8 @@
     function connectItem(item) {
         itemId = item && typeof item.id === "string" && item.id.trim() &&
             (item.type === "movie" || item.type === "show") ? item.id : null;
+        currentItem = itemId ? item : null;
+        if (accountView) return accountView.connectItem(currentItem);
         section.hidden = !itemId;
         displayRating(0);
         restoreRating();
@@ -72,6 +77,7 @@
 
     stars.forEach(function (star) {
         star.addEventListener("click", function () {
+            if (accountView) return;
             const selectedRating = Number(star.dataset.rating);
             if (!itemId || !isValidRating(selectedRating)) return;
             try {
@@ -86,6 +92,7 @@
     });
 
     clearButton.addEventListener("click", function () {
+        if (accountView) return;
         if (!itemId) return;
         try {
             const ratings = getSavedRatings();
@@ -100,9 +107,21 @@
     });
 
     window.addEventListener("storage", function (event) {
+        if (accountView) return; // Account data never comes from browser storage.
         if (event.key === storageKey || event.key === null) restoreRating();
     });
     window.addEventListener("pageshow", restoreRating);
-    window.CineFlixRatings = { connectItem: connectItem };
+    function enableAccountMode() {
+        if (!accountView) {
+            const client = window.CineFlixRatingsApi.createRatingsClient();
+            accountView = window.CineFlixAccountRatings.createAccountRatingView({
+                client, section, stars, ratingMessage, clearButton
+            });
+        }
+        return accountView.connectItem(currentItem);
+    }
+    window.CineFlixRatings = { connectItem, enableAccountMode };
     connectItem(null);
+    // Enable account mode after ratings routes and cookie authentication are integrated.
+    if (section.dataset.ratingsMode === "account") enableAccountMode();
 }());

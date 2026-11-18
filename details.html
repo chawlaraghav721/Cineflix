@@ -12,6 +12,8 @@
     <script src="js/navigation.js" defer></script>
     <script src="js/catalogue.js" defer></script>
     <script src="js/details.js" defer></script>
+    <script src="js/ratings-api.js" defer></script>
+    <script src="js/ratings-account.js" defer></script>
     <script src="js/ratings.js" defer></script>
     <script src="js/details-integration.js" defer></script>
 </head>
@@ -53,8 +55,9 @@
                     <button id="watchlist-button" class="btn secondary" type="button" disabled>Add to My List</button>
                 </div>
                 <p id="watchlist-status" class="details-watchlist-status" role="status" aria-live="polite"></p>
-                <section class="personal-rating" aria-labelledby="personal-rating-title" hidden>
+                <section class="personal-rating" data-ratings-mode="guest" aria-labelledby="personal-rating-title" hidden>
                     <h2 id="personal-rating-title">Your Personal Rating</h2>
+                    <p id="ratings-mode-note">Guest ratings are saved only in this browser.</p>
                     <p>How would you rate this title?</p>
                     <div class="rating-stars" role="group" aria-label="Choose a rating from 1 to 5 stars">
                         <button type="button" data-rating="1" aria-label="1 star — Not for me" aria-pressed="false">
@@ -85,6 +88,16 @@
                     </div>
                     <p id="rating-message" role="status" aria-live="polite">No rating selected yet.</p>
                     <button type="button" id="clear-rating" disabled>Clear Rating</button>
+                    <div id="ratings-account" hidden>
+                        <label for="rating-review">Your review (optional, up to 2000 characters)</label>
+                        <textarea id="rating-review" rows="3" maxlength="2000" disabled></textarea>
+                        <button type="button" id="save-review" disabled>Save review</button>
+                        <button type="button" id="retry-ratings">Refresh ratings</button>
+                        <p><a href="login.html">Sign in to your account</a></p>
+                        <h3>Community ratings</h3>
+                        <p id="ratings-summary" role="status" aria-live="polite"></p>
+                        <ul id="ratings-reviews" aria-label="Recent written reviews"></ul>
+                    </div>
                 </section>
             </div>
         </section>

@@ -80,6 +80,21 @@ resets of the shared Atlas database.
 
 ## Continuous independent work
 
+Model preparation now lives in `backend/src/models/MovieNightSession.cjs`.
+Its factory requires M1's existing connection; it never opens one. Document
+validation covers configuration, vote/status consistency and revision invariants.
+Catalogue existence/type checks still belong to the trusted title lookup.
+`backend/src/repositories/movieNightRepository.cjs` builds host/mode-scoped reads
+and conditional updates against an injected model. Query-spy tests verify the
+generated filters/updates; they do not execute MongoDB.
+
+Real Mongoose document tests run without a database when Mongoose is available.
+Otherwise that clearly labelled test is skipped. For this independent run,
+Mongoose 9.12.2 was installed outside the repository in a temporary directory.
+Set `CINEFLIX_MONGOOSE_PATH` to its module directory to include those checks.
+No shared package manifest/lockfile is created. Recheck compatibility against
+M1's eventual dependency version and perform real database verification later.
+
 Next milestones prepare a dependency-injected model and persistence adapter,
 multi-device room rules/services, HTTP controllers, dormant frontend API/polling
 helpers, and their tests. Each completed tested unit gets a focused local commit.

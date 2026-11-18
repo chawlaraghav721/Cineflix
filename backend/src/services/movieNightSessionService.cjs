@@ -92,16 +92,25 @@ function createMovieNightSessionService({ sessionRepository, titleRepository } =
             checkRevision(current, expectedRevision);
             const itemId = validateNextVote(current, input.itemId);
             const nextStatus = current.votes.length + 1 === current.voterCount ? "complete" : "voting";
-            return conditionalResult(await sessionRepository.appendVoteOwned(
+            const updated = await conditionalResult(await sessionRepository.appendVoteOwned(
                 { ...scope, expectedRevision }, { itemId, nextStatus }
             ), scope, expectedRevision);
+            if (updated.voterCount !== current.voterCount || JSON.stringify(updated.selectedIds) !== JSON.stringify(current.selectedIds) ||
+                updated.votes.length !== current.votes.length + 1 || updated.votes.at(-1) !== itemId ||
+                !current.votes.every((vote, index) => updated.votes[index] === vote)) throw new Error("Repository did not append exactly the requested vote.");
+            return updated;
         },
         async getResults(actor, sessionId) { return calculateResults(await read(ownedScope(actor, sessionId))); },
         async resetSession(actor, sessionId, expectedRevision) {
             const scope = ownedScope(actor, sessionId);
             validateRevision(expectedRevision);
-            checkRevision(await read(scope), expectedRevision);
-            return conditionalResult(await sessionRepository.resetVotesOwned({ ...scope, expectedRevision }), scope, expectedRevision);
+            const current = await read(scope);
+            checkRevision(current, expectedRevision);
+            const updated = await conditionalResult(await sessionRepository.resetVotesOwned({ ...scope, expectedRevision }), scope, expectedRevision);
+            if (updated.votes.length || updated.voterCount !== current.voterCount || JSON.stringify(updated.selectedIds) !== JSON.stringify(current.selectedIds)) {
+                throw new Error("Repository did not clear only the session votes.");
+            }
+            return updated;
         },
         async deleteSession(actor, sessionId) {
             const deleted = await sessionRepository.deleteOwned(ownedScope(actor, sessionId));

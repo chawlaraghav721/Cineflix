@@ -97,3 +97,10 @@ test("repository errors and incorrect revision advancement fail without retry", 
     f.sessionRepository.appendVoteOwned = async () => record();
     await assert.rejects(() => vote(f, 1), /advance the revision/);
 });
+test("revision advancement alone cannot masquerade as a successful vote or reset", async () => {
+    const f = fixture();
+    f.sessionRepository.appendVoteOwned = async () => record({ revision: 2, votes: [selectedIds[0], selectedIds[2]] });
+    await assert.rejects(() => vote(f, 1), /exactly the requested vote/);
+    f.sessionRepository.resetVotesOwned = async () => record({ revision: 2 });
+    await assert.rejects(() => f.service.resetSession(hostA, sessionId, 1), /clear only the session votes/);
+});

@@ -32,4 +32,21 @@ test("real Mongoose document validation (no MongoDB connection)", { skip: !mongo
     assert.equal(Model.schema.options.autoIndex, false);
     assert(Model.schema.indexes().some(([keys, opts]) => keys.roomCode === 1 && opts.unique && opts.partialFilterExpression.mode === "room"));
     assert.throws(() => new Model({ ...record(), injected: true }), /strict mode/);
+
+    // Exercise REAL Mongoose query casting with only the collection method stubbed.
+    // No server/connection is opened, and these are not database atomicity tests.
+    const { createMovieNightRepository } = require("../src/repositories/movieNightRepository.cjs");
+    const { createMovieNightRoomRepository } = require("../src/repositories/movieNightRoomRepository.cjs");
+    const { hostA, hostB, sessionId, selectedIds } = require("./helpers/sessionFixture.cjs");
+    const { roomId } = require("./helpers/roomFixture.cjs");
+    const calls = [];
+    Model.collection.findOneAndUpdate = async (filter, update, options) => { calls.push({ filter, update, options }); return record(); };
+    await createMovieNightRepository(Model).appendVoteOwned({ sessionId, hostUser: hostA.id, expectedRevision: 1 }, { itemId: selectedIds[0], nextStatus: "voting" });
+    assert(calls[0].filter._id instanceof isolated.Types.ObjectId);
+    assert.equal(String(calls[0].filter.hostUser), hostA.id);
+    await createMovieNightRoomRepository(Model).appendBallot({ roomId, actorId: hostB.id, roundId: "round-one" }, selectedIds[0]);
+    assert.equal(String(calls[1].filter.participants), hostB.id);
+    assert(Array.isArray(calls[1].update));
+    assert.equal(calls[1].options.returnDocument, "after");
+    assert.equal(isolated.connection.readyState, 0);
 });

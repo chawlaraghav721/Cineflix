@@ -25,5 +25,11 @@ test("real Mongoose document validation (no MongoDB connection)", { skip: !mongo
     }
     assert.equal(isolated.connection.readyState, 0);
     assert.equal(Model.schema.options.timestamps, true);
+    const { room } = require("./helpers/roomFixture.cjs");
+    await new Model(room()).validate();
+    await assert.rejects(() => new Model(room({ participants: [record().hostUser, record().hostUser] })).validate());
+    await assert.rejects(() => new Model(room({ roomCode: "INVALID0" })).validate());
+    assert.equal(Model.schema.options.autoIndex, false);
+    assert(Model.schema.indexes().some(([keys, opts]) => keys.roomCode === 1 && opts.unique && opts.partialFilterExpression.mode === "room"));
     assert.throws(() => new Model({ ...record(), injected: true }), /strict mode/);
 });

@@ -108,6 +108,15 @@ polling and persistent server-calculated results. Codes locate rooms; they are
 not credentials. A host joins explicitly to consume a voter slot. Independent
 participants must not contend for one client-supplied sequential revision.
 
+The independently implemented room rules/service and injected-model repository
+now live alongside the sequential modules. See `movie-night-room-contract.md` for
+the proposed lifecycle and privacy contract. Race tests simulate competing joins,
+ballots and resets; query tests inspect actual generated MongoDB update commands.
+Room vote completion uses an update pipeline after ballot append, not a status
+calculated from a potentially stale service snapshot. Mongoose document validation
+also covers room invariants. Index auto-creation is disabled: M1 must explicitly
+review/deploy indexes, including the partial unique room-code index, before use.
+
 M1 must supply dependencies, shared connection, Title model, route mounting and
 error middleware. M2 must supply JWT-cookie authentication and Origin/CSRF safeguards.
 Integration must keep guest and account state separate, verify actual database

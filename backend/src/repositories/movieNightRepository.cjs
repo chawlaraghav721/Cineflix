@@ -11,6 +11,8 @@ function toRecord(value) {
     const record = typeof value.toObject === "function" ? value.toObject() : { ...value };
     record._id = String(record._id);
     record.hostUser = String(record.hostUser);
+    if (record.participants) record.participants = record.participants.map(String);
+    if (record.votes) record.votes = record.votes.map(v => typeof v === "string" ? v : { ...v, participantId: String(v.participantId) });
     return record;
 }
 

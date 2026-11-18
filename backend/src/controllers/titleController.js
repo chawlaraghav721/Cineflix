@@ -34,8 +34,12 @@ async function getCatalogue(req, res, next) {
 }
 
 async function getTitleById(req, res, next) {
+    const itemId = req.params.itemId;
+    if (typeof itemId !== "string" || !itemId.trim() || itemId !== itemId.trim() || itemId.length > 128) {
+        return errorResponse(res, 400, "INVALID_ITEM_ID", "itemId must be a non-empty catalogue ID of at most 128 characters.");
+    }
     try {
-        const title = await Title.findOne({ id: req.params.itemId }).lean();
+        const title = await Title.findOne({ id: itemId }).lean();
         if (!title) return errorResponse(res, 404, "TITLE_NOT_FOUND", "No catalogue title has that ID.");
         return res.json(publicTitle(title));
     } catch (error) { return next(error); }

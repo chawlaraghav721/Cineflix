@@ -77,6 +77,9 @@ test("backend API integration", { concurrency: false }, async t => {
         await request(app).get("/api/titles/missing-title").expect(404).expect(({ body }) => {
             assert.equal(body.error.code, "TITLE_NOT_FOUND");
         });
+        await request(app).get("/api/titles/%20").expect(400).expect(({ body }) => {
+            assert.equal(body.error.code, "INVALID_ITEM_ID");
+        });
     });
 
     await t.test("search, type and complete genre-label filters combine", async () => {

@@ -27,8 +27,13 @@ test("only code-specific duplicate-index collisions are retried, with a fixed bo
     const f = fixture([]); let calls = 0; const original = f.roomRepository.createRoom;
     f.roomRepository.createRoom = async r => { if (++calls < 3) throw { code: 11000, keyPattern: { roomCode: 1 } }; return original(r); };
     await f.service.createRoom(hostA, input()); assert.equal(calls, 3);
-    f.roomRepository.createRoom = async () => { throw { code: 11000, keyPattern: { roomCode: 1 } }; };
+    let collisions = 0;
+    f.roomRepository.createRoom = async () => { collisions++; throw { code: 11000, keyPattern: { roomCode: 1 } }; };
     await assert.rejects(() => f.service.createRoom(hostA, input()), code("ROOM_CODE_CONFLICT"));
+    assert.equal(collisions, 5);
+    const unrelated = { code: 11000, keyPattern: { otherIndex: 1 } };
+    f.roomRepository.createRoom = async () => { throw unrelated; };
+    await assert.rejects(() => f.service.createRoom(hostA, input()), error => error === unrelated);
     f.roomRepository.createRoom = async () => { throw new Error("unavailable"); };
     await assert.rejects(() => f.service.createRoom(hostA, input()), /unavailable/);
 });
@@ -73,6 +78,14 @@ test("duplicate concurrent participant ballots consume one slot only", async () 
     assert.equal(outcomes.filter(r => r.status === "fulfilled").length, 1);
     assert.equal(outcomes.find(r => r.status === "rejected").reason.code, "ALREADY_VOTED");
     assert.equal(f.records.get(roomId).votes.length, 1);
+});
+test("three independent participants complete a three-way tie without losing any ballot", async () => {
+    const f = fixture([active({ voterCount: 3, participants: [hostA.id, hostB.id, third.id] })]);
+    await Promise.all([cast(f, hostA, selectedIds[0]), cast(f, hostB, selectedIds[1]), cast(f, third, selectedIds[2])]);
+    const result = await f.service.getRoom(hostA, roomId);
+    assert.equal(result.status, "complete"); assert.equal(result.results.isTie, true);
+    assert.deepEqual(result.results.winners, selectedIds);
+    assert.equal(result.results.tallies.reduce((total, item) => total + item.count, 0), 3);
 });
 test("host must join to vote and outsiders cannot poll or vote", async () => {
     const f = fixture([active({ participants: [hostB.id, third.id] })]);

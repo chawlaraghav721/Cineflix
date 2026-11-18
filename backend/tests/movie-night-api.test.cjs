@@ -3,10 +3,19 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const vm = require("node:vm");
 const { createClient, createRoomPoller, MovieNightApiError } = require("../../js/movie-night-api.js");
 const { sessionId, input, selectedIds } = require("./helpers/sessionFixture.cjs");
 const { roomId } = require("./helpers/roomFixture.cjs");
 const ok = data => ({ ok: true, status: 200, json: async () => data });
+test("browser script loading only exposes the factory and performs no background requests", async () => {
+    let requests = 0;
+    const context = vm.createContext({ fetch: async () => { requests++; return ok({ sessions: [] }); } });
+    vm.runInContext(fs.readFileSync(path.join(__dirname, "../../js/movie-night-api.js"), "utf8"), context);
+    assert.equal(requests, 0); assert.equal(typeof context.CineFlixMovieNightApi.createClient, "function");
+    const client = context.CineFlixMovieNightApi.createClient(); assert.equal(requests, 0);
+    assert.equal((await client.listSessions()).sessions.length, 0); assert.equal(requests, 1);
+});
 test("client is dormant, same-origin, allowlists creation fields and never reads tokens", async () => {
     const calls = []; const client = createClient({ fetchImpl: async (...args) => { calls.push(args); return ok({}); } });
     assert.equal(calls.length, 0);

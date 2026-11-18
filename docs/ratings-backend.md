@@ -149,6 +149,13 @@ modify Movie Night sessions, votes, selected IDs, revision headers or room polli
 Member 5's revision/room extensions remain proposals awaiting team approval;
 this implementation does not approve or activate them. No Member 5 file is changed.
 
+An in-memory Git merge-tree check found no file conflicts with that exact draft
+head. A combined tree was extracted to a temporary directory and all **212 tests
+passed, 0 failed, 0 skipped**, including both members' tests and the original suite.
+The existing catalogue test needs historical `git show`, so the temporary run
+received read-only access to this repository's Git history. This was a compatibility
+simulation; neither feature branch nor main was merged or modified by it.
+
 ## Verification and limitations
 
 Baseline on main: **96 passed** with `node --test`. Current repeatable commands:
@@ -159,8 +166,8 @@ node --test backend/tests/ratings-*.test.cjs
 ```
 
 No project manifest is added: M1 owns backend package configuration. The default
-suite runs dependency-free tests and labels unavailable Mongoose, Express and
-optional browser checks as skipped. For the full executed validation, dependencies
+suite yields **121 passed, 0 failed, 3 skipped** without dependencies and labels
+unavailable Mongoose, Express and optional browser checks. For full validation, dependencies
 were installed outside the repository with these versions:
 
 ```sh

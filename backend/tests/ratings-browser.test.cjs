@@ -91,7 +91,11 @@ test("Chrome Details guest/account journeys at desktop/mobile widths (fixture AP
         assert(await page.locator("#ratings-account").isVisible());
         if (evidence) {
             fs.mkdirSync(evidence, { recursive: true });
-            await page.screenshot({ path: path.join(evidence, "ratings-" + width + ".png"), fullPage: true });
+            await page.setViewportSize({ width, height: 1600 });
+            await page.locator(".personal-rating").evaluate(element => {
+                window.scrollTo(0, element.getBoundingClientRect().top + window.scrollY - 140);
+            });
+            await page.screenshot({ path: path.join(evidence, "ratings-" + width + ".png") });
         }
     }
     await page.locator("#clear-rating").click();

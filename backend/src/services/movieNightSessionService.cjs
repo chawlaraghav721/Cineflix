@@ -1,21 +1,14 @@
 "use strict";
-
-const {
-    MovieNightRuleError,
-    validateSessionConfiguration,
-    validateSessionInput
-} = require("./movieNightRules.cjs");
+const { MovieNightRuleError, validateSessionConfiguration, validateSessionInput,
+    validateNextVote, validateRevision, calculateResults } = require("./movieNightRules.cjs");
 
 function requireMethods(repository, name, methods) {
     for (const method of methods) {
-        if (!repository || typeof repository[method] !== "function") {
-            throw new TypeError(`${name}.${method} is required.`);
-        }
+        if (!repository || typeof repository[method] !== "function") throw new TypeError(`${name}.${method} is required.`);
     }
 }
 
-// A caller precondition, NOT authentication. Only an authenticated controller may
-// pass M2's req.user here; never populate this argument from request input/storage.
+// Caller precondition only. M2's middleware must supply verified req.user.
 function requireHostId(actor) {
     if (!actor || typeof actor.id !== "string" || !actor.id.trim() || actor.id !== actor.id.trim()) {
         throw new MovieNightRuleError("AUTH_REQUIRED", "Sign in to manage Movie Night sessions.", 401);
@@ -30,80 +23,91 @@ function ownedScope(actor, sessionId) {
     }
     return { sessionId, hostUser };
 }
+const notFound = () => new MovieNightRuleError("SESSION_NOT_FOUND", "Movie Night session not found.", 404);
+const conflict = () => new MovieNightRuleError("SESSION_CONFLICT", "The session changed. Reload its state before continuing.", 409);
 
-function notFound() {
-    return new MovieNightRuleError("SESSION_NOT_FOUND", "Movie Night session not found.", 404);
-}
-
-// Repository DTOs must normalize MongoDB identifiers to strings. These checks
-// reject accidental foreign results; the adapter MUST still scope the actual
-// database query/write by host. A post-write check cannot undo an unsafe adapter.
 function checkOwnedRecord(record, hostUser, sessionId) {
     if (!record || typeof record._id !== "string" || !record._id.trim() ||
-        record.hostUser !== hostUser || (sessionId !== undefined && record._id !== sessionId)) {
+        record.hostUser !== hostUser || (sessionId !== undefined && record._id !== sessionId) ||
+        (record.mode !== undefined && record.mode !== "sequential")) {
         throw new Error("Movie Night repository returned a record outside the requested scope.");
+    }
+    try {
+        if (!Number.isSafeInteger(record.revision) || record.revision < 0) throw new Error();
+        const results = calculateResults(record);
+        if (record.status !== (results.complete ? "complete" : "voting")) throw new Error();
+    } catch {
+        throw new Error("Movie Night repository returned invalid stored state.");
     }
     return record;
 }
 
-/**
- * Repository-backed use cases only. No default repositories, routes, authentication,
- * database connection, vote submission, or revision mechanism are supplied.
- * See docs/movie-night-backend.md for the internal adapter contract.
- */
 function createMovieNightSessionService({ sessionRepository, titleRepository } = {}) {
     requireMethods(sessionRepository, "sessionRepository", [
-        "create", "findOwned", "listOwned", "updateOwned", "deleteOwned"
+        "create", "findOwned", "listOwned", "appendVoteOwned", "resetVotesOwned", "deleteOwned"
     ]);
     requireMethods(titleRepository, "titleRepository", ["findByIds"]);
-
+    async function read(scope) {
+        const record = await sessionRepository.findOwned(scope);
+        if (record === null) throw notFound();
+        return checkOwnedRecord(record, scope.hostUser, scope.sessionId);
+    }
+    async function conditionalResult(record, scope, revision) {
+        if (record === null) {
+            await read(scope);
+            throw conflict();
+        }
+        checkOwnedRecord(record, scope.hostUser, scope.sessionId);
+        if (record.revision !== revision + 1) throw new Error("Repository did not advance the revision exactly once.");
+        return record;
+    }
+    function checkRevision(record, revision) {
+        if (record.revision !== revision) throw conflict();
+    }
     return {
         async createSession(actor, input) {
             const hostUser = requireHostId(actor);
             const configuration = validateSessionConfiguration(input);
             const titles = await titleRepository.findByIds([...configuration.selectedIds]);
             const validated = validateSessionInput(configuration, titles);
-            const record = await sessionRepository.create({
-                ...validated, hostUser, votes: [], status: "voting"
-            });
-            return checkOwnedRecord(record, hostUser);
+            return checkOwnedRecord(await sessionRepository.create({
+                ...validated, hostUser, votes: [], status: "voting", revision: 0
+            }), hostUser);
         },
-
-        async getSession(actor, sessionId) {
-            const scope = ownedScope(actor, sessionId);
-            const record = await sessionRepository.findOwned(scope);
-            if (record === null) throw notFound();
-            return checkOwnedRecord(record, scope.hostUser, scope.sessionId);
-        },
-
+        async getSession(actor, sessionId) { return read(ownedScope(actor, sessionId)); },
         async listSessions(actor) {
             const hostUser = requireHostId(actor);
             const sessions = await sessionRepository.listOwned({ hostUser });
-            if (!Array.isArray(sessions)) {
-                throw new Error("Movie Night repository must return a session array.");
-            }
+            if (!Array.isArray(sessions)) throw new Error("Movie Night repository must return a session array.");
             for (const record of sessions) checkOwnedRecord(record, hostUser);
             return { sessions };
         },
-
-        async resetSession(actor, sessionId) {
+        async submitVote(actor, sessionId, input, expectedRevision) {
             const scope = ownedScope(actor, sessionId);
-            // Clear votes only. Do not replace configuration, host, or the record.
-            const record = await sessionRepository.updateOwned(scope, { votes: [], status: "voting" });
-            if (record === null) throw notFound();
-            return checkOwnedRecord(record, scope.hostUser, scope.sessionId);
-        },
-
-        async deleteSession(actor, sessionId) {
-            const scope = ownedScope(actor, sessionId);
-            const deleted = await sessionRepository.deleteOwned(scope);
-            if (deleted === false) throw notFound();
-            if (deleted !== true) {
-                throw new Error("Movie Night repository must return a deletion boolean.");
+            validateRevision(expectedRevision);
+            if (!input || typeof input !== "object" || Array.isArray(input)) {
+                throw new MovieNightRuleError("INVALID_VOTE", "Provide an itemId.");
             }
-            // Future HTTP controller sends the agreed 204 with no response body.
+            const current = await read(scope);
+            checkRevision(current, expectedRevision);
+            const itemId = validateNextVote(current, input.itemId);
+            const nextStatus = current.votes.length + 1 === current.voterCount ? "complete" : "voting";
+            return conditionalResult(await sessionRepository.appendVoteOwned(
+                { ...scope, expectedRevision }, { itemId, nextStatus }
+            ), scope, expectedRevision);
+        },
+        async getResults(actor, sessionId) { return calculateResults(await read(ownedScope(actor, sessionId))); },
+        async resetSession(actor, sessionId, expectedRevision) {
+            const scope = ownedScope(actor, sessionId);
+            validateRevision(expectedRevision);
+            checkRevision(await read(scope), expectedRevision);
+            return conditionalResult(await sessionRepository.resetVotesOwned({ ...scope, expectedRevision }), scope, expectedRevision);
+        },
+        async deleteSession(actor, sessionId) {
+            const deleted = await sessionRepository.deleteOwned(ownedScope(actor, sessionId));
+            if (deleted === false) throw notFound();
+            if (deleted !== true) throw new Error("Movie Night repository must return a deletion boolean.");
         }
     };
 }
-
-module.exports = { createMovieNightSessionService };
+module.exports = { createMovieNightSessionService, requireHostId, requireMethods };

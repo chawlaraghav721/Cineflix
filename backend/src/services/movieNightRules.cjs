@@ -99,6 +99,13 @@ function validateNextVote(state, itemId) {
  * Internal result representation, not a mounted API response contract.
  * Include zero counts in selection order; announce winners only when complete.
  */
+function validateRevision(revision) {
+    if (!Number.isSafeInteger(revision) || revision < 0 || revision === Number.MAX_SAFE_INTEGER) {
+        throw new MovieNightRuleError("INVALID_REVISION", "Provide a nonnegative, incrementable session revision.");
+    }
+    return revision;
+}
+
 function calculateResults(state) {
     validateVoteHistory(state);
     const counts = new Map(state.selectedIds.map(id => [id, 0]));
@@ -115,5 +122,6 @@ module.exports = {
     validateSessionConfiguration,
     validateSessionInput,
     validateNextVote,
+    validateRevision,
     calculateResults
 };

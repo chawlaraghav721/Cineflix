@@ -14,7 +14,7 @@ function createRatingControllers({ ratingService }) {
             if (error instanceof RatingError) {
                 return res.status(error.statusCode).json({ error: { code: error.code, message: error.message } });
             }
-            return next(error); // M1's safe JSON 500 handler; never serialize DB errors.
+            return next(error); // Forward unexpected failures to the shared JSON error handler.
         }
     };
     return {

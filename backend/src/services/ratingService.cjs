@@ -19,7 +19,7 @@ function validateItemId(itemId) {
 }
 
 function requireUserId(actor) {
-    // Presence/type guard only. M2's JWT middleware MUST verify req.user first.
+    // Check actor shape; requireAuth must verify req.user before this service runs.
     if (typeof actor?.id !== "string" || !/^[a-f\d]{24}$/i.test(actor.id)) {
         throw new RatingError("AUTH_REQUIRED", "Sign in to manage your rating.", 401);
     }

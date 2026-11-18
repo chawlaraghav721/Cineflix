@@ -6,7 +6,7 @@ const { createRatingService, validateRating, validateItemId } = require("../src/
 const alice = { id: "000000000000000000000001" };
 const bob = { id: "000000000000000000000002" };
 
-// All identities/records are fixtures. Production receives real M1/M2 dependencies.
+// Test-only identities and records; production uses the catalogue and verified auth context.
 function fixture() {
     const rows = new Map();
     const key = scope => scope.user + "/" + scope.itemId;

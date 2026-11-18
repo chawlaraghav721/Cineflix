@@ -7,7 +7,7 @@ try { mongoose = require(process.env.CINEFLIX_MONGOOSE_PATH || "mongoose"); } ca
     if (process.env.CINEFLIX_MONGOOSE_PATH || error.code !== "MODULE_NOT_FOUND") throw error;
 }
 
-test("real disconnected Mongoose schema and query casting (requires M1 dependency)", { skip: !mongoose }, async () => {
+test("disconnected Mongoose schema validation and query casting (requires mongoose)", { skip: !mongoose }, async () => {
     const connection = mongoose.createConnection(); // disconnected: no URI or I/O
     const Rating = createRatingModel({ mongoose, connection });
     assert.equal(createRatingModel({ mongoose, connection }), Rating);

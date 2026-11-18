@@ -1,7 +1,7 @@
 "use strict";
 const { MAX_REVIEW_LENGTH, validateItemId } = require("../services/ratingService.cjs");
 
-// Reuse M1's already connected Mongoose connection. No connect()/server here.
+// Register on the application's existing Mongoose connection.
 function createRatingModel({ mongoose, connection }) {
     if (!mongoose?.Schema || typeof connection?.model !== "function") {
         throw new TypeError("Mongoose and the shared connection are required.");

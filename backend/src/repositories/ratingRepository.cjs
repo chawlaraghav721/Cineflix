@@ -49,7 +49,7 @@ function createRatingRepository({ Rating }) {
 }
 
 function createRatingTitleRepository({ Title }) {
-    if (!Title) throw new TypeError("Member 1's Title model is required.");
+    if (!Title) throw new TypeError("The catalogue Title model is required.");
     return { exists: async itemId => Boolean(await Title.exists({ id: itemId }).exec()) };
 }
 

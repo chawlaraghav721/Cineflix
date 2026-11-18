@@ -14,7 +14,7 @@ function registerRatingRoutes({ router, controllers, requireAuth, protectMutatio
     router.get("/:itemId/me", requireAuth, controllers.getOwn);
     router.put("/:itemId/me", requireAuth, protectMutation, controllers.putOwn);
     router.delete("/:itemId/me", requireAuth, protectMutation, controllers.deleteOwn);
-    return router; // M1 mounts once at /api/ratings; imports do not activate routes.
+    return router; // Mount once at /api/ratings in the shared application.
 }
 
 module.exports = { registerRatingRoutes };

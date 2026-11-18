@@ -122,6 +122,6 @@
     }
     window.CineFlixRatings = { connectItem, enableAccountMode };
     connectItem(null);
-    // M1 switches this attribute only after the real API/auth gates pass.
+    // Enable account mode after ratings routes and cookie authentication are integrated.
     if (section.dataset.ratingsMode === "account") enableAccountMode();
 }());

@@ -61,7 +61,7 @@ test("real Express HTTP contract with test-only identity/database fixtures", { s
     });
     const app = express();
     app.use(express.json());
-    // These are NOT M2's authentication/CSRF implementation; used ONLY in tests.
+    // Test-only identity and Origin middleware; production requires verified cookie auth.
     const auth = (req, res, next) => {
         const id = { "test-user=alice": "000000000000000000000001", "test-user=bob": "000000000000000000000002" }[req.get("Cookie")];
         if (!id) return res.status(401).json({ error: { code: "AUTH_REQUIRED", message: "Sign in." } });

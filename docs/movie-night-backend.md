@@ -67,6 +67,26 @@ https://www.mongodb.com/docs/manual/core/write-operations-atomicity/
 
 ## Verification and limitations
 
+## HTTP preparation
+
+`createMovieNightControllers` accepts the session service and optional room service.
+It implements agreed success statuses/envelopes, strict revision/round parsing,
+resource ID/body checks and private/no-store responses. Expected business errors
+become the agreed JSON envelope. Unexpected errors are forwarded to M1's shared
+safe 500 middleware; internal details must never be serialized there.
+
+`registerMovieNightRoutes` accepts a supplied router, controllers, real
+`requireAuth`, and real `protectMutation` middleware. It does not import Express,
+implement middleware, or mount routes. Every read requires auth; every mutation
+also requires the supplied Origin/CSRF protection. Rooms require explicit
+`enableRooms: true`; imports alone do nothing. M1 must coordinate the eventual
+`/api/movie-night` mount, and M2 must approve these middleware interfaces.
+
+HTTP tests invoke handlers with test-only request/response fixtures. They do not
+constitute an actual Express/cookie/JWT/CSRF integration test.
+
+## Test commands
+
 ```powershell
 node --test backend/tests/movie-night-rules.test.cjs backend/tests/movie-night-session-service.test.cjs backend/tests/movie-night-voting-service.test.cjs
 node --test

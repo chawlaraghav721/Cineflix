@@ -20,7 +20,8 @@ const { seedCatalogue } = require("../src/scripts/seedCatalogue");
 dotenv.config = originalDotenvConfig;
 
 let mongo;
-const app = createApp();
+const { loadAuthConfig } = require("../src/config/auth");
+const app = createApp({ authConfig: loadAuthConfig({ JWT_SECRET: "catalogue-test-secret-not-for-production-12345", APP_ORIGIN: "http://localhost:3000" }) });
 
 test("backend API integration", { concurrency: false }, async t => {
     await t.test("seed script loads backend/.env relative to its own file", () => {
@@ -141,7 +142,7 @@ test("backend API integration", { concurrency: false }, async t => {
         await assert.rejects(Title.create(item), error => error && error.code === 11000);
     });
 
-    await t.test("admin mutations remain unavailable until real auth middleware is integrated", async () => {
+    await t.test("catalogue admin mutations remain outside the authentication scope", async () => {
         await request(app).post("/api/titles").send({}).expect(404);
         await request(app).patch("/api/titles/movie-001").send({ title: "Changed" }).expect(404);
         await request(app).delete("/api/titles/movie-001").expect(404);

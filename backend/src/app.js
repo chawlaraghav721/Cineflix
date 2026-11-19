@@ -5,6 +5,9 @@ const path = require("node:path");
 const { errorHandler, notFoundHandler } = require("./middleware/errorHandler");
 const healthRoutes = require("./routes/healthRoutes");
 const titleRoutes = require("./routes/titleRoutes");
+const cookieParser = require("cookie-parser");
+const { createAuthRouter } = require("./routes/authRoutes");
+const { loadAuthConfig } = require("./config/auth");
 
 const repositoryRoot = path.resolve(__dirname, "../..");
 
@@ -19,8 +22,9 @@ function isPrivatePath(requestPath) {
     return segments.some(segment => segment === ".git" || segment === "backend" || segment === "node_modules" || segment.startsWith("."));
 }
 
-function createApp() {
+function createApp({ authConfig = loadAuthConfig() } = {}) {
     const app = express();
+    app.locals.authConfig = authConfig;
     app.disable("x-powered-by");
     app.use((req, res, next) => {
         res.set("X-Content-Type-Options", "nosniff");
@@ -33,7 +37,9 @@ function createApp() {
         return next();
     });
     app.use(express.json({ limit: "100kb" }));
+    app.use(cookieParser());
 
+    app.use("/api/auth", createAuthRouter());
     app.use("/api", healthRoutes);
     app.use("/api", titleRoutes);
     app.get("/api", (req, res) => res.json({ message: "CineFlix API" }));

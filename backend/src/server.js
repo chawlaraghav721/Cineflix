@@ -5,14 +5,18 @@ require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
 
 const { createApp } = require("./app");
 const { connectDatabase, disconnectDatabase } = require("./config/db");
+const { loadAuthConfig, AuthConfigurationError } = require("./config/auth");
+const User = require("./models/User");
 
 async function startServer() {
+    const authConfig = loadAuthConfig();
     await connectDatabase();
+    await User.createIndexes();
     const port = Number.parseInt(process.env.PORT || "3000", 10);
     if (!Number.isInteger(port) || port < 1 || port > 65535) {
         throw new Error("PORT must be an integer between 1 and 65535.");
     }
-    const server = createApp().listen(port, () => {
+    const server = createApp({ authConfig }).listen(port, () => {
         console.log(`CineFlix backend listening on port ${port}`);
     });
     const shutdown = () => {
@@ -27,8 +31,10 @@ async function startServer() {
 }
 
 if (require.main === module) {
-    startServer().catch(error => {
-        console.error("CineFlix backend startup failed:", error.message);
+    startServer().catch(async error => {
+        console.error("CineFlix backend startup failed:", error instanceof AuthConfigurationError
+            ? error.message : "Check database access and server configuration.");
+        await disconnectDatabase();
         process.exitCode = 1;
     });
 }

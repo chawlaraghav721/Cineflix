@@ -2,6 +2,7 @@
     "use strict";
     let state = { user: null, status: "loading" };
     let revision = 0;
+    let pendingMutations = 0;
     const notificationKey = "cineflixSessionChange";
 
     function getState() { return { status: state.status, user: state.user ? { ...state.user } : null }; }
@@ -45,6 +46,8 @@
         window.dispatchEvent(new Event("cineflix:session-updated"));
     }
     async function refresh() {
+        // A mutation may still be changing the cookie; reconcile once it settles.
+        if (pendingMutations) return getState();
         const current = ++revision;
         update(null, "loading");
         try {
@@ -55,19 +58,28 @@
         }
         return getState();
     }
+    async function finishMutation() {
+        pendingMutations--;
+        if (!pendingMutations) await refresh();
+    }
     async function signIn(path, body) {
         const current = ++revision;
-        update(null, "loading");
+        pendingMutations++;
         try {
+            update(null, "loading");
             const user = publicUser(await request(path, "POST", body));
             if (current === revision) { update(user, "signed-in"); announceChange(); }
             return user;
         } catch (error) { if (current === revision) update(null, "signed-out"); throw error; }
+        finally { await finishMutation(); }
     }
     async function signOut() {
         const current = ++revision;
-        await request("logout", "POST");
-        if (current === revision) { update(null, "signed-out"); announceChange(); }
+        pendingMutations++;
+        try {
+            await request("logout", "POST");
+            if (current === revision) { update(null, "signed-out"); announceChange(); }
+        } finally { await finishMutation(); }
     }
     window.CineFlixAuth = { getState, refresh, login: values => signIn("login", values),
         register: values => signIn("register", values), logout: signOut };

@@ -184,7 +184,10 @@ test("late account reads cannot restore a previous identity after a newer logout
     const page = await loadPage({ user: signedUser });
     let resolve;
     const pending = new Promise(done => { resolve = done; });
-    page.api.override = url => url.endsWith("/me") ? pending : undefined;
+    let heldRead = false;
+    page.api.override = url => {
+        if (url.endsWith("/me") && !heldRead) { heldRead = true; return pending; }
+    };
     const oldRead = page.window.CineFlixAuth.refresh();
     await page.window.CineFlixAuth.logout();
     page.api.override = null;
@@ -192,6 +195,44 @@ test("late account reads cannot restore a previous identity after a newer logout
     resolve(page.response({ user: signedUser })); await oldRead; await flush();
     assert.equal(page.window.CineFlixAuth.getState().user, null);
     assert.equal(page.login.textContent, "Login");
+});
+
+test("background refreshes during login or registration cannot discard successful sign-in", async () => {
+    for (const method of ["login", "register"]) {
+        const page = await loadPage();
+        let complete;
+        const pending = new Promise(resolve => { complete = resolve; });
+        page.api.override = url => url.endsWith("/" + method) ? pending : undefined;
+        const signIn = page.window.CineFlixAuth[method]({ email: signedUser.email, password: "a safe password phrase", ...(method === "register" ? { name: signedUser.name } : {}) });
+        page.window.dispatchEvent({ type: "focus" });
+        page.window.dispatchEvent({ type: "storage", key: "cineflixSessionChange" });
+        await page.window.CineFlixAuth.refresh();
+        page.api.user = signedUser;
+        complete(page.response({ user: signedUser }, method === "register" ? 201 : 200));
+        await signIn; await flush();
+        assert.equal(page.window.CineFlixAuth.getState().user?.id, signedUser.id);
+        assert.equal(page.login.textContent, "My Account");
+        assert.equal(page.ids["account-panel"].hidden, false);
+        assert(page.local.values.has("cineflixSessionChange"));
+    }
+});
+
+test("background refreshes during logout cannot restore the previous signed-in view", async () => {
+    const page = await loadPage({ user: signedUser });
+    let complete;
+    const pending = new Promise(resolve => { complete = resolve; });
+    page.api.override = url => url.endsWith("/logout") ? pending : undefined;
+    const signOut = page.window.CineFlixAuth.logout();
+    page.window.dispatchEvent({ type: "focus" });
+    page.window.dispatchEvent({ type: "storage", key: "cineflixSessionChange" });
+    await page.window.CineFlixAuth.refresh();
+    page.api.user = null;
+    complete(page.response({ message: "Signed out" }));
+    await signOut; await flush();
+    assert.equal(page.window.CineFlixAuth.getState().user, null);
+    assert.equal(page.login.textContent, "Login");
+    assert.equal(page.ids["account-panel"].hidden, true);
+    assert(page.local.values.has("cineflixSessionChange"));
 });
 
 test("account service failure never falls back to a stored demo identity", async () => {

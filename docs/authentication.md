@@ -107,6 +107,8 @@ Requests use same-origin cookies and no-store caching; no token is exposed to JS
 data. A storage notification containing only a random change marker synchronizes
 other tabs; it contains no identity or credentials. Page restoration and focus
 refresh account state. Stale responses cannot restore an earlier identity.
+Background refreshes defer while login, registration or logout is pending; the
+account state is reconciled with `/me` after the mutation settles.
 Cookie authentication works even if browser storage is blocked. Legacy demo
 identities are ignored and cleaned up after successful sign-in/logout.
 
@@ -120,7 +122,7 @@ logging, login markup, navbar account display, dependency configuration and docs
 ## Verification
 
 Executed with Node 26.13.0, Express 4.22.3, Mongoose 8.24.10 and installed Google
-Chrome: the complete `node --test` run passed **126 tests, 0 failed, 0 skipped**.
+Chrome: the complete `node --test` run passed **128 tests, 0 failed, 0 skipped**.
 The backend `npm test` command passed **26 tests, 0 failed, 0 skipped**. The
 separate Movie Night ownership verification passed its real-database test.
 JavaScript syntax checks passed for all 46 application/test scripts.

@@ -606,6 +606,18 @@ body.trailer-open {
     color: #e50914;
 }
 
+.login-box .auth-hint {
+    color: #b9bec8;
+    font-size: 13px;
+    line-height: 1.5;
+    margin-top: 14px;
+}
+
+.login-box [hidden] { display: none !important; }
+.login-box .btn:disabled, .signout-btn:disabled { opacity: 0.6; cursor: wait; }
+.login-box input[aria-invalid="true"] { border-color: #ff5964; }
+.login-extra a:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
+
 
 .container {
     width: 88%;

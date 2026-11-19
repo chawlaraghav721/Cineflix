@@ -54,14 +54,27 @@
 
         <div class="login-box">
 
-            <h1>Sign In</h1>
+            <h1 id="auth-title">Sign In</h1>
+
+            <div id="account-panel" hidden>
+                <p id="account-message" role="status" aria-live="polite"></p>
+                <button id="account-signout" class="btn" type="button">Sign Out</button>
+            </div>
 
             <form id="login-form" novalidate>
+
+                <div id="registration-name" hidden>
+                    <label for="name">Name</label>
+                    <input type="text" id="name" autocomplete="name" maxlength="80" aria-describedby="name-error" placeholder="Enter your name">
+                    <p id="name-error" class="field-error" aria-live="polite"></p>
+                </div>
 
                 <label for="email">Email</label>
                 <input
                     type="email"
                     id="email"
+                    autocomplete="email"
+                    maxlength="254"
                     aria-describedby="email-error"
                     placeholder="Enter your email"
                     required
@@ -75,6 +88,8 @@
                     <input
                         type="password"
                         id="password"
+                        autocomplete="current-password"
+                        maxlength="128"
                         aria-describedby="password-error"
                         placeholder="Enter your password"
                         required
@@ -94,29 +109,19 @@
 
                 <p id="password-error" class="field-error" aria-live="polite"></p>
 
-                <div class="remember">
+                <p class="auth-hint">Creating an account? Use a password with at least 12 characters.</p>
 
-                    <input
-                        type="checkbox"
-                        id="remember"
-                    >
-
-                    <label for="remember">Remember me</label>
-
-                </div>
-
-                <button type="submit" class="btn">
+                <button id="auth-submit" type="submit" class="btn">
                     Sign In
                 </button>
 
-                <p id="login-feedback" role="status" aria-live="polite"></p>
-
             </form>
+            <p id="login-feedback" role="status" aria-live="polite"></p>
 
             <p class="login-extra">
-                New to CineFlix?
-                <a href="#">Sign up now</a>
+                <a href="login.html?mode=register" id="auth-toggle">New to CineFlix? Create an account</a>
             </p>
+            <p class="auth-hint">Sign-in lasts up to one hour. Saved lists, ratings and Movie Night currently stay on this device.</p>
 
         </div>
 

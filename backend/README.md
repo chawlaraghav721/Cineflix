@@ -11,14 +11,8 @@ The Express app serves the existing frontend and `/api` routes from the same ori
    npm install
    ```
 
-2. Set your private Atlas connection string in `backend/.env` as `MONGODB_URI`. The file is ignored by Git. `backend/.env.example` contains variable names and a placeholder only.
-3. Seed the shared development database with the 30 checked-in catalogue items:
-
-   ```sh
-   npm run seed
-   ```
-
-   Seeding upserts by the stable catalogue `id`; rerunning it does not create duplicate titles or remove other records.
+2. Copy `.env.example` to `backend/.env`. Set the shared Atlas URI as `MONGODB_URI`, generate a private random `JWT_SECRET` of at least 32 bytes, and set `APP_ORIGIN` to the exact browser origin (default `http://localhost:3000`). Generate a secret locally with `node -e "process.stdout.write(require('node:crypto').randomBytes(48).toString('hex'))"`. The `.env` file is ignored by Git; never share its values in source, chat or screenshots. Production requires an HTTPS `APP_ORIGIN` and `NODE_ENV=production`.
+3. Use the existing shared `cineflix` database and its populated catalogue. Authentication setup does not require reseeding. The catalogue owner can run `npm run seed` when catalogue initialization or a coordinated seed update is needed; it upserts by stable ID without clearing collections.
 4. Start the integrated website and API:
 
    ```sh
@@ -27,7 +21,7 @@ The Express app serves the existing frontend and `/api` routes from the same ori
 
    Open <http://localhost:3000>. `npm run dev` restarts the server when backend source files change.
 
-The server exits before listening if `MONGODB_URI` is missing or MongoDB cannot be reached. `GET /api/health` reports the database connection state. Do not put database credentials in frontend files or commit `.env`.
+The server exits before listening if authentication configuration is invalid, `MONGODB_URI` is missing, MongoDB cannot be reached, or the user email index cannot be created. `GET /api/health` reports the database connection state. Do not put database credentials in frontend files or commit `.env`.
 
 ## Catalogue endpoints
 
@@ -40,7 +34,22 @@ The server exits before listening if `MONGODB_URI` is missing or MongoDB cannot 
 
 Sort values are `title_asc`, `title_desc`, `year_asc`, and `year_desc`. Page defaults to 1, limit defaults to 12 and is capped at 50. Query errors and API failures use `{ "error": { "code", "message" } }`.
 
-Admin title creation, update, and deletion are intentionally not mounted yet. They require Member 2's real `requireAuth` and `requireAdmin` middleware; the current demo login is not server authentication and must not authorize catalogue changes. Once that middleware is integrated, add the protected `POST /api/titles`, `PATCH /api/titles/:itemId`, and `DELETE /api/titles/:itemId` routes.
+Admin title creation, update, and deletion remain outside this authentication change and are not mounted. The real `requireAuth`, `requireAdmin` and `protectMutation` middleware are now available for the catalogue routes to use during their own integration.
+
+## Accounts
+
+`login.html` provides registration, sign-in, account details and sign-out through the same-origin backend. Registration uses `{name,email,password}` and login uses `{email,password}`. Passwords require 12–128 characters for registration. Demo browser identities are no longer used to establish a login.
+
+| Method and path | Result |
+|---|---|
+| `POST /api/auth/register` | `{user:{id,name,email,role}}`, signed cookie, HTTP 201 |
+| `POST /api/auth/login` | Same user envelope and signed cookie, HTTP 200 |
+| `POST /api/auth/logout` | `{message:"Signed out"}`, cleared cookie |
+| `GET /api/auth/me` | Current user envelope, or HTTP 401 |
+
+POST requests require an exact matching `Origin` header, or a same-origin `Referer` when Origin is absent. Set `Origin` explicitly in Postman/curl. Cookie flags are HttpOnly, SameSite=Strict, Path=/ and Secure in production; expiry is one hour. Logout clears the browser cookie but copied stateless JWTs remain valid until expiry. Registration/login share a per-process limit of 20 attempts per IP per 15 minutes.
+
+See [authentication integration and verification](../docs/authentication.md) for middleware usage, admin account designation, tests and the completed live Atlas verification record. Watchlist, personal ratings and Movie Night remain their existing browser-based features until their backend integrations are completed.
 
 ## Tests
 
@@ -58,3 +67,5 @@ npm test
 ```
 
 Backend tests use `mongodb-memory-server` and an isolated temporary MongoDB instance; they do not connect to or clear Atlas data. The first test run may download a MongoDB test binary.
+
+For real-browser account tests, install Chromium with `npx playwright install chromium`, then run `npm run test:browser`. Alternatively set `CINEFLIX_CHROME_PATH` to an installed Chrome executable. This check is explicitly skipped if no browser executable is available. It uses the real server process and an isolated test database, including a server restart and separate browser accounts.

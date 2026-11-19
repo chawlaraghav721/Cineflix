@@ -8,18 +8,23 @@
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "seed": "node src/scripts/seedCatalogue.js",
-    "test": "node --test"
+    "test": "node --test",
+    "test:browser": "node --test test/auth-browser.test.cjs"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
+    "cookie-parser": "^1.4.7",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "express-rate-limit": "^8.7.5",
+    "jsonwebtoken": "^9.0.3",
     "mongoose": "^8.9.5"
   },
   "devDependencies": {
     "mongodb-memory-server": "^10.1.4",
+    "playwright": "^1.65.1",
     "supertest": "^7.0.0"
   }
 }

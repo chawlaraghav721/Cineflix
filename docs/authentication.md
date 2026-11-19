@@ -126,8 +126,8 @@ separate Movie Night ownership verification passed its real-database test.
 JavaScript syntax checks passed for all 46 application/test scripts.
 
 Install dependencies with `cd backend && npm ci`. Run `node --test` from the repo
-root, or `npm test` inside backend. Test databases are temporary MongoDB instances;
-they never read an Atlas URI. Existing catalogue and frontend regressions remain
+root, or `npm test` inside backend. Automated tests use temporary MongoDB instances;
+they do not connect to Atlas. Existing catalogue and frontend regressions remain
 covered; old demo-login tests were deliberately updated for asynchronous accounts.
 
 For browser checks, install Chromium with `npx playwright install chromium` inside
@@ -155,13 +155,32 @@ cannot list, read, vote, reset or delete the first account's session, and a
 cross-origin mutation fails. No Movie Night source file is changed or activated
 in the production app. This does not approve its proposed room/revision contracts.
 
-**Live shared Atlas verification remains pending by agreement.** Once database
-access is supplied privately and the client IP is allowed, configure `.env`, run
-the server, register designated test accounts, inspect only their new User
-documents, restart the server, log in again and verify cookie/logout behavior.
-Never drop the shared database or clear a collection for testing. Confirm admin
-checks with the designated account, then coordinate the final protected feature
-flow. No live Atlas connection has been attempted in this implementation run.
+### Live Atlas verification — 20 November 2026
+
+The actual backend server was tested against the existing shared `cineflix`
+database. **All 29 live checks passed**, including:
+
+- Connection, health response and catalogue API reads; all 30 existing titles were visible.
+- Registration of two uniquely named temporary accounts, safe response fields,
+  salted password hashes, timestamps and the unique email index.
+- Current-account reads and account separation; a client-supplied user ID did not
+  override the verified cookie identity.
+- Rejection of duplicate registration, incorrect passwords, missing cookies,
+  tampered/expired JWTs and cross-origin logout.
+- Account/session persistence after stopping and restarting the actual server,
+  followed by successful login and cookie-clearing logout.
+
+Both temporary accounts were removed using filters restricted to their unique
+test email addresses, names and creation time. The catalogue remained at 30
+records; it was not reseeded. No other account data or feature records were
+modified. Credentials stayed in the ignored local `.env` and were not included
+in logs or verification output.
+
+Browser journeys, production cookie flags, administrator-role changes, rate
+limiting and Movie Night ownership were verified separately against isolated
+MongoDB. Those checks are not a claim of production HTTPS deployment or live
+integration of the other feature modules. Live administrator access requires a
+designated administrator account; no shared account was promoted during this check.
 
 ## Demonstration
 

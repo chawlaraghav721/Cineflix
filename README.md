@@ -76,16 +76,15 @@ Cineflix/
    ```
 
 3. Copy `backend/.env.example` to `backend/.env`. Privately configure the shared `MONGODB_URI`, a random `JWT_SECRET` of at least 32 bytes, and `APP_ORIGIN=http://localhost:3000`. See [backend setup](backend/README.md) for the secret-generation command and production settings. Never commit `.env`.
-4. After database access is available, seed the catalogue and start the server:
+4. Start the server using the existing shared catalogue:
 
    ```bash
-   npm run seed
    npm start
    ```
 
 5. Open `http://localhost:3000/`. Catalogue and authentication APIs must run on the same origin as the pages; Live Server or `file://` alone does not provide these APIs.
 
-Live shared Atlas verification is pending until team database access is configured. Automated integration tests use an isolated temporary database and do not require Atlas.
+The shared Atlas connection and authentication flow were verified on 20 November 2026. Configure your own assigned credentials locally. The shared catalogue is already populated; reseeding is not required for authentication setup. Automated integration tests use an isolated temporary database and do not require Atlas.
 
 ## ⚙️ How It Works
 
@@ -123,4 +122,4 @@ CineFlix was built as a team college project. Development work was organized usi
 ---
 
 **Project type:** B.Tech CSE college project<br>
-**Status:** Catalogue backend and account authentication implemented; live shared Atlas verification and remaining account-backed feature integrations are pending.
+**Status:** Catalogue backend and account authentication implemented, with live Atlas authentication verified. Remaining account-backed feature integrations are pending.

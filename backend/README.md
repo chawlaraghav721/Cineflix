@@ -12,13 +12,7 @@ The Express app serves the existing frontend and `/api` routes from the same ori
    ```
 
 2. Copy `.env.example` to `backend/.env`. Set the shared Atlas URI as `MONGODB_URI`, generate a private random `JWT_SECRET` of at least 32 bytes, and set `APP_ORIGIN` to the exact browser origin (default `http://localhost:3000`). Generate a secret locally with `node -e "process.stdout.write(require('node:crypto').randomBytes(48).toString('hex'))"`. The `.env` file is ignored by Git; never share its values in source, chat or screenshots. Production requires an HTTPS `APP_ORIGIN` and `NODE_ENV=production`.
-3. Seed the shared development database with the 30 checked-in catalogue items:
-
-   ```sh
-   npm run seed
-   ```
-
-   Seeding upserts by the stable catalogue `id`; rerunning it does not create duplicate titles or remove other records.
+3. Use the existing shared `cineflix` database and its populated catalogue. Authentication setup does not require reseeding. The catalogue owner can run `npm run seed` when catalogue initialization or a coordinated seed update is needed; it upserts by stable ID without clearing collections.
 4. Start the integrated website and API:
 
    ```sh
@@ -55,7 +49,7 @@ Admin title creation, update, and deletion remain outside this authentication ch
 
 POST requests require an exact matching `Origin` header, or a same-origin `Referer` when Origin is absent. Set `Origin` explicitly in Postman/curl. Cookie flags are HttpOnly, SameSite=Strict, Path=/ and Secure in production; expiry is one hour. Logout clears the browser cookie but copied stateless JWTs remain valid until expiry. Registration/login share a per-process limit of 20 attempts per IP per 15 minutes.
 
-See [authentication integration and verification](../docs/authentication.md) for middleware usage, admin account designation, tests and the remaining live Atlas checks. Watchlist, personal ratings and Movie Night remain their existing browser-based features until their backend integrations are completed.
+See [authentication integration and verification](../docs/authentication.md) for middleware usage, admin account designation, tests and the completed live Atlas verification record. Watchlist, personal ratings and Movie Night remain their existing browser-based features until their backend integrations are completed.
 
 ## Tests
 

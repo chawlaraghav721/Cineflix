@@ -214,6 +214,11 @@
     border-radius: 6px;
 }
 #night-account-controls .night-button { margin: 4px; }
+#night-room-join { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 28px; }
+#night-room-join label { width: 100%; font-weight: bold; }
+#night-room-code-input { background: #232731; color: #fff; border: 1px solid #545968; border-radius: 6px; padding: 12px; font: inherit; max-width: 100%; text-transform: uppercase; }
+#night-room-panel .night-button { margin: 5px 0; }
+#night-room-code { overflow-wrap: anywhere; margin: 16px 0; }
 
 /* Styles used only on Movies when opened in movie-selection mode. */
 .night-select-banner {

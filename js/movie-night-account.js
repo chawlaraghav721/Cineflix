@@ -19,7 +19,7 @@
         }
         let account = auth.getState();
         if (account.status === "loading") account = await auth.refresh();
-        if (account.status === "signed-out") {
+        if (account.status === "signed-out" && !params.has("session") && !params.has("room") && params.get("mode") !== "room") {
             if (message) message.textContent = "Guest demo — sign in to save nights to your account or vote across devices.";
             window.addEventListener("cineflix:auth-state", () => {
                 if (auth.getState().status === "signed-in") location.reload();
@@ -147,6 +147,7 @@
                         if (valid()) { active = value; results = totals; }
                     }))));
                 } else if (results) showResults(results);
+                roomUi?.render();
             };
             refresh = async () => {
                 if (busy) { needsRefresh = true; return; }
@@ -166,7 +167,7 @@
             };
             sessions.addEventListener("change", () => { setUrl(sessions.value || null); refresh(); });
             byId("night-new").addEventListener("click", () => { active = null; results = null; setUrl(null); sessions.value = ""; render(); });
-            byId("night-retry").addEventListener("click", () => { if (!currentOwner()) auth.refresh(); else refresh(); });
+            byId("night-retry").addEventListener("click", () => { if (!currentOwner()) auth.refresh(); else if (roomUi?.isActive()) roomUi.refresh(); else refresh(); });
             voters.addEventListener("change", () => { const count = Number(voters.value); if (Number.isInteger(count) && count >= 2 && count <= 10) saveDraft({ ...draft, voterCount: count }); });
             start.addEventListener("click", () => {
                 const voterCount = Number(voters.value);
@@ -197,7 +198,7 @@
                 if (isMovieNight && document.activeElement !== byId("night-voters") && !active) byId("night-voters").value = draft.voterCount;
                 if (message) message.textContent = "Saved to your account — one-device sequential voting.";
                 if (isMovieNight && window.CineFlixMovieNightRooms && !roomUi) roomUi = window.CineFlixMovieNightRooms.create({ client, movie, card,
-                    getDraft: () => draft, currentOwner, task, say, renderSequential: () => render() });
+                    getDraft: () => draft, currentOwner, isBusy: () => busy, task, say, renderSequential: () => render(), refreshSequential: () => refresh() });
                 if (roomUi?.isActive()) await roomUi.refresh(); else await refresh();
                 render();
             } catch (error) { if (token === epoch) { say(error.message + " Refresh the page to retry. Guest votes have not been changed."); render(); } }
@@ -213,7 +214,12 @@
             }
             if (owner) { if (busy) needsRefresh = true; else load(); } else { render(); say("Sign in to continue, or choose Guest demo."); }
         });
-        if (!owner) { say("Account status could not be verified. Retry account loading; guest mode has not been selected."); render(); }
+        if (!owner) {
+            const text = account.status === "signed-out" ? "Sign in to open this Movie Night, or explicitly choose Guest demo."
+                : "Account status could not be verified. Retry account loading; guest mode has not been selected.";
+            if (message) message.textContent = text;
+            say(text); render();
+        }
         else await load();
         return true;
     }

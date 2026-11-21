@@ -119,7 +119,7 @@
             : authState?.status === "signed-in" ? "Your account list is saved across visits." : "Checking your account…";
         clearButton.disabled = true;
         retryButton.hidden = true;
-        status.textContent = "Loading your list?";
+        status.textContent = "Loading your list...";
         errorMessage.textContent = "";
         try {
             const [loaded, saved] = await Promise.all([catalogueApi.loadCatalogue(), myList.getMyListItems()]);

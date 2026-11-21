@@ -154,7 +154,7 @@
             watchlistButton.textContent = "My List unavailable";
             return;
         }
-        watchlistButton.textContent = "Loading My List?";
+        watchlistButton.textContent = "Loading My List...";
         watchlistButton.setAttribute("aria-busy", "true");
         try {
             const saved = await myList.isInMyList(currentItem.id);

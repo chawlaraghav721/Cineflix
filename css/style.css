@@ -194,6 +194,7 @@ a {
 .nav-links .login-link.account-link {
     border: none;
     padding: 0;
+    border-radius: 0;
 }
 
 /* ---- BUTTONS ---- */
@@ -1218,12 +1219,13 @@ body.trailer-open {
     font-weight: bold;
 }
 
-.nav-links a.active:not(.login-link) {
+.nav-links a.active:not(.login-link),
+.nav-links a.active.account-link {
     border-bottom: 2px solid #ff4d52;
     padding-bottom: 5px;
 }
 
-.nav-links a.active.login-link {
+.nav-links a.active.login-link:not(.account-link) {
     background: #e50914;
     color: #ffffff;
 }

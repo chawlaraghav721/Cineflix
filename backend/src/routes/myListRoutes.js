@@ -12,4 +12,5 @@ router.param("itemId", (req, res, next, value) => validItemId(value) ? next()
 router.get("/", controller.getMyList);
 router.post("/", controller.addMyList);
 router.patch("/:itemId", controller.updateMyList);
+router.delete("/:itemId", controller.removeMyList);
 module.exports = router;

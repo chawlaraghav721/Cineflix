@@ -38,4 +38,12 @@ async function updateMyList(req, res, next) {
         return res.json(publicEntry(entry));
     } catch (error) { return next(error); }
 }
-module.exports = { getMyList, addMyList, updateMyList, publicEntry, fail };
+async function removeMyList(req, res, next) {
+    try {
+        // Saved titles can still be removed after catalogue deletion.
+        const result = await Watchlist.deleteOne({ user: req.user.id, itemId: req.params.itemId });
+        if (!result.deletedCount) return fail(res, 404, "ENTRY_NOT_FOUND", "This title is not in your list.");
+        return res.status(204).end();
+    } catch (error) { return next(error); }
+}
+module.exports = { getMyList, addMyList, updateMyList, removeMyList, publicEntry, fail };

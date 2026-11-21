@@ -66,4 +66,13 @@ test("watchlist HTTP API with verified cookies and disposable MongoDB", async t 
             await call("patch", "/movie-004").send(body).expect(400);
         }
     });
+    await t.test("DELETE item cannot remove another user's entry and permits stale-title cleanup", async () => {
+        await call("delete", "/movie-004", b).expect(404);
+        assert(await Watchlist.exists({ user: userA, itemId: "movie-004" }));
+        assert.equal((await call("delete", "/movie-004").expect(204)).text, "");
+        await call("delete", "/movie-004").expect(404);
+        await Watchlist.create({ user: userA, itemId: "deleted-title" });
+        await call("delete", "/deleted-title").expect(204);
+        assert(await Watchlist.exists({ user: userB, itemId: "show-001" }));
+    });
 });

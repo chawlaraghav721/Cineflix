@@ -1,3 +1,93 @@
+(function () {
+    "use strict";
+    let state = { user: null, status: "loading" };
+    let revision = 0;
+    let pendingMutations = 0;
+    const notificationKey = "cineflixSessionChange";
+
+    function getState() { return { status: state.status, user: state.user ? { ...state.user } : null }; }
+    function update(user, status) {
+        state = { user, status };
+        window.dispatchEvent(new Event("cineflix:auth-state"));
+    }
+    function publicUser(data) {
+        const user = data?.user;
+        if (!user || typeof user.id !== "string" || typeof user.name !== "string" ||
+            typeof user.email !== "string" || !["user", "admin"].includes(user.role)) {
+            throw new Error("The account response could not be read. Please try again.");
+        }
+        return { id: user.id, name: user.name, email: user.email, role: user.role };
+    }
+    async function request(path, method = "GET", body) {
+        let response;
+        try {
+            response = await window.fetch("/api/auth/" + path, { method, credentials: "same-origin", cache: "no-store",
+                headers: { Accept: "application/json", ...(body === undefined ? {} : { "Content-Type": "application/json" }) },
+                ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
+        } catch { throw new Error("Unable to reach CineFlix. Check your connection and try again."); }
+        let data;
+        try { data = await response.json(); } catch { data = null; }
+        if (!response.ok) {
+            const error = new Error(response.status >= 500 ? "The account service is unavailable. Please try again."
+                : data?.error?.message || "The account request failed. Please try again.");
+            error.status = response.status;
+            error.code = data?.error?.code;
+            throw error;
+        }
+        if (!data || typeof data !== "object") throw new Error("The account response could not be read. Please try again.");
+        return data;
+    }
+    function announceChange() {
+        // This notification contains no identity or credentials; cookies remain HttpOnly.
+        for (const name of ["localStorage", "sessionStorage"]) {
+            try { window[name].removeItem("cineflixDemoUser"); } catch { /* Optional legacy cleanup. */ }
+        }
+        try { window.localStorage.setItem(notificationKey, Date.now() + ":" + Math.random()); } catch { /* Cookie login still works without storage. */ }
+        window.dispatchEvent(new Event("cineflix:session-updated"));
+    }
+    async function refresh() {
+        // A mutation may still be changing the cookie; reconcile once it settles.
+        if (pendingMutations) return getState();
+        const current = ++revision;
+        update(null, "loading");
+        try {
+            const user = publicUser(await request("me"));
+            if (current === revision) update(user, "signed-in");
+        } catch (error) {
+            if (current === revision) update(null, error.status === 401 ? "signed-out" : "error");
+        }
+        return getState();
+    }
+    async function finishMutation() {
+        pendingMutations--;
+        if (!pendingMutations) await refresh();
+    }
+    async function signIn(path, body) {
+        const current = ++revision;
+        pendingMutations++;
+        try {
+            update(null, "loading");
+            const user = publicUser(await request(path, "POST", body));
+            if (current === revision) { update(user, "signed-in"); announceChange(); }
+            return user;
+        } catch (error) { if (current === revision) update(null, "signed-out"); throw error; }
+        finally { await finishMutation(); }
+    }
+    async function signOut() {
+        const current = ++revision;
+        pendingMutations++;
+        try {
+            await request("logout", "POST");
+            if (current === revision) { update(null, "signed-out"); announceChange(); }
+        } finally { await finishMutation(); }
+    }
+    window.CineFlixAuth = { getState, refresh, login: values => signIn("login", values),
+        register: values => signIn("register", values), logout: signOut };
+    window.addEventListener("cineflix:session-updated", refresh);
+    window.addEventListener("storage", event => { if (event.key === null || event.key === notificationKey) refresh(); });
+    window.addEventListener("pageshow", event => { if (event.persisted) refresh(); });
+    window.addEventListener("focus", refresh);
+}());
 
 document.addEventListener("DOMContentLoaded", function () {
 
@@ -71,30 +161,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
     });
 
-    // Read the stores independently: a blocked or corrupt persistent store must
-    // not hide a valid tab session. Demo sessions never contain passwords.
-    function readDemoUser() {
-        for (const storageName of ["localStorage", "sessionStorage"]) {
-            try {
-                const user = JSON.parse(window[storageName].getItem("cineflixDemoUser"));
-                if (user && typeof user === "object" && !Array.isArray(user) &&
-                    typeof user.email === "string" && user.email.trim()) return user;
-            } catch (error) {
-                // Missing, corrupt and unavailable demo sessions are signed out.
-            }
-        }
-        return null;
-    }
-
-    function updateDemoSession() {
+    function updateAccount() {
         const loginLink = document.querySelector(".login-link");
         const navList = document.querySelector(".nav-links");
         if (!loginLink || !navList) return;
-        const demoUser = readDemoUser();
+        const state = window.CineFlixAuth.getState();
         const existingSignOut = navList.querySelector(".signout-btn");
 
-        if (!demoUser) {
-            loginLink.textContent = "Login";
+        loginLink.setAttribute("aria-busy", String(state.status === "loading"));
+        if (!state.user) {
+            loginLink.textContent = state.status === "loading" ? "Account…" : "Login";
             loginLink.removeAttribute("title");
             loginLink.classList.remove("account-link");
             if (existingSignOut) existingSignOut.parentNode.remove();
@@ -102,7 +178,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         loginLink.textContent = "My Account";
-        loginLink.title = demoUser.email;
+        loginLink.title = state.user.email;
         loginLink.classList.add("account-link");
         if (existingSignOut) return;
 
@@ -111,29 +187,21 @@ document.addEventListener("DOMContentLoaded", function () {
         signOutButton.type = "button";
         signOutButton.textContent = "Sign Out";
         signOutButton.className = "signout-btn";
-        signOutButton.addEventListener("click", function () {
-            let failed = false;
-            for (const storageName of ["localStorage", "sessionStorage"]) {
-                try {
-                    window[storageName].removeItem("cineflixDemoUser");
-                } catch (error) {
-                    failed = true;
-                }
+        signOutButton.addEventListener("click", async function () {
+            signOutButton.disabled = true;
+            try {
+                await window.CineFlixAuth.logout();
+                window.location.href = "login.html";
+            } catch {
+                signOutButton.disabled = false;
+                window.alert("Unable to sign out. Check your connection and try again.");
             }
-            if (failed) {
-                window.alert("Unable to clear your demo session. Check browser storage settings and try again.");
-                return;
-            }
-            window.location.href = "login.html";
         });
         signOutItem.appendChild(signOutButton);
         navList.appendChild(signOutItem);
     }
 
-    window.addEventListener("cineflix:session-updated", updateDemoSession);
-    window.addEventListener("pageshow", updateDemoSession);
-    window.addEventListener("storage", function (event) {
-        if (event.key === null || event.key === "cineflixDemoUser") updateDemoSession();
-    });
-    updateDemoSession();
+    window.addEventListener("cineflix:auth-state", updateAccount);
+    updateAccount();
+    window.CineFlixAuth.refresh();
 });

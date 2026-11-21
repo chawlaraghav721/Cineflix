@@ -45,7 +45,7 @@
     function loadCatalogue() {
         if (!cataloguePromise) {
             cataloguePromise = Promise.resolve()
-                .then(() => fetch("data/catalogue.json"))
+                .then(() => fetch("/api/catalogue", { credentials: "same-origin" }))
                 .then(response => {
                     if (!response.ok) {
                         throw new Error("Unable to load the catalogue (HTTP " + response.status + ").");

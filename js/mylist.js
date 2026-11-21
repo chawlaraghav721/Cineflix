@@ -129,6 +129,7 @@
             search.disabled = false;
             filter.disabled = false;
             render();
+            window.dispatchEvent(new Event("cineflix:list-refreshed"));
         } catch (error) {
             if (current !== revision) return;
             status.textContent = "";

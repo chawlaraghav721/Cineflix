@@ -91,6 +91,7 @@
             const items = window.CineFlixCatalogue.getAllItems(catalogue);
             const ids = await savedIds();
             if (current !== revision) return;
+            if (ids !== null) window.dispatchEvent(new Event("cineflix:list-refreshed"));
             const ratings = savedRatings();
             const saved = ids === null ? [] : ids.map(id => items.find(item => item.id === id)).filter(Boolean);
             const rated = ratings === null ? [] : items.filter(item => Object.hasOwn(ratings, item.id));

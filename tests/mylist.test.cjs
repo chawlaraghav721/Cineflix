@@ -23,9 +23,10 @@ test('My List refreshes saved cards when restored from the back-forward cache', 
         CineFlixCatalogue: { loadCatalogue: async () => ({ movies: [item], shows: [] }), getItemById: (_, id) => id === item.id ? item : null },
         CineFlixMyList: { getMyListItems: async () => saved.map(itemId => ({ itemId, status: "want-to-watch" })) },
         addEventListener(type, callback) { (events[type] ||= []).push(callback); }
+        ,dispatchEvent(event) { for (const callback of events[event.type] || []) callback(event); }
     };
     vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../js/mylist.js'), 'utf8'), {
-        window, URL,
+        window, URL, Event: class { constructor(type) { this.type = type; } },
         document: { baseURI: 'http://localhost/mylist.html', getElementById: id => ids[id], createElement: () => new Element() }
     });
     await new Promise(resolve => setImmediate(resolve));

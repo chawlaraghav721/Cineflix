@@ -163,6 +163,7 @@
             watchlistButton.textContent = saved ? "Remove from My List" : "Add to My List";
             watchlistButton.setAttribute("aria-label", watchlistButton.textContent);
             watchlistButton.disabled = watchlistBusy;
+            window.dispatchEvent(new Event("cineflix:list-refreshed"));
         } catch (error) {
             if (current !== watchlistRevision) return;
             watchlistButton.textContent = "Retry My List";

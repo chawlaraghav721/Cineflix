@@ -98,6 +98,19 @@ test("successful cookie login updates navigation and never stores identity/passw
     assert(!stored.includes(signedUser.email)); assert(!stored.includes("password"));
 });
 
+test("navbar recovers its unavailable count when a page successfully retries My List", async () => {
+    const page = await loadPage();
+    page.window.CineFlixMyList.getMyListIds = async () => { throw Error("offline"); };
+    page.window.dispatchEvent({ type: "cineflix:list-updated" });
+    await flush();
+    const badge = page.mylist.querySelector(".mylist-count");
+    assert.equal(badge.getAttribute("aria-label"), "Saved title count unavailable");
+    page.window.CineFlixMyList.getMyListIds = async () => ["movie-004", "show-001"];
+    page.window.dispatchEvent({ type: "cineflix:list-refreshed" });
+    await flush();
+    assert.equal(badge.textContent, "2");
+});
+
 test("legacy demo sessions cannot impersonate a cookie-authenticated account", async () => {
     const local = storage({ cineflixDemoUser: JSON.stringify(signedUser) });
     const signedOut = await loadPage({ local });

@@ -133,6 +133,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (badge.dataset.countInitialized !== "true") {
             window.addEventListener("cineflix:list-updated", updateMyListCount);
+            window.addEventListener("cineflix:list-refreshed", updateMyListCount);
             window.addEventListener("storage", function (event) {
                 if (event.key === null || event.key === "cineflixMyList") updateMyListCount();
             });

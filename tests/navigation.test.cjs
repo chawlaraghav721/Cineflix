@@ -54,7 +54,7 @@ async function loadPage(options = {}) {
     const window = {
         localStorage: local, sessionStorage: session,
         location: { pathname: "/login.html", search: options.registration ? "?mode=register" : "", href: "" },
-        CineFlixMyList: { getMyListIds: () => ["movie-001"], isStorageAvailable: () => true },
+        CineFlixMyList: { getMyListIds: async () => ["movie-001"] },
         addEventListener(type, cb) { (events[type] ||= []).push(cb); },
         dispatchEvent(event) { for (const cb of events[event.type] || []) cb(event); },
         alert(message) { alerts.push(message); },

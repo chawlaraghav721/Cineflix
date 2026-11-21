@@ -104,21 +104,24 @@ document.addEventListener("DOMContentLoaded", function () {
         badge.setAttribute("aria-live", "polite");
         badge.setAttribute("aria-atomic", "true");
 
-        function updateMyListCount() {
+        let countRevision = 0;
+        async function updateMyListCount() {
+            const current = ++countRevision;
+            badge.textContent = "\u2014";
+            badge.setAttribute("aria-label", "Loading saved title count");
             let count;
             try {
                 const myList = window.CineFlixMyList;
                 if (!myList || typeof myList.getMyListIds !== "function") {
                     throw new Error("My List storage API is unavailable.");
                 }
-                if (typeof myList.isStorageAvailable === "function" && !myList.isStorageAvailable()) {
-                    throw new Error("Browser storage is unavailable.");
-                }
-                count = myList.getMyListIds().length;
+                count = (await myList.getMyListIds()).length;
+                if (current !== countRevision) return;
             } catch (error) {
+                if (current !== countRevision) return;
                 badge.textContent = "\u2014";
                 badge.setAttribute("aria-label", "Saved title count unavailable");
-                badge.title = "My List count is unavailable. Check that the shared storage script is loaded.";
+                badge.title = "My List count is unavailable. Open My List to try again.";
                 return;
             }
 

@@ -3,8 +3,8 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const { existsSync } = require("node:fs");
 const { chromium } = require("playwright");
-const { integrationFixture } = require("./helpers/movieNightIntegration.cjs");
-const { startBackendProcess } = require("./helpers/movieNightServerProcess.cjs");
+const { integrationFixture } = require("../test-support/movieNightIntegration.cjs");
+const { startBackendProcess } = require("../test-support/movieNightServerProcess.cjs");
 const executable = process.env.CINEFLIX_CHROME_PATH || chromium.executablePath();
 
 test("Movie Night guest and account frontend with real cookies, MongoDB and server restart", {

@@ -3,12 +3,12 @@ const { randomBytes } = require("node:crypto");
 const request = require("supertest");
 const mongoose = require("mongoose");
 const { MongoMemoryServer } = require("mongodb-memory-server");
-const { connectDatabase, disconnectDatabase } = require("../../src/config/db");
-const { createApp } = require("../../src/app");
-const { loadAuthConfig } = require("../../src/config/auth");
-const { seedCatalogue } = require("../../src/scripts/seedCatalogue");
-const User = require("../../src/models/User");
-const { createMovieNightSessionModel } = require("../../src/models/MovieNightSession.cjs");
+const { connectDatabase, disconnectDatabase } = require("../src/config/db");
+const { createApp } = require("../src/app");
+const { loadAuthConfig } = require("../src/config/auth");
+const { seedCatalogue } = require("../src/scripts/seedCatalogue");
+const User = require("../src/models/User");
+const { createMovieNightSessionModel } = require("../src/models/MovieNightSession.cjs");
 
 async function integrationFixture(t) {
     const mongo = await MongoMemoryServer.create();

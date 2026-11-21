@@ -11,7 +11,7 @@ async function startBackendProcess({ mongoUri, secret, port }) {
         await new Promise(resolve => probe.close(resolve));
     }
     const origin = `http://127.0.0.1:${port}`;
-    const child = spawn(process.execPath, [path.resolve(__dirname, "../../src/server.js")], {
+    const child = spawn(process.execPath, [path.resolve(__dirname, "../src/server.js")], {
         env: { ...process.env, NODE_ENV: "test", PORT: String(port), APP_ORIGIN: origin,
             JWT_SECRET: secret, MONGODB_URI: mongoUri }, stdio: ["ignore", "pipe", "pipe"], windowsHide: true
     });

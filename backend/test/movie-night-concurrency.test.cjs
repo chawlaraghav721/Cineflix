@@ -2,8 +2,8 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const request = require("supertest");
-const { integrationFixture, configuration } = require("./helpers/movieNightIntegration.cjs");
-const { startBackendProcess } = require("./helpers/movieNightServerProcess.cjs");
+const { integrationFixture, configuration } = require("../test-support/movieNightIntegration.cjs");
+const { startBackendProcess } = require("../test-support/movieNightServerProcess.cjs");
 
 test("MongoDB sequential concurrency across two real shared-server processes", { timeout: 90000 }, async t => {
     const f = await integrationFixture(t);

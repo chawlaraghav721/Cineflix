@@ -4,7 +4,7 @@ const assert = require("node:assert/strict");
 const request = require("supertest");
 const jwt = require("jsonwebtoken");
 const { createApp } = require("../src/app");
-const { integrationFixture, configuration } = require("./helpers/movieNightIntegration.cjs");
+const { integrationFixture, configuration } = require("../test-support/movieNightIntegration.cjs");
 
 test("Movie Night on the shared app, real cookie authentication and isolated MongoDB", async t => {
     const f = await integrationFixture(t);

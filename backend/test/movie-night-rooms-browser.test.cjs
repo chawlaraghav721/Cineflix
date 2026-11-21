@@ -1,10 +1,11 @@
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { existsSync } = require("node:fs");
+const { existsSync, mkdirSync } = require("node:fs");
+const path = require("node:path");
 const { chromium } = require("playwright");
-const { integrationFixture } = require("./helpers/movieNightIntegration.cjs");
-const { startBackendProcess } = require("./helpers/movieNightServerProcess.cjs");
+const { integrationFixture } = require("../test-support/movieNightIntegration.cjs");
+const { startBackendProcess } = require("../test-support/movieNightServerProcess.cjs");
 const executable = process.env.CINEFLIX_CHROME_PATH || chromium.executablePath();
 
 test("room UI lifecycle in two real authenticated browser contexts", {
@@ -84,6 +85,12 @@ test("room UI lifecycle in two real authenticated browser contexts", {
     assert.equal(await otherTab.locator("#night-room-tally").textContent(), "");
     await b.goto(roomUrl); await b.waitForFunction(() => document.getElementById("night-mode-message").textContent.includes("Sign in to open"));
     assert.equal(await b.locator("#night-room-state").isVisible(), false);
-    for (const width of [320, 390, 1440]) { await a.setViewportSize({ width, height: 1000 }); assert(await a.evaluate(() => document.documentElement.scrollWidth <= innerWidth)); }
+    for (const width of [320, 390, 1440]) {
+        await a.setViewportSize({ width, height: 1000 }); assert(await a.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+        if (process.env.CINEFLIX_MOVIE_NIGHT_ARTIFACTS) {
+            mkdirSync(process.env.CINEFLIX_MOVIE_NIGHT_ARTIFACTS, { recursive: true });
+            await a.screenshot({ path: path.join(process.env.CINEFLIX_MOVIE_NIGHT_ARTIFACTS, `movie-night-room-${width}.png`), fullPage: true });
+        }
+    }
     assert.deepEqual(errors, []);
 });

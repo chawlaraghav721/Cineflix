@@ -1,136 +1,69 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
-const path = require("node:path");
 const vm = require("node:vm");
-
-const source = fs.readFileSync(path.join(__dirname, "..", "js", "my-list-storage.js"), "utf8");
-const STORAGE_KEY = "cineflixMyList";
-
-function createStorage(initialValue = null) {
-    return {
-        value: initialValue,
-        readsBlocked: false,
-        writesBlocked: false,
-        writes: 0,
-        getItem() {
-            if (this.readsBlocked) throw new Error("Storage read blocked");
-            return this.value;
-        },
-        setItem(key, value) {
-            assert.equal(key, STORAGE_KEY);
-            this.writes += 1;
-            if (this.writesBlocked) throw new Error("Storage write blocked");
-            this.value = value;
-        }
-    };
-}
-
-function loadMyList(storage = createStorage()) {
-    const events = [];
+const source = fs.readFileSync(require("node:path").join(__dirname, "../js/my-list-storage.js"), "utf8");
+function fixture(options = {}) {
+    const values = new Map(Object.entries(options.storage || {})), events = {}, calls = [];
+    let state = options.state || { status: "signed-out", user: null };
     const window = {
-        localStorage: storage,
-        dispatchEvent(event) {
-            events.push(event);
-            return true;
-        }
+        localStorage: { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) },
+        CineFlixAuth: { getState: () => state, refresh: async () => {} },
+        CineFlixCatalogue: { loadCatalogue: async () => ({}), getItemById: (_, id) => ["movie-004", "show-001"].includes(id) },
+        addEventListener: (type, fn) => (events[type] ||= []).push(fn),
+        removeEventListener: (type, fn) => { events[type] = events[type].filter(cb => cb !== fn); },
+        dispatchEvent: event => (events[event.type] || []).slice().forEach(fn => fn(event)),
+        fetch: async (url, config) => { calls.push({ url, ...config }); return options.fetch(url, config); }
     };
-    vm.runInNewContext(source, {
-        window,
-        Event: class {
-            constructor(type) { this.type = type; }
-        }
-    });
-    return { api: window.CineFlixMyList, events, storage };
+    vm.runInNewContext(source, { window, Event: class { constructor(type) { this.type = type; } } });
+    return { api: window.CineFlixMyList, window, values, calls,
+        session(value) { state = value; window.dispatchEvent({ type: "cineflix:auth-state" }); } };
 }
-
-test("a new My List starts empty", () => {
-    const { api } = loadMyList();
-    assert.deepEqual(Array.from(api.getMyListIds()), []);
-    assert.equal(api.isStorageAvailable(), true);
+const plain = data => JSON.parse(JSON.stringify(data));
+test("explicit guest list migrates legacy IDs locally, supports statuses and refresh persistence", async () => {
+    const page = fixture({ storage: { cineflixMyList: '["movie-004","movie-004",null]' } });
+    assert.deepEqual(plain(await page.api.getMyListIds()), ["movie-004"]);
+    assert.equal(await page.api.addToMyList("movie-004"), false);
+    assert.equal(await page.api.addToMyList("show-001"), true);
+    await page.api.updateStatus("movie-004", "watched");
+    assert.equal((await page.api.getMyListItems())[0].status, "watched");
+    const refreshed = fixture({ storage: Object.fromEntries(page.values) });
+    assert.equal(await refreshed.api.isInMyList("show-001"), true);
+    await refreshed.api.removeFromMyList("show-001");
+    await refreshed.api.clearMyList();
+    assert.deepEqual(plain(await refreshed.api.getMyListIds()), []);
+    assert.equal(page.values.get("cineflixMyList"), '["movie-004","movie-004",null]');
+    assert.equal(page.calls.length, 0);
 });
-
-test("valid movie and show IDs can be added", () => {
-    const { api } = loadMyList();
-    assert.equal(api.addToMyList("movie-011"), true);
-    assert.equal(api.addToMyList("show-001"), true);
-    assert.deepEqual(Array.from(api.getMyListIds()), ["movie-011", "show-001"]);
+test("guest corruption, blocked reads and writes, invalid IDs and statuses are safe", async () => {
+    for (const raw of ["not-json", "null", "{}", "[]"]) assert.deepEqual(plain(await fixture({ storage: { cineflixGuestWatchlist: raw } }).api.getMyListItems()), []);
+    const page = fixture();
+    for (const id of [null, {}, "", " movie-004", "missing"]) await assert.rejects(page.api.addToMyList(id));
+    await assert.rejects(page.api.addToMyList("movie-004", "BAD"));
+    page.window.localStorage.getItem = () => { throw Error("blocked"); };
+    await assert.rejects(page.api.getMyListItems(), /storage/);
+    await assert.rejects(page.api.addToMyList("movie-004"), /storage/);
+    assert.equal(page.values.size, 0);
+    page.window.localStorage.getItem = () => null;
+    page.window.localStorage.setItem = () => { throw Error("blocked"); };
+    await assert.rejects(page.api.addToMyList("movie-004"), /could not be saved/);
 });
-
-test("duplicate IDs cannot be added", () => {
-    const { api } = loadMyList();
-    assert.equal(api.addToMyList("movie-011"), true);
-    assert.equal(api.addToMyList("movie-011"), false);
-    assert.deepEqual(Array.from(api.getMyListIds()), ["movie-011"]);
-});
-
-test("a saved title can be removed", () => {
-    const { api } = loadMyList();
-    api.addToMyList("movie-011");
-    api.addToMyList("show-001");
-    assert.equal(api.removeFromMyList("movie-011"), true);
-    assert.deepEqual(Array.from(api.getMyListIds()), ["show-001"]);
-});
-
-test("clearing My List removes all saved IDs", () => {
-    const { api } = loadMyList();
-    api.addToMyList("movie-011");
-    api.addToMyList("show-001");
-    assert.equal(api.clearMyList(), true);
-    assert.deepEqual(Array.from(api.getMyListIds()), []);
-    assert.equal(api.clearMyList(), false);
-});
-
-test("invalid IDs are rejected without changing storage", () => {
-    const { api, storage } = loadMyList();
-    for (const id of [null, undefined, 0, {}, "", " ", " movie-011"]) {
-        assert.equal(api.addToMyList(id), false);
-        assert.equal(api.removeFromMyList(id), false);
-        assert.equal(api.isInMyList(id), false);
-    }
-    assert.equal(storage.value, null);
-});
-
-test("corrupted and non-array storage is handled as an empty list", () => {
-    for (const raw of ["not-json", "null", "{}", '"movie-011"']) {
-        const { api } = loadMyList(createStorage(raw));
-        assert.deepEqual(Array.from(api.getMyListIds()), []);
-    }
-});
-
-test("storage read and write failures do not overwrite existing saved data", () => {
-    const blockedRead = createStorage('["movie-011"]');
-    blockedRead.readsBlocked = true;
-    const readCase = loadMyList(blockedRead);
-    assert.equal(readCase.api.isStorageAvailable(), false);
-    assert.equal(readCase.api.addToMyList("show-001"), false);
-    assert.equal(readCase.api.removeFromMyList("movie-011"), false);
-    assert.equal(readCase.api.clearMyList(), false);
-    assert.equal(blockedRead.value, '["movie-011"]');
-    assert.equal(blockedRead.writes, 0);
-
-    const blockedWrite = createStorage('["movie-011"]');
-    blockedWrite.writesBlocked = true;
-    const writeCase = loadMyList(blockedWrite);
-    assert.equal(writeCase.api.addToMyList("show-001"), false);
-    assert.equal(blockedWrite.value, '["movie-011"]');
-    assert.equal(writeCase.api.removeFromMyList("movie-011"), false);
-    assert.equal(writeCase.api.clearMyList(), false);
-    assert.equal(blockedWrite.value, '["movie-011"]');
-    assert.equal(writeCase.events.length, 0);
-});
-
-test("the update event fires after successful changes only", () => {
-    const { api, events } = loadMyList();
-    assert.equal(api.addToMyList("movie-011"), true);
-    assert.equal(api.addToMyList("movie-011"), false);
-    assert.equal(api.addToMyList("show-001"), true);
-    assert.equal(api.removeFromMyList("movie-011"), true);
-    assert.equal(api.clearMyList(), true);
-    assert.deepEqual(events.map(event => event.type), [
-        "cineflix:list-updated",
-        "cineflix:list-updated",
-        "cineflix:list-updated",
-        "cineflix:list-updated"
-    ]);
+test("signed-in operations use same-origin API without accessing guest storage", async () => {
+    const entries = [];
+    const page = fixture({ state: { status: "signed-in", user: { id: "A" } }, fetch: async (_, config) => {
+        const body = config.body && JSON.parse(config.body);
+        if (config.method === "POST") entries.push({ ...body, addedAt: "now", updatedAt: "now" });
+        if (config.method === "PATCH") entries[0].status = body.status;
+        if (config.method === "DELETE") entries.length = 0;
+        return { ok: true, status: config.method === "DELETE" ? 204 : 200, json: async () => config.method === "GET" ? { items: entries } : entries[0] };
+    }});
+    page.window.localStorage.getItem = () => { throw Error("must not read guest data"); };
+    await page.api.addToMyList("movie-004");
+    assert.deepEqual(plain(await page.api.getMyListIds()), ["movie-004"]);
+    await page.api.updateStatus("movie-004", "watching");
+    assert.equal((await page.api.getMyListItems())[0].status, "watching");
+    await page.api.removeFromMyList("movie-004");
+    await page.api.clearMyList();
+    assert(page.calls.every(call => call.credentials === "same-origin" && call.cache === "no-store"));
+    assert(page.calls.every(call => !call.body || !call.body.includes("userId")));
 });

@@ -3,7 +3,7 @@ const { requireMethods } = require("../services/movieNightSessionService.cjs");
 
 // Feature routes only. M1 supplies a router and mounts it, after team approval.
 // No Express import, server, middleware implementation, or automatic registration.
-function registerMovieNightRoutes({ router, controllers, requireAuth, protectMutation, enableRooms = false }) {
+function registerMovieNightRoutes({ router, controllers, requireAuth, protectMutation, enableRooms = false, joinLimiter }) {
     requireMethods(router, "router", ["get", "post", "put", "delete"]);
     if (typeof requireAuth !== "function" || typeof protectMutation !== "function") {
         throw new TypeError("Real authentication and mutation-protection middleware are required.");
@@ -19,7 +19,8 @@ function registerMovieNightRoutes({ router, controllers, requireAuth, protectMut
         ["post", "/rooms/:roomId/reset", "resetRoom"], ["put", "/rooms/:roomId/votes/me", "voteRoom"]);
     requireMethods(controllers, "controllers", routes.map(r => r[2]));
     for (const [method, path, name] of routes) {
-        router[method](path, requireAuth, ...(method === "get" ? [] : [protectMutation]), controllers[name]);
+        router[method](path, requireAuth, ...(method === "get" ? [] : [protectMutation]),
+            ...(name === "joinRoom" && joinLimiter ? [joinLimiter] : []), controllers[name]);
     }
     return router;
 }

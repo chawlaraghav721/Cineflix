@@ -120,7 +120,12 @@
                     method === "POST" ? { itemId: id, status: status || "want-to-watch" } : method === "PATCH" ? { status } : undefined);
             }
             check(ctx);
+            revision++;
             reading = null;
+            if (ctx.owner !== "guest") {
+                try { window.localStorage.setItem("cineflixWatchlistChange", Date.now() + ":" + Math.random()); }
+                catch { /* Account persistence does not require browser storage. */ }
+            }
             changed();
             return true;
         } finally { pending.delete(ctx.revision); }

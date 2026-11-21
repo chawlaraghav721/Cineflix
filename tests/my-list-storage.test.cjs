@@ -20,6 +20,39 @@ function fixture(options = {}) {
         session(value) { state = value; window.dispatchEvent({ type: "cineflix:auth-state" }); } };
 }
 const plain = data => JSON.parse(JSON.stringify(data));
+const flush = () => new Promise(resolve => setImmediate(resolve));
+const signed = id => ({ status: "signed-in", user: { id } });
+const response = (items = []) => ({ ok: true, status: 200, json: async () => ({ items }) });
+test("account changes discard pending reads and never merge or expose guest/account lists", async () => {
+    let finish;
+    const page = fixture({ state: signed("A"), storage: { cineflixMyList: '["show-001"]' },
+        fetch: () => new Promise(resolve => { finish = resolve; }) });
+    const old = page.api.getMyListItems();
+    const rejected = assert.rejects(old, /account changed/);
+    await flush();
+    page.session(signed("B"));
+    finish(response([{ itemId: "movie-004", status: "watched" }]));
+    await rejected;
+    page.window.fetch = async () => response();
+    assert.deepEqual(plain(await page.api.getMyListItems()), []);
+    page.session({ status: "signed-out", user: null });
+    assert.deepEqual(plain(await page.api.getMyListIds()), ["show-001"]);
+    assert.equal(page.values.get("cineflixMyList"), '["show-001"]');
+});
+test("loading authentication waits, duplicate writes are blocked and pending mutations cannot cross accounts", async () => {
+    let finish;
+    const page = fixture({ state: { status: "loading", user: null }, fetch: () => new Promise(resolve => { finish = resolve; }) });
+    const loading = page.api.getMyListItems();
+    await flush(); assert.equal(page.calls.length, 0);
+    page.session(signed("A")); await flush(); finish(response()); await loading;
+    const first = page.api.addToMyList("movie-004");
+    const rejected = assert.rejects(first, /account changed/);
+    await flush();
+    await assert.rejects(page.api.addToMyList("movie-004"), /wait/);
+    assert.equal(page.calls.filter(call => call.method === "POST").length, 1);
+    page.session(signed("B")); finish(response()); await rejected;
+    assert.equal(page.values.size, 0);
+});
 test("explicit guest list migrates legacy IDs locally, supports statuses and refresh persistence", async () => {
     const page = fixture({ storage: { cineflixMyList: '["movie-004","movie-004",null]' } });
     assert.deepEqual(plain(await page.api.getMyListIds()), ["movie-004"]);

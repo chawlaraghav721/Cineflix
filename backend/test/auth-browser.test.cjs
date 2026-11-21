@@ -161,6 +161,13 @@ test("browser accounts, cookies, cross-tab logout and refresh persistence with i
     });
     await b.goto(origin + "/login.html");
     await b.locator("#account-panel:not([hidden])").waitFor();
+    await b.waitForFunction(() => document.querySelector("#account-list-count").textContent === "0");
+    // Guest storage cannot populate the signed-in dashboard. Seed this account through its real API.
+    for (const itemId of ["movie-001", "show-001"]) {
+        const result = await contextB.request.post(origin + "/api/my-list", { headers: { Origin: origin }, data: { itemId } });
+        assert.equal(result.status(), 201);
+    }
+    await b.reload();
     await b.waitForFunction(() => document.querySelector("#account-list-count").textContent === "2");
     assert.equal(await b.locator("#profile-name").textContent(), "Viewer B");
     assert.equal(await b.locator("#profile-email").textContent(), emailB);
@@ -191,18 +198,21 @@ test("browser accounts, cookies, cross-tab logout and refresh persistence with i
         localStorage.setItem("cineflixPersonalRatings", "[]");
         window.dispatchEvent(new StorageEvent("storage", { key: null }));
     });
-    await b.waitForFunction(() => document.querySelector("#account-list-count").textContent === "0");
-    assert.equal(await b.locator("#account-rating-count").textContent(), "0");
-    assert.equal(await b.locator(".account-title-card").count(), 0);
+    await b.waitForFunction(() => document.querySelector("#account-rating-count").textContent === "0");
+    assert.equal(await b.locator("#account-list-count").textContent(), "2");
+    assert.equal(await b.locator(".account-title-card").count(), 2);
 
     await b.evaluate(() => {
         window.restoreAccountStorage = Storage.prototype.getItem;
         Storage.prototype.getItem = () => { throw new DOMException("Blocked", "SecurityError"); };
         window.dispatchEvent(new StorageEvent("storage", { key: "cineflixPersonalRatings" }));
     });
+    await b.locator("#account-rated-tab").click();
     await b.waitForFunction(() => document.querySelector("#account-library-status").textContent.includes("Enable browser storage"));
-    assert.equal(await b.locator("#account-list-count").textContent(), "—");
+    assert.equal(await b.locator("#account-list-count").textContent(), "2");
     assert.equal(await b.locator("#account-library-retry").isVisible(), true);
+    await b.locator("#account-saved-tab").click();
+    await b.waitForFunction(() => document.querySelectorAll(".account-title-card").length === 2);
     await b.evaluate(() => {
         Storage.prototype.getItem = window.restoreAccountStorage;
         delete window.restoreAccountStorage;

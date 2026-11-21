@@ -22,6 +22,9 @@
     let currentItem = null;
     let myList = null;
     let previouslyFocused = null;
+    let watchlistRevision = 0;
+    let watchlistBusy = false;
+    let savedState = null;
 
     function getSelectedId() {
         return new URLSearchParams(window.location.search).get("id");
@@ -143,26 +146,32 @@
         }
     }
 
-    function refreshWatchlistButton() {
+    async function refreshWatchlistButton() {
+        const current = ++watchlistRevision;
+        savedState = null;
+        watchlistButton.disabled = true;
         if (!isMyListConnected() || !currentItem) {
-            watchlistButton.disabled = true;
-            watchlistButton.textContent = "Add to My List";
-            watchlistButton.setAttribute("aria-label", "Add to My List (unavailable)");
-            return;
-        }
-
-        if (!isMyListStorageAvailable()) {
-            watchlistButton.disabled = true;
             watchlistButton.textContent = "My List unavailable";
-            watchlistButton.setAttribute("aria-label", "My List unavailable");
-            setWatchlistStatus("Browser storage is unavailable. Enable browser storage to use My List.");
             return;
         }
-
-        watchlistButton.disabled = false;
-        const saved = myList.isInMyList(currentItem.id);
-        watchlistButton.textContent = saved ? "Remove from My List" : "Add to My List";
-        watchlistButton.setAttribute("aria-label", watchlistButton.textContent);
+        watchlistButton.textContent = "Loading My List?";
+        watchlistButton.setAttribute("aria-busy", "true");
+        try {
+            const saved = await myList.isInMyList(currentItem.id);
+            if (current !== watchlistRevision) return;
+            savedState = saved;
+            watchlistButton.textContent = saved ? "Remove from My List" : "Add to My List";
+            watchlistButton.setAttribute("aria-label", watchlistButton.textContent);
+            watchlistButton.disabled = watchlistBusy;
+        } catch (error) {
+            if (current !== watchlistRevision) return;
+            watchlistButton.textContent = "Retry My List";
+            watchlistButton.setAttribute("aria-label", "Retry My List");
+            watchlistButton.disabled = watchlistBusy;
+            setWatchlistStatus(error.message || "My List could not be loaded. Please try again.");
+        } finally {
+            if (current === watchlistRevision) watchlistButton.setAttribute("aria-busy", "false");
+        }
     }
 
     function setWatchlistStatus(message) {
@@ -175,15 +184,6 @@
             typeof myList.addToMyList === "function" &&
             typeof myList.removeFromMyList === "function" &&
             typeof myList.isInMyList === "function";
-    }
-
-    function isMyListStorageAvailable() {
-        try {
-            if (typeof myList.isStorageAvailable === "function") return myList.isStorageAvailable();
-            return Boolean(window.localStorage);
-        } catch (error) {
-            return false;
-        }
     }
 
     function render(item) {
@@ -286,41 +286,28 @@
         if (!trailerModal.hidden && !trailerModal.contains(event.target)) closeTrailerButton.focus();
     });
 
-    watchlistButton.addEventListener("click", function () {
-        if (!isMyListConnected() || !currentItem) return;
-
-        if (!isMyListStorageAvailable()) {
-            refreshWatchlistButton();
-            return;
-        }
-
-        let wasSaved = false;
-        let succeeded = false;
+    watchlistButton.addEventListener("click", async function () {
+        if (!isMyListConnected() || !currentItem || watchlistBusy) return;
+        if (savedState === null) { await refreshWatchlistButton(); return; }
+        const item = currentItem;
+        const owner = window.CineFlixAuth?.getState().user?.id;
+        const wasSaved = savedState;
+        watchlistBusy = true;
+        watchlistButton.disabled = true;
+        watchlistButton.setAttribute("aria-busy", "true");
+        setWatchlistStatus("");
+        let message;
         try {
-            wasSaved = myList.isInMyList(currentItem.id);
-            succeeded = wasSaved
-                ? myList.removeFromMyList(currentItem.id)
-                : myList.addToMyList(currentItem.id);
+            const succeeded = await (wasSaved ? myList.removeFromMyList(item.id) : myList.addToMyList(item.id));
+            if (!succeeded) throw new Error("Your list changed. Please check it and try again.");
+            message = (optionalText(item.title) || "This title") + (wasSaved ? " was removed from My List." : " was added to My List.");
         } catch (error) {
-            succeeded = false;
+            message = error.message || "Your list could not be updated. Please try again.";
+        } finally {
+            watchlistBusy = false;
+            await refreshWatchlistButton();
+            if (item === currentItem && owner === window.CineFlixAuth?.getState().user?.id) setWatchlistStatus(message);
         }
-
-        if (succeeded !== true) {
-            if (!isMyListStorageAvailable()) {
-                setWatchlistStatus("Browser storage is unavailable. Enable browser storage to use My List.");
-            } else {
-                setWatchlistStatus(wasSaved
-                    ? "Could not remove this title from My List. Please try again."
-                    : "Could not add this title to My List. Please try again.");
-            }
-            refreshWatchlistButton();
-            return;
-        }
-
-        refreshWatchlistButton();
-        setWatchlistStatus(wasSaved
-            ? (optionalText(currentItem.title) || "This title") + " was removed from My List."
-            : (optionalText(currentItem.title) || "This title") + " was added to My List.");
     });
 
     // Integration API: getSelectedId(), render(item), showLoading(), and showError(message, type?).

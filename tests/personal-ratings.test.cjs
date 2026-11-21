@@ -99,6 +99,7 @@ async function loadPage(options = {}) {
     };
     const window = {
         localStorage: saved,
+        CineFlixAuth: { getState: () => ({ status: "signed-out", user: null }) },
         location: { search: options.id === null ? "" : "?id=" + encodeURIComponent(options.id || "movie-004") },
         addEventListener(type, listener) { (events[type] ||= []).push(listener); },
         dispatchEvent(event) { for (const listener of events[event.type] || []) listener(event); }
@@ -115,6 +116,7 @@ async function loadPage(options = {}) {
     for (const name of ["catalogue.js", "my-list-storage.js", "details.js"]) run(name);
     if (options.ratings !== false) run("ratings.js");
     run("details-integration.js");
+    window.CineFlixCatalogue.loadCatalogue = async () => options.catalogue || catalogue;
     const loadingHidden = section.hidden;
     await new Promise(resolve => setImmediate(resolve));
     return { elements, stars, section, main, window, storage: saved, loadingHidden };
@@ -336,10 +338,12 @@ test("My List add/remove and Details metadata remain independent of personal rat
     assert.match(page.elements["details-meta"].textContent, /8.1\/10/);
     page.stars[4].click();
     page.elements["watchlist-button"].click();
-    assert.deepEqual(JSON.parse(page.storage.getItem("cineflixMyList")), ["movie-004"]);
+    await new Promise(resolve => setImmediate(resolve));
+    assert.deepEqual(JSON.parse(page.storage.getItem("cineflixGuestWatchlist")).map(entry => entry.itemId), ["movie-004"]);
     assert.equal(page.elements["watchlist-button"].textContent, "Remove from My List");
     page.elements["watchlist-button"].click();
-    assert.deepEqual(JSON.parse(page.storage.getItem("cineflixMyList")), []);
+    await new Promise(resolve => setImmediate(resolve));
+    assert.deepEqual(JSON.parse(page.storage.getItem("cineflixGuestWatchlist")), []);
     assert.equal(JSON.parse(page.storage.getItem(key))["movie-004"], 5);
     assert.match(page.elements["details-meta"].textContent, /8.1\/10/);
 });

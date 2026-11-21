@@ -54,6 +54,21 @@ test("network mutation failures are never automatically replayed or saved locall
     assert.equal(calls, 1); assert.throws(() => c.voteSession(sessionId, selectedIds[0], -1), TypeError);
     assert.throws(() => c.getRoom("https://untrusted"), TypeError);
 });
+test("uppercase hexadecimal IDs use canonical URLs and accept canonical polling responses", async () => {
+    const canonicalId = "abcdefabcdefabcdefabcdef";
+    const paths = [];
+    const client = createClient({ fetchImpl: async url => {
+        paths.push(url); return ok({ id: canonicalId, revision: 0, status: "complete" });
+    } });
+    await client.getSession(canonicalId.toUpperCase());
+    let notifications = 0;
+    const poller = createRoomPoller({ client, roomId: canonicalId.toUpperCase(),
+        onState: value => { assert.equal(value.id, canonicalId); notifications++; },
+        onError: error => { throw error; } });
+    await poller.start();
+    assert.deepEqual(paths, ["/api/movie-night/sessions/" + canonicalId, "/api/movie-night/rooms/" + canonicalId]);
+    assert.equal(notifications, 1); assert.equal(poller.isRunning(), false);
+});
 function polling(load) {
     const timers = new Map(); let id = 0; const states = [], errors = []; let signal;
     const poller = createRoomPoller({ client: { async getRoom(_, opts) { signal = opts.signal; return load(opts); } }, roomId,

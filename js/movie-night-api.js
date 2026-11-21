@@ -11,7 +11,7 @@
     }
     function idPath(id) {
         if (typeof id !== "string" || !/^[a-f\d]{24}$/i.test(id)) throw new TypeError("A session or room ID is required.");
-        return encodeURIComponent(id);
+        return encodeURIComponent(id.toLowerCase());
     }
     function revisionHeaders(revision) {
         if (!Number.isSafeInteger(revision) || revision < 0 || revision >= Number.MAX_SAFE_INTEGER) throw new TypeError("An incrementable revision is required.");
@@ -64,7 +64,7 @@
 
     function createRoomPoller({ client, roomId, onState, onError, intervalMs = 2500, maxIntervalMs = 15000,
         setTimer = setTimeout, clearTimer = clearTimeout } = {}) {
-        idPath(roomId);
+        roomId = idPath(roomId);
         if (typeof client?.getRoom !== "function" || typeof onState !== "function" || typeof onError !== "function" ||
             !Number.isSafeInteger(intervalMs) || intervalMs < 1 || !Number.isSafeInteger(maxIntervalMs) || maxIntervalMs < intervalMs) throw new TypeError("Valid polling dependencies and intervals are required.");
         let current = null;

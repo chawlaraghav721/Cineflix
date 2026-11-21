@@ -13,7 +13,7 @@ function revisionHeader(req) {
 function resourceId(req, key) {
     const id = req.params?.[key];
     if (typeof id !== "string" || !/^[a-f\d]{24}$/i.test(id)) throw new MovieNightRuleError("INVALID_RESOURCE_ID", "Provide a valid session or room ID.");
-    return id;
+    return id.toLowerCase();
 }
 function requestBody(req) {
     if (!req.body || typeof req.body !== "object" || Array.isArray(req.body)) throw new MovieNightRuleError("INVALID_BODY", "Provide a JSON object.");

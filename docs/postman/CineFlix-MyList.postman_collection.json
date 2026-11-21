@@ -1,0 +1,653 @@
+{
+  "info": {
+    "name": "CineFlix Member 4 Watchlist",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Run only against local isolated infrastructure or your dedicated demonstration account. The collection creates an account and clears its own watchlist. Cookies are maintained by the runner. Set baseUrl to the exact APP_ORIGIN. No credentials are exported."
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "email",
+      "value": ""
+    },
+    {
+      "key": "password",
+      "value": "watchlist-demo-only-password-123"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (!pm.collectionVariables.get(\"email\")) pm.collectionVariables.set(\"email\", \"member4-\" + Date.now() + \"@example.test\");"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Register a dedicated demonstration account",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/register",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "register"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Member 4 Demo\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Read empty account list",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/my-list",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "my-list"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Empty list\", () => pm.expect(pm.response.json().items).to.eql([]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Save movie",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/my-list",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "my-list"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"itemId\": \"movie-004\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+              "pm.test(\"Default status\", () => pm.expect(pm.response.json().status).to.eql(\"want-to-watch\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reject duplicate movie",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/my-list",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "my-list"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"itemId\": \"movie-004\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mark movie watched",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/my-list/movie-004",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "my-list",
+            "movie-004"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"watched\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Updated status\", () => pm.expect(pm.response.json().status).to.eql(\"watched\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Read persisted movie",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/my-list",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "my-list"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Saved movie\", () => pm.expect(pm.response.json().items[0].itemId).to.eql(\"movie-004\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Save show",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/my-list",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "my-list"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"itemId\": \"show-001\",\n  \"status\": \"watching\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reject unknown catalogue ID",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/my-list",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "my-list"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"itemId\": \"member4-missing-title\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reject invalid status",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/my-list/movie-004",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "my-list",
+            "movie-004"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"bad\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Remove movie",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/my-list/movie-004",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "my-list",
+            "movie-004"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Clear only own list",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/my-list",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "my-list"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Verify clear",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/my-list",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "my-list"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"List cleared\", () => pm.expect(pm.response.json().items).to.eql([]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sign out",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/logout",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "logout"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reject unauthenticated read",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{baseUrl}}"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/my-list",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "my-list"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

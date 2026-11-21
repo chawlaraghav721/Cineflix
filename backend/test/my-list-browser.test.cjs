@@ -63,7 +63,28 @@ test("watchlist browser lifecycle with real cookies, MongoDB, account switching 
     assert.match(await page.locator("#mylist-session").textContent(), /Guest list/);
     await account("watchlist-a@example.test");
     await list(0); // No implicit migration into A.
-    for (const id of ["movie-004", "movie-011", "show-001"]) await add(id);
+    let release, received;
+    const gate = new Promise(resolve => { release = resolve; });
+    const sent = new Promise(resolve => { received = resolve; });
+    let adds = 0;
+    await page.route("**/api/my-list", async route => {
+        if (route.request().method() !== "POST") return route.continue();
+        adds++;
+        const response = await route.fetch();
+        received();
+        await gate;
+        await route.fulfill({ response });
+    });
+    await go("details.html?id=movie-004");
+    await page.getByRole("button", { name: "Add to My List", exact: true }).click();
+    await sent;
+    assert.equal(await page.locator("#watchlist-button").isDisabled(), true);
+    await page.locator("#watchlist-button").evaluate(button => button.click());
+    release();
+    await page.getByRole("button", { name: "Remove from My List", exact: true }).waitFor();
+    assert.equal(adds, 1);
+    await page.unroute("**/api/my-list");
+    for (const id of ["movie-011", "show-001"]) await add(id);
     await list(3);
     const first = page.locator('.mylist-card[data-id="movie-004"]');
     await first.locator("select").selectOption("watched");
@@ -129,6 +150,9 @@ test("watchlist browser lifecycle with real cookies, MongoDB, account switching 
     await page.waitForFunction(() => document.querySelector("#mylist-error").textContent.includes("temporarily unavailable"));
     assert.equal(await first.locator("select").inputValue(), "watched");
     await page.unroute("**/api/my-list/movie-004");
+    await first.locator("select").selectOption("watching");
+    await page.waitForFunction(() => document.querySelector('.mylist-card[data-id="movie-004"] select')?.value === "watching" && !document.querySelector('.mylist-card[data-id="movie-004"] select')?.disabled);
+    assert.equal(await page.locator("#mylist-error").textContent(), "");
 
     for (const width of [1440, 768, 390, 320]) {
         await page.setViewportSize({ width, height: 1000 });

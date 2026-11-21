@@ -23,6 +23,23 @@ const plain = data => JSON.parse(JSON.stringify(data));
 const flush = () => new Promise(resolve => setImmediate(resolve));
 const signed = id => ({ status: "signed-in", user: { id } });
 const response = (items = []) => ({ ok: true, status: 200, json: async () => ({ items }) });
+test("API failures, malformed responses and expired sessions never fall back to guest storage", async () => {
+    for (const result of [new Error("offline"), { ok: false, status: 503, json: async () => ({ error: { message: "private" } }) },
+        { ok: false, status: 409, json: async () => ({ error: { message: "Already saved" } }) },
+        { ok: true, status: 200, json: async () => ({}) }, { ok: true, status: 200, json: async () => { throw Error("JSON"); } },
+        { ok: false, status: 401 }]) {
+        const page = fixture({ state: signed("A"), storage: { cineflixMyList: '["show-001"]' }, fetch: async () => {
+            if (result instanceof Error) throw result; return result;
+        }});
+        await assert.rejects(page.api.getMyListItems(), error => !error.message.includes("private"));
+        assert.equal(page.values.size, 1);
+        page.window.fetch = async () => response();
+        assert.deepEqual(plain(await page.api.getMyListIds()), []);
+    }
+    const page = fixture({ state: { status: "error", user: null } });
+    await assert.rejects(page.api.getMyListItems(), /account could not be checked/);
+    assert.equal(page.calls.length, 0);
+});
 test("account changes discard pending reads and never merge or expose guest/account lists", async () => {
     let finish;
     const page = fixture({ state: signed("A"), storage: { cineflixMyList: '["show-001"]' },

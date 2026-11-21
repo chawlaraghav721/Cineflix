@@ -46,6 +46,14 @@ test("room UI lifecycle in two real authenticated browser contexts", {
     await a.locator("#night-room-start").click();
     await a.locator("#night-room-options button").first().waitFor();
     await b.bringToFront(); await b.locator("#night-room-options button").first().waitFor();
+    const pendingRoomId = new URL(b.url()).searchParams.get("room");
+    await b.route("**/api/movie-night/rooms/" + pendingRoomId, route => route.fulfill({ status: 503,
+        contentType: "application/json", body: JSON.stringify({ error: { code: "UNAVAILABLE", message: "Room temporarily offline" } }) }));
+    await b.locator("#night-room-refresh").click();
+    await b.waitForFunction(() => document.getElementById("night-feedback").textContent.includes("Room temporarily offline"));
+    assert.equal(await b.locator("#night-room-panel").isVisible(), true);
+    await b.unroute("**/api/movie-night/rooms/" + pendingRoomId);
+    await b.locator("#night-room-refresh").click();
     await Promise.all([a.getByRole("button", { name: "Vote for Inception", exact: true }).click(),
         b.getByRole("button", { name: "Vote for Interstellar", exact: true }).click()]);
     await a.bringToFront(); await a.waitForFunction(() => document.getElementById("night-room-winner").textContent.includes("tie"));
@@ -67,7 +75,13 @@ test("room UI lifecycle in two real authenticated browser contexts", {
     const stale = await b.evaluate(async ({ roomId, roundId }) => (await fetch(`/api/movie-night/rooms/${roomId}/votes/me`, {
         method: "PUT", credentials: "same-origin", headers: { "Content-Type": "application/json", "X-Movie-Night-Round": roundId },
         body: JSON.stringify({ itemId: "movie-012" }) })).status, { roomId, roundId: previousRound }); assert.equal(stale, 409);
-    const roomUrl = b.url(); await b.locator(".signout-btn").click(); await b.waitForURL("**/login.html");
+    const roomUrl = b.url();
+    const otherTab = await participant.newPage(); await otherTab.goto(roomUrl);
+    await otherTab.locator("#night-room-state:not([hidden])").waitFor();
+    await b.bringToFront(); await b.locator(".signout-btn").click(); await b.waitForURL("**/login.html");
+    await otherTab.waitForFunction(() => document.getElementById("night-mode-message").textContent.includes("Signed out"));
+    assert.equal(await otherTab.locator("#night-room-code").textContent(), "");
+    assert.equal(await otherTab.locator("#night-room-tally").textContent(), "");
     await b.goto(roomUrl); await b.waitForFunction(() => document.getElementById("night-mode-message").textContent.includes("Sign in to open"));
     assert.equal(await b.locator("#night-room-state").isVisible(), false);
     for (const width of [320, 390, 1440]) { await a.setViewportSize({ width, height: 1000 }); assert(await a.evaluate(() => document.documentElement.scrollWidth <= innerWidth)); }

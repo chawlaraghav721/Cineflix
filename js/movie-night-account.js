@@ -210,7 +210,10 @@
             if (nextOwner !== owner) {
                 epoch++; owner = nextOwner; active = null; results = null; catalogue = null; busy = false; roomUi?.clear();
                 if (message) message.textContent = owner ? "Loading your saved nights…" : "Signed out or account unavailable. Sign in or explicitly choose Guest demo.";
-                if (isMovieNight) { byId("night-options").replaceChildren(); byId("night-tally").replaceChildren(); }
+                if (isMovieNight) {
+                    for (const id of ["night-selected-movies", "night-options", "night-tally", "night-winner"]) byId(id).replaceChildren();
+                    byId("night-sessions").replaceChildren();
+                }
             }
             if (owner) { if (busy) needsRefresh = true; else load(); } else { render(); say("Sign in to continue, or choose Guest demo."); }
         });

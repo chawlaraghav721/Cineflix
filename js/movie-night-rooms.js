@@ -3,12 +3,17 @@
     "use strict";
     const byId = id => document.getElementById(id);
     function create({ client, movie, card, getDraft, currentOwner, isBusy, task, say, renderSequential, refreshSequential }) {
-        let state = null, poller = null, generation = 0;
+        let state = null, poller = null, generation = 0, request = null;
         const panel = byId("night-room-panel");
         const params = () => new URLSearchParams(location.search);
         const isActive = () => params().get("mode") === "room" || params().has("room");
-        function stop() { poller?.stop(); poller = null; }
-        function clear() { generation++; stop(); state = null; render(); }
+        function stop() { poller?.stop(); poller = null; request?.controller.abort(); request = null; }
+        function clear() {
+            generation++; stop(); state = null;
+            for (const id of ["night-room-code", "night-room-progress", "night-room-help", "night-room-options", "night-room-winner", "night-room-tally"]) byId(id).replaceChildren();
+            byId("night-room-code-input").value = "";
+            render();
+        }
         function roomUrl(id) {
             const url = new URL(location.href); url.searchParams.set("mode", "room");
             url.searchParams.delete("session"); url.searchParams.delete("new");
@@ -37,11 +42,19 @@
             if (!isActive() || !currentOwner()) return render();
             const id = params().get("room");
             if (!id) return render();
-            const token = generation;
-            try {
-                const value = await client.getRoom(id);
-                if (token === generation && currentOwner() && isActive()) { update(value); startPolling(); }
-            } catch (error) { if (token === generation && currentOwner()) report(error); }
+            if (request) return request.promise;
+            stop();
+            const cycle = { controller: new AbortController(), token: generation };
+            request = cycle;
+            cycle.promise = (async () => {
+                try {
+                    const value = await client.getRoom(id, { signal: cycle.controller.signal });
+                    if (request === cycle && cycle.token === generation && currentOwner() && isActive()) { update(value); startPolling(); }
+                } catch (error) {
+                    if (error.name !== "AbortError" && request === cycle && cycle.token === generation && currentOwner()) report(error);
+                } finally { if (request === cycle) request = null; }
+            })();
+            return cycle.promise;
         }
         function render() {
             const active = isActive(); const ready = currentOwner();
@@ -50,6 +63,7 @@
             byId("night-mode-room").setAttribute("aria-pressed", String(active));
             byId("night-mode-sequential").setAttribute("aria-pressed", String(!active));
             if (!active || !ready) return;
+            byId("night-mode-message").textContent = "Saved to your account — participants vote from their own devices.";
             for (const node of panel.querySelectorAll("button,input")) node.disabled = isBusy();
             byId("night-room-entry").hidden = !!state;
             byId("night-room-state").hidden = !state;

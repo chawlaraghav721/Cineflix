@@ -90,4 +90,24 @@ test("watchlist HTTP API with verified cookies and disposable MongoDB", async t 
         assert.equal((await call("get")).body.items[0].itemId, "movie-004");
         await assert.rejects(Watchlist.create({ user: userA, itemId: "movie-004" }), { code: 11000 });
     });
+    await t.test("all routes require verified cookies and mutations reject untrusted origins", async () => {
+        for (const [method, path, body] of [["get", "", undefined], ["post", "", { itemId: "show-001" }],
+            ["patch", "/movie-004", { status: "watched" }], ["delete", "/movie-004"], ["delete", ""]]) {
+            for (const cookie of ["", "cineflix_session=forged"]) {
+                await request(app)[method]("/api/my-list" + path).set("Origin", config.origin).set("Cookie", cookie).send(body).expect(401);
+            }
+            if (method !== "get") {
+                await request(app)[method]("/api/my-list" + path).set("Cookie", a).send(body).expect(403);
+                await request(app)[method]("/api/my-list" + path).set("Cookie", a).set("Origin", "https://evil.example").send(body).expect(403);
+            }
+        }
+        await call("post").type("json").send('{"itemId":').expect(400);
+        const mock = t.mock.method(Watchlist, "find", () => { throw new Error("private database details"); });
+        const log = t.mock.method(console, "error", () => {});
+        try {
+            const failed = await call("get").expect(500);
+            assert.equal(failed.body.error.code, "INTERNAL_ERROR");
+            assert(!JSON.stringify(failed.body).includes("private"));
+        } finally { mock.mock.restore(); log.mock.restore(); }
+    });
 });

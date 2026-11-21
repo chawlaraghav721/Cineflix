@@ -62,8 +62,13 @@
             byId("night-session-controls").hidden = active;
             byId("night-mode-room").setAttribute("aria-pressed", String(active));
             byId("night-mode-sequential").setAttribute("aria-pressed", String(!active));
+            if (ready) {
+                byId("night-intro").textContent = active ? "Choose three movies, share a room code, and vote from separate signed-in devices."
+                    : "Can't decide what to watch? Choose 3 movies, then let everyone vote on one device.";
+                byId("night-mode-message").textContent = active ? "Saved to your account — participants vote from their own devices."
+                    : "Saved to your account — one-device sequential voting.";
+            }
             if (!active || !ready) return;
-            byId("night-mode-message").textContent = "Saved to your account — participants vote from their own devices.";
             for (const node of panel.querySelectorAll("button,input")) node.disabled = isBusy();
             byId("night-room-entry").hidden = !!state;
             byId("night-room-state").hidden = !state;
@@ -74,7 +79,8 @@
             byId("night-room-progress").textContent = state.participantCount + " / " + state.voterCount + " participants — " +
                 state.results.tallies.reduce((total, t) => total + t.count, 0) + " / " + state.voterCount + " votes";
             byId("night-room-help").textContent = state.status === "complete" ? "Round complete. Refresh to check for a new round."
-                : state.status === "waiting" ? (state.isHost ? "Fill all slots, then start. Join as a voter if you want to participate." : "Waiting for the host to start voting.")
+                : state.status === "waiting" ? (state.isHost ? (state.canStart ? "Everyone is here. Start voting when you are ready."
+                    : state.hasJoined ? "Share the room code and wait for the remaining participants." : "Share the code or join as a voter. Start when all slots are filled.") : "Waiting for the host to start voting.")
                     : state.hasVoted ? "Your vote is saved. Waiting for the other participants." : "Each participant votes once from their own device.";
             byId("night-room-enroll").hidden = !state.isHost || state.hasJoined || state.status !== "waiting" || state.participantCount >= state.voterCount;
             byId("night-room-start").hidden = !state.isHost || state.status !== "waiting";

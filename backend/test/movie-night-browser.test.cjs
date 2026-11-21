@@ -32,9 +32,18 @@ test("Movie Night guest and account frontend with real cookies, MongoDB and serv
     await signup(page, "night-browser-a@example.test");
     const guestState = { selected: [], voters: 4, votes: [], started: false };
     await page.evaluate(value => localStorage.setItem("cineflixMovieNightV1", JSON.stringify(value)), guestState);
+    await page.route("**/api/auth/me", route => route.fulfill({ status: 503, contentType: "application/json",
+        body: JSON.stringify({ error: { code: "UNAVAILABLE", message: "Account temporarily unavailable" } }) }));
     await page.goto(server.origin + "/movie-night.html?new=1");
+    await page.waitForFunction(() => document.getElementById("night-feedback").textContent.includes("Account status could not be verified"));
+    assert.equal(await page.locator("#night-retry").isEnabled(), true);
+    await page.unroute("**/api/auth/me"); await page.locator("#night-retry").click();
     await page.waitForFunction(() => document.getElementById("night-mode-message").textContent.includes("Saved to your account"));
+    await page.route("**/api/catalogue", route => route.fulfill({ status: 503, contentType: "application/json",
+        body: JSON.stringify({ error: { code: "UNAVAILABLE", message: "Catalogue temporarily unavailable" } }) }));
     await page.locator("#night-choose").click();
+    await page.locator("#movies-retry").waitFor(); await page.unroute("**/api/catalogue"); await page.locator("#movies-retry").click();
+    await page.waitForFunction(() => document.querySelector('.movie-card[data-id="movie-011"]')?.getAttribute("aria-disabled") === "false", undefined, { timeout: 5000 });
     await page.locator('.movie-card[data-id="movie-011"]').focus(); await page.keyboard.press("Space");
     await page.locator('.movie-card[data-id="movie-012"]').click(); await page.locator('.movie-card[data-id="movie-013"]').click();
     assert.equal(await page.locator('.movie-card[aria-checked="true"]').count(), 3);

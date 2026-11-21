@@ -70,7 +70,7 @@ test("room UI lifecycle in two real authenticated browser contexts", {
     const port = server.port; await server.close(); server = await startBackendProcess({ mongoUri: f.mongo.getUri(), secret: f.config.secret, port });
     await a.reload(); await a.waitForFunction(() => document.getElementById("night-room-winner").textContent.includes("tie"));
     await a.bringToFront(); a.once("dialog", dialog => dialog.accept()); await a.locator("#night-room-reset").click();
-    await a.waitForFunction(() => document.getElementById("night-room-help").textContent.includes("Fill all slots"));
+    await a.waitForFunction(() => document.getElementById("night-room-help").textContent.includes("Everyone is here"));
     await b.bringToFront(); await b.locator("#night-room-refresh").click();
     await b.waitForFunction(() => document.getElementById("night-room-help").textContent.includes("Waiting for the host"));
     const stale = await b.evaluate(async ({ roomId, roundId }) => (await fetch(`/api/movie-night/rooms/${roomId}/votes/me`, {

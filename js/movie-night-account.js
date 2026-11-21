@@ -119,7 +119,7 @@
             });
             grid.addEventListener("keydown", event => { if (event.key === " ") { const node = event.target.closest(".movie-card"); if (node) { event.preventDefault(); node.click(); } } });
             grid.addEventListener("auxclick", event => { if (event.target.closest(".movie-card")) event.preventDefault(); });
-            document.addEventListener("cineflix:movies-rendered", render);
+            document.addEventListener("cineflix:movies-rendered", () => { if (!catalogue && currentOwner()) load(); else render(); });
         } else {
             controls.hidden = false;
             const sessions = byId("night-sessions"), voters = byId("night-voters");
@@ -134,6 +134,7 @@
                 reset.hidden = !ready || roomMode;
                 byId("night-restart").hidden = !active || roomMode;
                 for (const node of controls.querySelectorAll("button,select")) node.disabled = busy || !ready;
+                byId("night-retry").disabled = busy;
                 voters.disabled = busy; start.disabled = busy || !ready || draft.selectedIds.length !== 3;
                 reset.disabled = busy; reset.textContent = active ? "Delete session" : "Clear selection";
                 if (!active) {
@@ -167,7 +168,9 @@
             };
             sessions.addEventListener("change", () => { setUrl(sessions.value || null); refresh(); });
             byId("night-new").addEventListener("click", () => { active = null; results = null; setUrl(null); sessions.value = ""; render(); });
-            byId("night-retry").addEventListener("click", () => { if (!currentOwner()) auth.refresh(); else if (roomUi?.isActive()) roomUi.refresh(); else refresh(); });
+            byId("night-retry").addEventListener("click", () => {
+                if (!currentOwner()) auth.refresh(); else if (!catalogue) load(); else if (roomUi?.isActive()) roomUi.refresh(); else refresh();
+            });
             voters.addEventListener("change", () => { const count = Number(voters.value); if (Number.isInteger(count) && count >= 2 && count <= 10) saveDraft({ ...draft, voterCount: count }); });
             start.addEventListener("click", () => {
                 const voterCount = Number(voters.value);

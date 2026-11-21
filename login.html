@@ -8,8 +8,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CineFlix - Login</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/account.css">
+    <script src="js/catalogue.js" defer></script>
     <script src="js/login.js" defer></script>
     <script src="js/my-list-storage.js" defer></script>
+    <script src="js/account-dashboard.js" defer></script>
     <script src="js/navigation.js" defer></script>
 </head>
 
@@ -52,13 +55,70 @@
 
     <main class="login-page">
 
-        <div class="login-box">
+        <div class="login-box" id="auth-shell">
 
+            <p class="account-eyebrow">YOUR FRONT ROW SEAT</p>
             <h1 id="auth-title">Sign In</h1>
 
             <div id="account-panel" hidden>
-                <p id="account-message" role="status" aria-live="polite"></p>
-                <button id="account-signout" class="btn" type="button">Sign Out</button>
+                <p id="account-message" class="visually-hidden" role="status" aria-live="polite"></p>
+                <section class="account-welcome" aria-labelledby="profile-name">
+                    <div class="account-identity">
+                        <div class="account-avatar" id="profile-avatar" aria-hidden="true">CF</div>
+                        <div>
+                            <p class="account-overline">Welcome back,</p>
+                            <h2 id="profile-name"></h2>
+                            <p id="profile-email" class="account-muted"></p>
+                            <span class="account-member">CineFlix member</span>
+                        </div>
+                    </div>
+                    <div class="account-welcome-action">
+                        <p>A good story is always<br>one discovery away.</p>
+                        <a href="movies.html" class="account-primary">Find your next movie <span aria-hidden="true">↗</span></a>
+                    </div>
+                </section>
+
+                <div class="account-stats" aria-label="Your collection on this device">
+                    <a href="mylist.html" class="account-stat">
+                        <span class="account-stat-label">My List</span>
+                        <strong id="account-list-count">—</strong>
+                        <span class="account-muted">Titles saved for later <span aria-hidden="true">↗</span></span>
+                    </a>
+                    <a href="#account-library" class="account-stat" id="account-ratings-link">
+                        <span class="account-stat-label">Your ratings</span>
+                        <strong id="account-rating-count">—</strong>
+                        <span class="account-muted">Stories you have rated <span aria-hidden="true">↓</span></span>
+                    </a>
+                    <a href="movie-night.html" class="account-stat account-night-stat">
+                        <span class="account-stat-label">Better together</span>
+                        <strong>Movie Night</strong>
+                        <span class="account-muted">Pick three. Gather friends. Vote. <span aria-hidden="true">↗</span></span>
+                    </a>
+                </div>
+
+                <section class="account-library" id="account-library" aria-labelledby="account-library-title">
+                    <div class="account-section-heading">
+                        <div><p class="account-overline">YOUR OWN LITTLE COLLECTION</p><h2 id="account-library-title">On your watchlist</h2></div>
+                        <a href="mylist.html" class="account-text-link">View My List <span aria-hidden="true">→</span></a>
+                    </div>
+                    <div class="account-library-tabs" role="group" aria-label="Choose a collection">
+                        <button type="button" id="account-saved-tab" aria-pressed="true">Saved titles</button>
+                        <button type="button" id="account-rated-tab" aria-pressed="false">Rated by you</button>
+                    </div>
+                    <p id="account-library-status" class="account-muted" role="status" aria-live="polite">Loading your collection…</p>
+                    <button type="button" id="account-library-retry" class="account-text-link" hidden>Try again</button>
+                    <div id="account-library-grid" class="account-library-grid" aria-busy="true"></div>
+                </section>
+
+                <div class="account-discover">
+                    <div><p class="account-overline">LET THE OPENING CREDITS ROLL</p><h2>What are you in the mood for?</h2><p class="account-muted">A new favourite or a whole new series. Start exploring.</p></div>
+                    <div class="account-discover-links"><a href="movies.html">Explore movies <span aria-hidden="true">→</span></a><a href="shows.html">Discover TV shows <span aria-hidden="true">→</span></a></div>
+                </div>
+
+                <section class="account-settings" aria-labelledby="account-settings-title">
+                    <div><h2 id="account-settings-title">Account &amp; privacy</h2><p class="account-muted">Lists and ratings are saved in this browser. Sign-in lasts up to one hour.</p></div>
+                    <button id="account-signout" type="button">Sign Out</button>
+                </section>
             </div>
 
             <form id="login-form" novalidate>
@@ -116,12 +176,12 @@
                 </button>
 
             </form>
-            <p id="login-feedback" role="status" aria-live="polite"></p>
+            <p id="login-feedback" role="alert" aria-live="assertive" tabindex="-1"></p>
 
             <p class="login-extra">
                 <a href="login.html?mode=register" id="auth-toggle">New to CineFlix? Create an account</a>
             </p>
-            <p class="auth-hint">Sign-in lasts up to one hour. Saved lists, ratings and Movie Night currently stay on this device.</p>
+            <p class="auth-hint" id="session-hint">Sign-in lasts up to one hour. Saved lists, ratings and Movie Night currently stay on this device.</p>
 
         </div>
 

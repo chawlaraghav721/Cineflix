@@ -71,6 +71,19 @@ test("browser accounts, cookies, cross-tab logout and refresh persistence with i
     }
     const a = await contextA.newPage();
     const b = await contextB.newPage();
+    await a.goto(origin + "/login.html");
+    await a.locator("#email").fill("unregistered@example.test");
+    await a.locator("#password").fill(password);
+    await a.locator("#auth-submit").click();
+    await a.waitForFunction(() => document.querySelector("#login-feedback").textContent.includes("User does not exist"));
+    assert.equal(await a.locator("#email").getAttribute("aria-invalid"), "true");
+    assert.equal(await a.locator("#login-feedback").getAttribute("data-state"), "error");
+    assert.equal(await a.locator("#auth-toggle").isVisible(), true);
+    if (process.env.CINEFLIX_AUTH_SCREENSHOTS) {
+        mkdirSync(process.env.CINEFLIX_AUTH_SCREENSHOTS, { recursive: true });
+        await a.screenshot({ path: path.join(process.env.CINEFLIX_AUTH_SCREENSHOTS, "unknown-account.png"), fullPage: true });
+    }
+    t.diagnostic("Unknown accounts show an actionable sign-in error.");
     async function signup(page, name, email) {
         await page.goto(origin + "/login.html?mode=register");
         await page.locator("#registration-name:not([hidden])").waitFor();
@@ -85,6 +98,10 @@ test("browser accounts, cookies, cross-tab logout and refresh persistence with i
     t.diagnostic("Initial account registration and cookie login passed.");
     assert.match(await a.locator("#account-message").textContent(), /<script>viewer<\/script>/);
     assert.equal(await a.locator("#account-message script").count(), 0);
+    assert.equal(await a.locator("#profile-name").textContent(), "<script>viewer</script>");
+    assert.equal(await a.locator("#profile-name script").count(), 0);
+    await a.waitForFunction(() => document.querySelector("#account-list-count").textContent === "0");
+    assert.match(await a.locator("#account-library-status").textContent(), /Explore movies/);
     const storedCookie = (await contextA.cookies()).find(cookie => cookie.name === authConfig.cookieName);
     assert(storedCookie);
     assert.equal(storedCookie.httpOnly, true);
@@ -138,16 +155,70 @@ test("browser accounts, cookies, cross-tab logout and refresh persistence with i
         await b.goto(origin + "/" + name);
         await b.waitForFunction(() => document.querySelector(".login-link").textContent === "My Account");
     }
+    await b.evaluate(() => {
+        localStorage.setItem("cineflixMyList", JSON.stringify(["movie-001", "show-001", "missing-id"]));
+        localStorage.setItem("cineflixPersonalRatings", JSON.stringify({ "movie-001": 4, "missing-id": 5, "movie-002": 9 }));
+    });
     await b.goto(origin + "/login.html");
     await b.locator("#account-panel:not([hidden])").waitFor();
+    await b.waitForFunction(() => document.querySelector("#account-list-count").textContent === "2");
+    assert.equal(await b.locator("#profile-name").textContent(), "Viewer B");
+    assert.equal(await b.locator("#profile-email").textContent(), emailB);
+    assert.equal(await b.locator("#account-rating-count").textContent(), "1");
+    assert.equal(await b.locator(".account-title-card").count(), 2);
+    await b.locator("#account-rated-tab").click();
+    await b.waitForFunction(() => document.querySelector("#account-library-grid").getAttribute("aria-busy") === "false");
+    assert.equal(await b.locator(".account-title-card").count(), 1);
+    assert.match(await b.locator(".account-title-rating").textContent(), /4 \/ 5/);
+    await b.locator("#account-saved-tab").click();
+    await b.waitForFunction(() => document.querySelectorAll(".account-title-card").length === 2);
+    await b.evaluate(() => {
+        localStorage.setItem("cineflixMyList", JSON.stringify(["movie-001", "show-001"]));
+        window.dispatchEvent(new StorageEvent("storage", { key: "cineflixMyList" }));
+    });
     for (const width of [1440, 768, 390, 320]) {
         await b.setViewportSize({ width, height: 1000 });
         assert(await b.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "Account layout overflow at " + width);
         if (process.env.CINEFLIX_AUTH_SCREENSHOTS) {
             mkdirSync(process.env.CINEFLIX_AUTH_SCREENSHOTS, { recursive: true });
-            await b.screenshot({ path: path.join(process.env.CINEFLIX_AUTH_SCREENSHOTS, "account-" + width + ".png") });
+            await b.evaluate(() => scrollTo(0, 0));
+            await b.screenshot({ path: path.join(process.env.CINEFLIX_AUTH_SCREENSHOTS, "account-" + width + ".png"), fullPage: true });
         }
     }
+
+    await b.evaluate(() => {
+        localStorage.setItem("cineflixMyList", "not-json");
+        localStorage.setItem("cineflixPersonalRatings", "[]");
+        window.dispatchEvent(new StorageEvent("storage", { key: null }));
+    });
+    await b.waitForFunction(() => document.querySelector("#account-list-count").textContent === "0");
+    assert.equal(await b.locator("#account-rating-count").textContent(), "0");
+    assert.equal(await b.locator(".account-title-card").count(), 0);
+
+    await b.evaluate(() => {
+        window.restoreAccountStorage = Storage.prototype.getItem;
+        Storage.prototype.getItem = () => { throw new DOMException("Blocked", "SecurityError"); };
+        window.dispatchEvent(new StorageEvent("storage", { key: "cineflixPersonalRatings" }));
+    });
+    await b.waitForFunction(() => document.querySelector("#account-library-status").textContent.includes("Enable browser storage"));
+    assert.equal(await b.locator("#account-list-count").textContent(), "—");
+    assert.equal(await b.locator("#account-library-retry").isVisible(), true);
+    await b.evaluate(() => {
+        Storage.prototype.getItem = window.restoreAccountStorage;
+        delete window.restoreAccountStorage;
+        localStorage.setItem("cineflixMyList", '["movie-001","show-001"]');
+        localStorage.setItem("cineflixPersonalRatings", '{"movie-001":4}');
+    });
+
+    await b.route("**/api/catalogue", route => route.fulfill({ status: 503, contentType: "application/json", body: '{}' }));
+    await b.reload();
+    await b.waitForFunction(() => document.querySelector("#account-library-status").textContent.includes("couldn't load"));
+    assert.equal(await b.locator("#account-library-retry").isVisible(), true);
+    assert.equal(await b.evaluate(() => localStorage.getItem("cineflixMyList")), '["movie-001","show-001"]');
+    await b.unroute("**/api/catalogue");
+    await b.locator("#account-library-retry").click();
+    await b.waitForFunction(() => document.querySelector("#account-list-count").textContent === "2");
+    t.diagnostic("Account dashboard collections, storage failures, catalogue retry and mobile layouts passed.");
     await b.locator("#account-signout").click();
     await b.locator("#login-form:not([hidden])").waitFor();
     await b.locator("#auth-toggle").click();

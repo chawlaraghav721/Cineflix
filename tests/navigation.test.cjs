@@ -180,6 +180,23 @@ test("login errors remain visible and password visibility/mode switching work", 
     assert.equal(page.login.textContent, "Login");
 });
 
+test("unknown email shows an actionable error and highlights the email field", async () => {
+    const page = await loadPage();
+    page.api.override = (url, options) => url.endsWith("/login") && options.method === "POST"
+        ? page.response({ error: { code: "USER_NOT_FOUND", message: "User does not exist. Create an account to get started." } }, 401) : undefined;
+    page.ids.email.value = "unknown@example.test";
+    page.ids.password.value = "a safe password phrase";
+    await page.ids["login-form"].dispatch("submit");
+    assert.match(page.ids["login-feedback"].textContent, /User does not exist/);
+    assert.match(page.ids["email-error"].textContent, /User does not exist/);
+    assert.equal(page.ids.email.getAttribute("aria-invalid"), "true");
+    assert.equal(page.ids["login-feedback"].focused, true);
+    assert.equal(page.ids["auth-toggle"].hidden, false);
+    await page.ids["auth-toggle"].click();
+    assert.equal(page.ids["login-feedback"].textContent, "");
+    assert.equal(page.ids.email.getAttribute("aria-invalid"), undefined);
+});
+
 test("late account reads cannot restore a previous identity after a newer logout", async () => {
     const page = await loadPage({ user: signedUser });
     let resolve;

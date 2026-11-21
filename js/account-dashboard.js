@@ -57,7 +57,7 @@
             const badge = document.createElement("span");
             badge.className = "account-title-rating";
             badge.textContent = "★ " + rating + " / 5";
-            badge.setAttribute("aria-label", "Your rating: " + rating + " out of 5");
+            badge.setAttribute("aria-label", "Guest rating on this device: " + rating + " out of 5");
             art.appendChild(badge);
         }
         const name = document.createElement("h3");
@@ -82,7 +82,7 @@
         if (!user) { status.textContent = ""; grid.setAttribute("aria-busy", "false"); return; }
         savedTab.setAttribute("aria-pressed", String(view === "saved"));
         ratedTab.setAttribute("aria-pressed", String(view === "rated"));
-        document.getElementById("account-library-title").textContent = view === "saved" ? "On your watchlist" : "Your take on the titles";
+        document.getElementById("account-library-title").textContent = view === "saved" ? "On your watchlist" : "Guest ratings on this device";
         status.textContent = "Loading your collection…";
         grid.setAttribute("aria-busy", "true");
         try {
@@ -105,7 +105,7 @@
             for (const item of preview) grid.appendChild(titleCard(item, ratings?.[item.id]));
             status.textContent = !collection.length
                 ? view === "saved" ? "Your next favourites belong here. Explore movies and add a title to My List to start your collection."
-                    : "Every opinion starts with a story. Open a movie or show and leave your first rating."
+                    : "No guest ratings on this device. Signed-in ratings and reviews are saved separately to your account on each title's Details page."
                 : view === "saved" && collection.length > 5 ? "Showing 5 of " + collection.length + " saved titles. Open My List to see them all." : "";
         } catch {
             if (current !== revision) return;

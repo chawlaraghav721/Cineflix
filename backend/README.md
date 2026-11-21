@@ -21,7 +21,7 @@ The Express app serves the existing frontend and `/api` routes from the same ori
 
    Open <http://localhost:3000>. `npm run dev` restarts the server when backend source files change.
 
-The server exits before listening if authentication configuration is invalid, `MONGODB_URI` is missing, MongoDB cannot be reached, or the user/Movie Night indexes cannot be created. Movie Night's indexes are created non-destructively on the existing connection; their definitions were verified first on isolated MongoDB. `GET /api/health` reports the database connection state. Do not put database credentials in frontend files or commit `.env`.
+The server exits before listening if authentication configuration is invalid, `MONGODB_URI` is missing, MongoDB cannot be reached, or the user, ratings or Movie Night indexes cannot be created. Feature indexes are created non-destructively on the existing connection; their definitions were verified first on isolated MongoDB. `GET /api/health` reports the database connection state. Do not put database credentials in frontend files or commit `.env`.
 
 ## Catalogue endpoints
 
@@ -49,7 +49,15 @@ Admin title creation, update, and deletion remain outside this authentication ch
 
 POST requests require an exact matching `Origin` header, or a same-origin `Referer` when Origin is absent. Set `Origin` explicitly in Postman/curl. Cookie flags are HttpOnly, SameSite=Strict, Path=/ and Secure in production; expiry is one hour. Logout clears the browser cookie but copied stateless JWTs remain valid until expiry. Registration/login share a per-process limit of 20 attempts per IP per 15 minutes.
 
-See [authentication integration and verification](../docs/authentication.md) for middleware usage, admin account designation, tests and the completed live Atlas authentication verification record. Watchlist and personal ratings retain their existing browser-based behavior. Movie Night is now integrated on this feature branch as described below.
+See [authentication integration and verification](../docs/authentication.md) for middleware usage, admin account designation, tests and the completed live Atlas authentication verification record. Watchlist retains its existing browser-based behavior. Ratings and Movie Night use the shared backend as described below.
+
+## Ratings and reviews
+
+Details supports persistent account scores, optional written reviews, editing,
+deletion and public community averages/counts/recent reviews through
+`/api/ratings/:itemId` and `/api/ratings/:itemId/me`. Guest ratings stay separate.
+See [ratings contracts, persistence and verification](../docs/ratings-backend.md)
+for request/response shapes, unique indexes, security and test commands.
 
 ## Movie Night
 

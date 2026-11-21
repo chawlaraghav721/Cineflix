@@ -75,4 +75,10 @@ test("watchlist HTTP API with verified cookies and disposable MongoDB", async t 
         await call("delete", "/deleted-title").expect(204);
         assert(await Watchlist.exists({ user: userB, itemId: "show-001" }));
     });
+    await t.test("DELETE collection is idempotent and clears only the current user", async () => {
+        await call("delete").expect(204);
+        assert.deepEqual((await call("get")).body, { items: [] });
+        assert.equal((await call("get", "", b)).body.items.length, 1);
+        await call("delete").expect(204);
+    });
 });

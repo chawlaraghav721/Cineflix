@@ -13,4 +13,5 @@ router.get("/", controller.getMyList);
 router.post("/", controller.addMyList);
 router.patch("/:itemId", controller.updateMyList);
 router.delete("/:itemId", controller.removeMyList);
+router.delete("/", controller.clearMyList);
 module.exports = router;

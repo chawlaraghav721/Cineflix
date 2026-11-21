@@ -46,4 +46,10 @@ async function removeMyList(req, res, next) {
         return res.status(204).end();
     } catch (error) { return next(error); }
 }
-module.exports = { getMyList, addMyList, updateMyList, removeMyList, publicEntry, fail };
+async function clearMyList(req, res, next) {
+    try {
+        await Watchlist.deleteMany({ user: req.user.id });
+        return res.status(204).end();
+    } catch (error) { return next(error); }
+}
+module.exports = { getMyList, addMyList, updateMyList, removeMyList, clearMyList, publicEntry, fail };

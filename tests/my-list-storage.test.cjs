@@ -88,7 +88,7 @@ test("explicit guest list migrates legacy IDs locally, supports statuses and ref
 test("guest corruption, blocked reads and writes, invalid IDs and statuses are safe", async () => {
     for (const raw of ["not-json", "null", "{}", "[]"]) assert.deepEqual(plain(await fixture({ storage: { cineflixGuestWatchlist: raw } }).api.getMyListItems()), []);
     const page = fixture();
-    for (const id of [null, {}, "", " movie-004", "missing"]) await assert.rejects(page.api.addToMyList(id));
+    for (const id of [undefined, null, {}, "", " movie-004", "missing"]) await assert.rejects(page.api.addToMyList(id));
     await assert.rejects(page.api.addToMyList("movie-004", "BAD"));
     page.window.localStorage.getItem = () => { throw Error("blocked"); };
     await assert.rejects(page.api.getMyListItems(), /storage/);
@@ -97,6 +97,13 @@ test("guest corruption, blocked reads and writes, invalid IDs and statuses are s
     page.window.localStorage.getItem = () => null;
     page.window.localStorage.setItem = () => { throw Error("blocked"); };
     await assert.rejects(page.api.addToMyList("movie-004"), /could not be saved/);
+});
+test("missing single-item arguments cannot clear a list or save an undefined status", async () => {
+    const page = fixture({ storage: { cineflixMyList: '["movie-004"]' } });
+    await assert.rejects(page.api.removeFromMyList());
+    await assert.rejects(page.api.updateStatus("movie-004"));
+    assert.deepEqual(plain(await page.api.getMyListIds()), ["movie-004"]);
+    assert.equal(page.values.size, 1);
 });
 test("signed-in operations use same-origin API without accessing guest storage", async () => {
     const entries = [];

@@ -134,9 +134,18 @@
         getMyListItems,
         getMyListIds: async () => (await getMyListItems()).map(item => item.itemId),
         isInMyList: async id => validId(id) && (await getMyListItems()).some(item => item.itemId === id),
-        addToMyList: (id, status) => mutate("POST", id, status),
-        updateStatus: (id, status) => mutate("PATCH", id, status),
-        removeFromMyList: id => mutate("DELETE", id),
+        addToMyList: async (id, status) => {
+            if (!validId(id)) throw new Error("Choose a valid catalogue title.");
+            return mutate("POST", id, status);
+        },
+        updateStatus: async (id, status) => {
+            if (!validId(id) || !STATUSES.includes(status)) throw new Error("Choose a valid title and watch status.");
+            return mutate("PATCH", id, status);
+        },
+        removeFromMyList: async id => {
+            if (!validId(id)) throw new Error("Choose a valid catalogue title.");
+            return mutate("DELETE", id);
+        },
         clearMyList: () => mutate("DELETE"),
         STATUSES
     };

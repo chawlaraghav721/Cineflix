@@ -10,6 +10,9 @@
     <script src="js/my-list-storage.js" defer></script>
     <script src="js/navigation.js" defer></script>
     <script src="js/catalogue.js" defer></script>
+    <script src="js/movie-night-api.js" defer></script>
+    <script src="js/movie-night-rooms.js" defer></script>
+    <script src="js/movie-night-account.js" defer></script>
     <script src="js/movie-night.js" defer></script>
 </head>
 <body data-page="movie-night">
@@ -33,19 +36,66 @@
     <main class="container movie-night">
         <p class="night-eyebrow">CINEFLIX SOCIAL</p>
         <h1 class="page-title">Movie Night Voting</h1>
-        <p class="page-intro">Can't decide what to watch? Choose 3 movies, then let everyone vote on one device.</p>
+        <p id="night-intro" class="page-intro">Can't decide what to watch? Choose 3 movies, then let everyone vote on one device.</p>
+        <p id="night-mode-message" class="night-help" role="status">Checking account…</p>
+        <section id="night-account-controls" class="night-panel" aria-label="Saved Movie Nights" hidden>
+            <div class="night-mode-buttons" aria-label="Movie Night mode">
+                <button id="night-mode-sequential" type="button" class="night-button" aria-pressed="true">On this device</button>
+                <button id="night-mode-room" type="button" class="night-button night-button-outline" aria-pressed="false">With other devices</button>
+            </div>
+            <div id="night-session-controls">
+            <label for="night-sessions">Your saved Movie Nights</label>
+            <select id="night-sessions"></select>
+            <button id="night-new" type="button" class="night-button night-button-outline">New session</button>
+            <button id="night-retry" type="button" class="night-button night-button-outline">Refresh saved state</button>
+            <button id="night-restart" type="button" class="night-button night-button-outline" hidden>Restart voting</button>
+            </div>
+            <a href="movie-night.html?guest=1" class="night-button night-button-outline">Guest demo</a>
+        </section>
+        <section id="night-room-panel" class="night-panel" aria-labelledby="night-room-title" hidden>
+            <h2 id="night-room-title">Movie Night with other devices</h2>
+            <p class="night-help">Everyone signs in with their own account. The host starts voting once all slots are filled.</p>
+            <div id="night-room-entry">
+                <form id="night-room-join">
+                    <label for="night-room-code-input">Join with a room code</label>
+                    <input id="night-room-code-input" type="text" minlength="8" maxlength="8" required autocomplete="off" spellcheck="false" placeholder="ABCDEFGH">
+                    <button type="submit" class="night-button">Join room</button>
+                </form>
+                <h3>Create a room</h3>
+                <div id="night-room-selected" class="night-selected-grid"></div>
+                <a class="night-button night-button-outline" href="movies.html?movieNight=1&amp;mode=room">Choose movies for room</a>
+                <div class="night-participants">
+                    <label for="night-room-voters">Participant slots (2–10)</label>
+                    <input id="night-room-voters" type="number" min="2" max="10" step="1" value="4">
+                </div>
+                <button id="night-room-create" type="button" class="night-button" disabled>Create room</button>
+            </div>
+            <div id="night-room-state" hidden>
+                <p id="night-room-code" class="night-progress"></p>
+                <p id="night-room-progress" role="status" aria-live="polite"></p>
+                <p id="night-room-help" class="night-help"></p>
+                <button id="night-room-enroll" type="button" class="night-button" hidden>Join as a voter</button>
+                <button id="night-room-start" type="button" class="night-button" hidden>Start room voting</button>
+                <button id="night-room-reset" type="button" class="night-button night-button-outline" hidden>Restart room round</button>
+                <div id="night-room-options" class="night-option-grid"></div>
+                <p id="night-room-winner" class="night-winner" role="status"></p>
+                <div id="night-room-tally"></div>
+            </div>
+            <button id="night-room-refresh" type="button" class="night-button night-button-outline">Refresh room</button>
+            <button id="night-room-new" type="button" class="night-button night-button-outline">Another room</button>
+        </section>
 
         <section class="night-panel" id="night-setup" aria-labelledby="night-setup-title">
             <h2 id="night-setup-title">1. Choose three movies</h2>
             <p class="night-help">Select movie posters from the existing Movies page.</p>
             <div id="night-selected-movies" class="night-selected-grid"></div>
-            <a class="night-button night-button-outline" href="movies.html?movieNight=1">Choose movies</a>
+            <a id="night-choose" class="night-button night-button-outline" href="movies.html?movieNight=1">Choose movies</a>
 
             <div class="night-participants">
                 <label for="night-voters">2. Number of voters (2–10)</label>
                 <input id="night-voters" type="number" min="2" max="10" value="4" step="1">
             </div>
-            <button class="night-button" type="button" id="night-start">Start voting</button>
+            <button class="night-button" type="button" id="night-start" disabled>Start voting</button>
         </section>
 
         <section class="night-panel" id="night-voting" aria-labelledby="night-voting-title" hidden>

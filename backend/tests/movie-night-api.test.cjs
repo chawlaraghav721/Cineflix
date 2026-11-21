@@ -23,7 +23,7 @@ test("client is dormant, same-origin, allowlists creation fields and never reads
     const [url, options] = calls[0]; assert.equal(url, "/api/movie-night/sessions");
     assert.equal(options.credentials, "same-origin"); assert.equal(options.cache, "no-store");
     assert.deepEqual(JSON.parse(options.body), input()); assert.equal(options.headers.Authorization, undefined);
-    for (const name of ["movie-night.html", "movies.html"]) assert.equal(fs.readFileSync(path.join(__dirname, "../..", name), "utf8").includes("movie-night-api.js"), false);
+    for (const name of ["movie-night.html", "movies.html"]) assert.equal(fs.readFileSync(path.join(__dirname, "../..", name), "utf8").includes("movie-night-api.js"), true);
 });
 test("all helpers use the proposed paths, verbs, revision and round headers", async () => {
     const calls = []; const c = createClient({ fetchImpl: async (...args) => { calls.push(args); return ok({}); } });

@@ -1,10 +1,13 @@
-/* Movie Night voting — frontend-only, same-device demo. */
+/* Guest Movie Night voting. Signed-in sessions use the account adapter. */
 document.addEventListener("DOMContentLoaded", async function () {
     "use strict";
 
     const isMovieNight = document.body.dataset.page === "movie-night";
     const isSelection = new URLSearchParams(window.location.search).get("movieNight") === "1";
     if (!isMovieNight && !isSelection) return;
+    if (window.CineFlixMovieNightAccount && await window.CineFlixMovieNightAccount.initialize({ isMovieNight, isSelection })) return;
+    const explicitGuest = new URLSearchParams(window.location.search).get("guest") === "1";
+    if (explicitGuest && isMovieNight) document.getElementById("night-choose").href = "movies.html?movieNight=1&guest=1";
 
     const STORAGE_KEY = "cineflixMovieNightV1";
     const catalogueApi = window.CineFlixCatalogue;
@@ -123,10 +126,10 @@ document.addEventListener("DOMContentLoaded", async function () {
         continueButton.className = "night-button";
         continueButton.textContent = "Continue to Movie Night";
         continueButton.addEventListener("click", function () {
-            window.location.href = "movie-night.html";
+            window.location.href = "movie-night.html" + (explicitGuest ? "?guest=1" : "");
         });
         const back = document.createElement("a");
-        back.href = "movie-night.html";
+        back.href = "movie-night.html" + (explicitGuest ? "?guest=1" : "");
         back.className = "night-button night-button-outline";
         back.textContent = "Back";
 

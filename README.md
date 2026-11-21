@@ -11,7 +11,7 @@ The project lets users browse a catalogue, view title details, save movies and s
 - **Details page:** Information for a selected title using its unique catalogue ID, with poster, genre, year, and additional metadata when available. A trailer modal is supported when a valid trailer URL is provided.
 - **My List:** Add or remove movies and shows, search saved titles, clear the list, and see the saved-item count in the navigation bar.
 - **Personal ratings:** Rate individual movies or shows from 1 to 5 stars, update a rating, or clear it.
-- **Movie Night:** Select exactly three movies, choose 2–10 participants, vote one turn at a time, and view vote totals, winners, or ties. Selections and voting progress are saved in the browser.
+- **Movie Night:** Select three movies and 2–10 voters. Signed-in hosts can save sequential sessions or create rooms for independent account voting across devices, with polling and server-calculated results. A separate browser-only guest demo remains available.
 - **Accounts:** Register, sign in, view account details and sign out using secure server-managed cookies, with password hashing and server-side validation.
 - **Contact form:** Validates name, email, and message and displays feedback (demo only; no message is sent).
 - **Responsive design:** Layouts for desktop and mobile, with loading messages, error handling, and poster fallbacks.
@@ -26,7 +26,7 @@ The project lets users browse a catalogue, view title details, save movies and s
 | JSON | Shared movie and TV show catalogue |
 | Fetch API | Same-origin catalogue and account requests |
 | Node.js / Express | Shared API and frontend hosting |
-| MongoDB / Mongoose | Catalogue and account persistence |
+| MongoDB / Mongoose | Catalogue, accounts, Movie Night sessions and rooms |
 | scrypt / signed JWT cookies | Password hashing and short-lived authentication |
 | Browser localStorage | Guest lists, personal ratings, votes and credential-free change notifications |
 | Node.js built-in test runner | Running automated JavaScript tests |
@@ -94,7 +94,7 @@ The shared Atlas connection and authentication flow were verified on 20 November
 4. Clicking a card opens a Details page using a URL such as `details.html?id=movie-011`.
 5. My List, personal ratings, and Movie Night save records against stable catalogue IDs, so users can return to them after refreshing the page.
 
-User accounts are stored in MongoDB and sessions use HttpOnly cookies. My List, personal ratings and Movie Night still belong to the current browser until their backend integrations are completed; they are not automatically merged into accounts.
+User accounts are stored in MongoDB and sessions use HttpOnly cookies. Signed-in Movie Night sessions/rooms persist in the same database; guest votes remain separate in the browser. My List and personal ratings retain their browser-based behavior and are not automatically merged into accounts. See [Movie Night integration](docs/movie-night-backend.md) and its [verification handoff](docs/movie-night-integration-handoff.md).
 
 ## 🧪 Running Tests
 
@@ -111,7 +111,7 @@ The frontend suite uses Node's built-in test runner. Backend integration tests u
 - CineFlix does not stream or host full movies or TV episodes.
 - Authentication cookies expire after one hour. Logout clears the browser cookie; copied stateless JWTs remain usable until expiry. Password reset, email verification and OAuth are outside the current scope.
 - The contact form validates entries but does not deliver emails or messages.
-- Saved lists, ratings, and votes are stored locally in the browser.
+- Saved lists, ratings and guest votes are stored locally. Account-backed Movie Night uses MongoDB; its isolated database/browser verification does not claim shared Atlas or physical-device testing.
 - Catalogue entries may have optional metadata; unavailable fields show fallback text. Trailer playback depends on a compatible embed URL being provided.
 - Some poster images come from external URLs and may be unavailable if their source changes.
 
@@ -122,4 +122,4 @@ CineFlix was built as a team college project. Development work was organized usi
 ---
 
 **Project type:** B.Tech CSE college project<br>
-**Status:** Catalogue backend and account authentication implemented, with live Atlas authentication verified. Remaining account-backed feature integrations are pending.
+**Status:** Catalogue/authentication and Movie Night integration implemented on this feature branch. Team review is required before merging Movie Night; account-backed Ratings and My List integration remain pending.

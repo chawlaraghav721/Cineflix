@@ -1,153 +1,167 @@
-# Member 5: independent Movie Night backend
+# Member 5: integrated Movie Night
 
-All work belongs to `feature/backend-movie-night`. No shared Express application,
-connection, authentication middleware, or package configuration is supplied here.
-The existing browser flow remains active. Test repositories and identities exist
-only in `backend/tests/`.
+Movie Night is integrated on `feature/backend-movie-night` with the shared Express
+app, Mongoose 8.x connection, Title model and Member 2's JWT-cookie middleware.
+No second application, connection or authentication implementation is introduced.
+The catalogue's stable `movie-...` IDs remain the source of title identity.
 
-## Implemented sequential service
+## Request flow and files
 
-`backend/src/services/movieNightRules.cjs` validates configuration and votes and
-calculates ID-based tallies. Configuration requires three distinct catalogue
-movies and an integer voter count of 2-10. Production code does not load the static
-JSON; a trusted title repository must supply records from Member 1's Title model.
+`backend/src/app.js` mounts `/api/movie-night` using
+`backend/src/routes/createMovieNightRouter.cjs`. That composition module supplies
+the existing Express router, Mongoose singleton/connection, Title model,
+`requireAuth` and `protectMutation` to Member 5's factories.
 
-`createMovieNightSessionService({sessionRepository,titleRepository})` provides
-create/get/list/delete, `submitVote(actor,id,{itemId},expectedRevision)`,
-`resetSession(actor,id,expectedRevision)`, and `getResults(actor,id)`.
-Caller context must come from M2's verified `req.user`, never the request body.
-Its presence check is not authentication. All targeted operations include host
-ownership; missing and foreign sessions both return internal 404 errors.
+- `models/MovieNightSession.cjs`: schema factory on the existing connection.
+- `repositories/movieNightRepository.cjs`: sequential/title persistence adapters.
+- `repositories/movieNightRoomRepository.cjs`: room reads and conditional writes.
+- `services/movieNightRules.cjs`: strict validation and ID-based result calculation.
+- `services/movieNightSessionService.cjs`: host-owned sequential lifecycle.
+- `services/movieNightRoomRules.cjs`, `movieNightRoomService.cjs`: room lifecycle,
+  codes, membership, account ballots and private state projection.
+- `controllers/movieNightController.cjs`, `routes/movieNightRoutes.cjs`: response
+  handling and route registration with supplied security middleware.
 
-Sessions start at revision 0. Votes and resets advance once and never rewind.
-Results include zero tallies in selection order; incomplete results have no
-winners. Repeated choices by different sequential slots are valid. Completion
-status is set with the last vote. Malformed stored state is an internal error.
+All backend paths above are relative to `backend/src/` unless fully qualified.
+The dependency-free factories and their earlier isolated tests remain useful;
+the composition layer now connects them to the actual project dependencies.
 
-## Proposed integration contracts (not team-approved or mounted)
+## Authentication and errors
 
-Existing `/api/movie-night/sessions` routes and JSON bodies remain as agreed.
-Add `revision` to session records and require `X-Movie-Night-Revision` on vote and
-reset requests. Missing/malformed revisions => 400 `INVALID_REVISION`; stale or
-lost conditional writes => 409 `SESSION_CONFLICT`; current completed sessions =>
-409 `VOTING_COMPLETE`. Errors use `{error:{code,message}}`. Public status values
-`voting`/`complete`, tally entries `{itemId,count}`, and winner ID arrays await team
-review. The fixed results envelope remains `{complete,tallies,winners,isTie}`.
+Every endpoint requires real `requireAuth`. Identity comes only from verified
+`req.user.id`; browser user IDs/roles cannot change ownership or participation.
+Every mutation also runs the existing Origin/Referer and Fetch-Site checks in
+`protectMutation`. No credentialed cross-origin access or frontend JWT storage
+is added. Movie Night responses are private/no-store. Unexpected errors are
+forwarded to the existing safe 500 handler.
 
-Revisions are nonnegative safe integers and cannot wrap. No absent revision is
-silently defaulted. A client must refetch after conflict or a lost response; never
-automatically replay a mutation at the new revision. This gives at-most-one turn
-consumption per revision, not successful-response replay.
+Errors use `{error:{code,message}}`. Missing/invalid/expired cookies return 401;
+inaccessible sequential sessions or rooms return 404. Accessible non-host room
+management and nonparticipant voting return 403. Invalid input returns 400;
+stale revisions/rounds, completed voting and duplicate ballots return 409.
+Room joins additionally have a 30-attempt, one-minute per-account/per-process
+limit returning 429 `ROOM_JOIN_LIMIT`. Existing authentication limits are unchanged.
 
-## Repository interface
+## Session API
 
-Factories require explicit dependencies. Repository records normalize `_id` and
-`hostUser` to strings; database ownership remains ObjectId in the shared collection.
+All paths below are under `/api/movie-night`.
 
-| Method | Required behavior |
+| Method/path | Request | Success |
+| --- | --- | --- |
+| `POST /sessions` | `{selectedIds,voterCount}` | Created own session, 201 |
+| `GET /sessions` | Cookie | `{sessions:[...]}` for host, 200 |
+| `GET /sessions/:sessionId` | Cookie | Own stored state, 200 |
+| `POST /sessions/:sessionId/votes` | `{itemId}`, revision header | Updated state, 200 |
+| `GET /sessions/:sessionId/results` | Cookie | `{complete,tallies,winners,isTie}`, 200 |
+| `POST /sessions/:sessionId/reset` | Revision header, no body required | Same configuration with cleared votes, 200 |
+| `DELETE /sessions/:sessionId` | Cookie | Delete own session, 204/no body |
+
+Creation requires exactly three distinct existing **movie** IDs and an integer
+`voterCount` from 2 through 10. Sessions expose `_id`, `hostUser`, `selectedIds`,
+`voterCount`, `votes`, `status`, `revision`, mode and timestamps. Status is `voting`
+or `complete`. This is one authenticated host with numbered sequential local
+slots, not separate participant accounts.
+
+## Sequential concurrency
+
+Votes and reset require `X-Movie-Night-Revision`, a canonical nonnegative decimal
+safe integer that can still be incremented. Missing/malformed values return 400
+`INVALID_REVISION`; stale values or lost conditional writes return 409
+`SESSION_CONFLICT`. A current completed session rejects another vote with 409
+`VOTING_COMPLETE`. Creation starts at revision 0; successful vote/reset increments
+once. Reset never rewinds the revision or changes title selection/voter count.
+
+The actual MongoDB vote filter checks `_id`, host, sequential mode, expected
+revision, voting status, selected movie membership and remaining capacity. One
+update appends the vote, changes completion status and increments the revision.
+Reset uses the same host/revision CAS. There are no in-process voting locks or
+unconditional fetch-then-save writes. A losing request is not automatically retried
+at a newer revision. Reload state before another deliberate turn after conflicts
+or lost responses. Different turns can legitimately choose the same movie.
+
+The result service derives totals/winners from stored votes, including zero-vote
+selections. Tallies are `[{itemId,count}]`; winners are catalogue ID strings.
+Incomplete sessions have no final winners and `isTie:false`.
+
+## Rooms and round concurrency
+
+See [room API and lifecycle](movie-night-room-contract.md) for the six additional
+room routes, response fields and permissions. Rooms use the same collection with
+`mode: room`; owner-only sequential endpoints cannot read or mutate room records.
+Host membership is explicit, capacity is fixed at 2-10, and the host starts after
+every slot fills. Each authenticated account may submit one immutable ballot in
+the current round. A host can observe without voting if other accounts fill slots.
+
+`X-Movie-Night-Round` identifies the participant's round. It is not a shared client
+revision: different participants may vote concurrently. MongoDB checks member
+identity, active round/status, selected ID, available capacity and absence of that
+account's prior ballot. The atomic update pipeline appends the ballot and derives
+completion from the resulting vote count. Host start/reset use revision CAS.
+Reset creates a fresh round ID, retains the roster, clears votes and returns to
+waiting; the host must start again. Old-round requests cannot consume new slots.
+
+## Schema, indexes and startup
+
+Collection: `movienightsessions`. Common fields: mode, hostUser (ObjectId), three
+selected catalogue IDs, voterCount, votes, status, revision and timestamps. Room
+fields: roomCode, roundId and participants (ObjectId array). Sequential votes are
+ID strings; room votes are `{participantId,itemId,roundId}` records. Services and
+document validation enforce the corresponding invariants. Title existence/type
+comes from the existing Title model through trusted lookup.
+
+| Index | Purpose |
 | --- | --- |
-| `titleRepository.findByIds(ids)` | Trusted title array |
-| `create(record)` | Insert allowlisted configuration/host/votes/status/revision; return record |
-| `findOwned({sessionId,hostUser})` | Host-owned record or null |
-| `listOwned({hostUser})` | Host-owned session array |
-| `appendVoteOwned(scope,{itemId,nextStatus})` | Atomic append/status/revision advance; record or null |
-| `resetVotesOwned(scope)` | Atomic clear/status/revision advance; record or null |
-| `deleteOwned({sessionId,hostUser})` | Boolean deletion result |
+| `{hostUser:1,mode:1,createdAt:-1}` | Host session listing |
+| `{roomCode:1}`, unique, partial `{mode:"room",roomCode:{$type:"string"}}` | Room-code uniqueness without affecting sequential records |
+| `{mode:1,participants:1}` | Membership lookup |
 
-Conditional scopes contain `sessionId`, `hostUser`, and `expectedRevision`.
-The old unconditional reset update is removed. The prepared adapters filter actual
-writes by host and revision; vote filters also require active status, selected ID
-membership, and remaining capacity. Appending the vote, marking completion and
-incrementing revision must occur in one operation. No in-process lock or unscoped
-fetch-then-save is a substitute. Reset preserves identity, host, selection and count.
-Deleting a session never permits a stale vote to recreate it.
+Schema auto-index creation remains disabled. After the shared connection and User
+index initialization, `server.js` calls `ensureMovieNightIndexes()` before
+listening. It uses non-destructive `createIndexes()`, not `syncIndexes`, drops or
+resets. These definitions were tested against isolated MongoDB before startup
+wiring. No test or verification command here applies indexes to shared Atlas.
+The next deliberate normal server start creates them in its configured database.
+If older external records lack mode/revision, agree on a scoped migration; do not
+silently default stored revisions, wipe records or drop conflicting indexes.
 
-MongoDB documents single-document atomicity and expected-value update filters:
-https://www.mongodb.com/docs/manual/core/write-operations-atomicity/
+## Frontend behavior
 
-## HTTP preparation
+`js/movie-night-api.js` now supplies the real client. `js/movie-night-account.js`
+connects the existing picker/session UI to `CineFlixAuth`; `js/movie-night-rooms.js`
+provides create/join, host controls, independent ballots, totals and polling.
 
-`createMovieNightControllers` accepts the session service and optional room service.
-It implements agreed success statuses/envelopes, strict revision/round parsing,
-resource ID/body checks and private/no-store responses. Expected business errors
-become the agreed JSON envelope. Unexpected errors are forwarded to M1's shared
-safe 500 middleware; internal details must never be serialized there.
+Confirmed signed-out visitors retain the existing browser-only guest demo.
+Signed-in visitors use saved account sessions, with a selector, new/delete actions
+and vote-only restart. An explicit Guest demo link also remains available. Guest
+`cineflixMovieNightV1` data is never imported into accounts or used as a fallback
+after account/API failures. Protected session/room URLs require sign-in.
+Account draft selection alone uses per-account sessionStorage; saved sessions and
+votes live in MongoDB. Blocked tab storage reports a picker error, while URL-based
+restoration of existing sessions does not depend on that draft being readable.
 
-`registerMovieNightRoutes` accepts a supplied router, controllers, real
-`requireAuth`, and real `protectMutation` middleware. It does not import Express,
-implement middleware, or mount routes. Every read requires auth; every mutation
-also requires the supplied Origin/CSRF protection. Rooms require explicit
-`enableRooms: true`; imports alone do nothing. M1 must coordinate the eventual
-`/api/movie-night` mount, and M2 must approve these middleware interfaces.
+Session/room IDs are restored from the URL and checked again on the server.
+Selection retains catalogue IDs, keyboard interaction and poster fallbacks.
+Unavailable catalogue metadata displays the recorded ID without erasing votes.
+Account errors and catalogue retry can recover without switching to guest mode.
+Logout/account changes stop polling and clear account views, including other tabs.
 
-HTTP tests invoke handlers with test-only request/response fixtures. They do not
-constitute an actual Express/cookie/JWT/CSRF integration test.
+Polling is serial, normally 2.5 seconds with transient-error backoff capped at
+15 seconds. Older revisions are ignored. Reads stop on access loss, completion,
+hidden-page/navigation or logout. Refresh room explicitly checks for a new round
+after completion; refocusing the page also reloads it. Manual refresh aborts the
+prior polling read and coalesces repeated refreshes. Mutations are never replayed
+automatically after network loss.
 
-## Dormant frontend helpers
+## Running, verification and limitations
 
-The dormant `js/movie-night-api.js` exports a fetch client and room poller. No HTML
-loads it and no existing frontend file is changed. Creation payloads contain only
-configuration; cookies remain same-origin and no JWT or identity is stored/read.
-Mutations are never automatically replayed. Errors/204/abort are explicit.
-Polling is serial, backs off on transient errors (2.5s normal / 15s cap), ignores
-older revisions, stops on completion/access failure and aborts on stop. Consumers
-must stop it on logout/navigation and explicitly restart after a completed round
-is reset. It does not imply any unavailable backend is active.
+Use [shared backend setup](../backend/README.md); no separate Movie Night server,
+database URI or authentication configuration is required. The catalogue is already
+populated in the shared development database; integration tests seed only their
+own isolated temporary databases. See the [integration handoff](movie-night-integration-handoff.md)
+for commands, actual test results, demos and the remaining review gates.
 
-## Test commands
-
-```powershell
-node --test backend/tests/movie-night-rules.test.cjs backend/tests/movie-night-session-service.test.cjs backend/tests/movie-night-voting-service.test.cjs
-node --test
-```
-
-Controlled test barriers force concurrent reads of the same revision. Test-only
-repositories simulate conditional writes. These tests establish service behavior,
-not real MongoDB atomicity, persistence, verified authentication, or CSRF protection.
-Future database tests must use authorized isolated infrastructure, never destructive
-resets of the shared Atlas database.
-
-## Model and persistence preparation
-
-Model preparation now lives in `backend/src/models/MovieNightSession.cjs`.
-Its factory requires M1's existing connection; it never opens one. Document
-validation covers configuration, vote/status consistency and revision invariants.
-Catalogue existence/type checks still belong to the trusted title lookup.
-`backend/src/repositories/movieNightRepository.cjs` builds host/mode-scoped reads
-and conditional updates against an injected model. Query-spy tests verify the
-generated filters/updates; they do not execute MongoDB.
-
-Real Mongoose document tests run without a database when Mongoose is available.
-Otherwise that clearly labelled test is skipped. For this independent run,
-Mongoose 9.12.2 was installed outside the repository in a temporary directory.
-Set `CINEFLIX_MONGOOSE_PATH` to its module directory to include those checks.
-No shared package manifest/lockfile is created. Recheck compatibility against
-M1's eventual dependency version and perform real database verification later.
-
-The model/adapters, room rules/services, HTTP controllers, dormant client/poller
-and their isolated tests are now prepared. No remaining shared dependency is
-substituted with production mocks. See `movie-night-integration-handoff.md` for
-the file inventory, exact verification evidence, and integration gates.
-Do not push, merge or deploy without permission.
-
-Multi-device rooms remain a planned goal. Proposed room routes, schema/index
-extensions, participant permissions and round headers require team coordination.
-The intended first version uses M2's authenticated accounts, capacity-limited
-membership, a host-started frozen roster, one vote per participant per round,
-polling and persistent server-calculated results. Codes locate rooms; they are
-not credentials. A host joins explicitly to consume a voter slot. Independent
-participants must not contend for one client-supplied sequential revision.
-
-The independently implemented room rules/service and injected-model repository
-now live alongside the sequential modules. See `movie-night-room-contract.md` for
-the proposed lifecycle and privacy contract. Race tests simulate competing joins,
-ballots and resets; query tests inspect actual generated MongoDB update commands.
-Room vote completion uses an update pipeline after ballot append, not a status
-calculated from a potentially stale service snapshot. Mongoose document validation
-also covers room invariants. Index auto-creation is disabled: M1 must explicitly
-review/deploy indexes, including the partial unique room-code index, before use.
-
-M1 must supply dependencies, shared connection, Title model, route mounting and
-error middleware. M2 must supply JWT-cookie authentication and Origin/CSRF safeguards.
-Integration must keep guest and account state separate, verify actual database
-constraints/races and multi-account requests, and preserve all frontend regressions.
+This branch activates the previously documented Member 5 additive routes and
+revision/round contract under the user's integration request. Existing catalogue
+and authentication contracts are unchanged. Team review of these feature additions
+and schema/index definitions is still required before PR #22 is merged.
+No claim of shared Atlas verification or physical-device testing is made.

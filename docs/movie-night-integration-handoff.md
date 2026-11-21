@@ -1,183 +1,167 @@
-# Member 5 integration handoff
+# Member 5 integration handoff — 21 November 2026
 
-## Delivery status
+## Status and history
 
-Independent Member 5 implementation is complete for sequential voting, session
-model preparation, injected-model repositories, room lifecycle/membership/voting,
-HTTP controllers, explicit feature route wiring, and dormant browser API/polling
-helpers. This is not an integrated running website backend. Nothing is mounted,
-no database is connected, and the existing same-device browser flow is unchanged.
-Only `feature/backend-movie-night` was used. Nothing was pushed, merged or deployed.
+Sequential account sessions and multi-device rooms are integrated in the feature
+branch with real shared authentication, persistence, frontend controls and polling.
+Latest `origin/main` at inspection was `cc8b32a`. Synchronization merge `b4eab69`
+preserved all ten original Member 5 commits through `cf0db20` without rebasing.
+Only `feature/backend-movie-night` was changed. Nothing was pushed, merged into
+main, force-pushed or deployed. The pre-existing `.vscode/` content was preserved.
 
-## File inventory
+The handoff file's older v1 same-device scope is extended by the user's explicit
+multi-device integration request. Existing shared catalogue/auth interfaces match
+the Member 5 dependency interfaces, so no incompatible shared contract was needed.
+Feature additions still require team PR review before main accepts them.
 
-Paths are relative to the repository root. No other member's source files changed.
+## Integration commits
 
-| Files | Purpose |
+| Commit | Completed work |
 | --- | --- |
-| `backend/src/services/movieNightRules.cjs` (modified) | Strict configuration/vote/revision rules and result calculation |
-| `backend/src/services/movieNightSessionService.cjs` (modified) | Host-scoped sessions, sequential votes, CAS reset, results and mutation postconditions |
-| `backend/src/services/movieNightRoomRules.cjs` (new) | Secure code generation, code/round/room invariants and private polling projection |
-| `backend/src/services/movieNightRoomService.cjs` (new) | Room creation, bounded collision retry, membership, host lifecycle and participant ballots |
-| `backend/src/models/MovieNightSession.cjs` (new) | Injected Mongoose/connection factory, shared collection, document validators and proposed indexes |
-| `backend/src/repositories/movieNightRepository.cjs` (new) | Sequential and catalogue query adapters; ObjectId/DTO normalization |
-| `backend/src/repositories/movieNightRoomRepository.cjs` (new) | Scoped room queries, atomic-operation filters, completion update pipeline |
-| `backend/src/controllers/movieNightController.cjs` (new) | Session/room handler factory, JSON errors, status codes and strict headers |
-| `backend/src/routes/movieNightRoutes.cjs` (new) | Feature-only route registration requiring supplied auth/protection |
-| `js/movie-night-api.js` (new) | Dormant same-origin client and serial room poller |
-| `backend/tests/helpers/sessionFixture.cjs`, `backend/tests/helpers/roomFixture.cjs` (new) | Test-only identities/repositories; never imported by production modules |
-| `backend/tests/movie-night-session-service.test.cjs` (modified) | Updated lifecycle/ownership coverage for mandatory revisions |
-| `backend/tests/movie-night-voting-service.test.cjs` (new) | Sequential races, stale/duplicate/reset safeguards and failures |
-| `backend/tests/movie-night-model.test.cjs` (new) | Pure invariants and optional real Mongoose document/query-casting tests without MongoDB |
-| `backend/tests/movie-night-repository.test.cjs`, `backend/tests/movie-night-room-repository.test.cjs` (new) | Generated MongoDB filter/update assertions |
-| `backend/tests/movie-night-rooms.test.cjs` (new) | Membership/lifecycle/race/privacy/code and participant-voting coverage |
-| `backend/tests/movie-night-http.test.cjs` (new) | Controller and route registration fixtures |
-| `backend/tests/movie-night-api.test.cjs` (new) | Client, browser-global loading, errors, polling, backoff, abort/restart |
-| `docs/movie-night-backend.md` (modified) | Module usage and independent-development boundaries |
-| `docs/movie-night-room-contract.md` (new) | Proposed room endpoints, lifecycle, schema and response permissions |
-| `docs/movie-night-integration-handoff.md` (new) | This delivery and verification record |
+| `b50ec9e` | Mount sessions using the shared app, Title model, Mongoose connection and cookie/Origin middleware |
+| `d7a71b3` | Real MongoDB sequential races across two backend processes and restart persistence |
+| `74ac4ae` | Mount rooms, verify unique indexes/collision retry, initialize indexes at startup and limit joins |
+| `87c352c` | Account session UI, saved-session restoration, keyboard selection and separate guest flow |
+| `ec959c2` | Room create/join/host/participant controls and polling across browser contexts |
+| `2cb3de2` | Clear views on cross-tab account changes and serialize manual room refreshes |
+| `7a17864` | Keep reusable fixtures out of Node test discovery; optional viewport screenshots |
+| `798834c` | Verified account/catalogue retry recovery and accurate mode feedback |
 
-The earlier `backend/tests/movie-night-rules.test.cjs` remains unchanged and passes.
-All original HTML, catalogue data, frontend logic, and root `tests/` remain unchanged.
-The pre-existing untracked `.vscode/` directory was not staged or modified.
+This handoff and updated run documentation are recorded in the final documentation
+commit. The synchronization merge is not counted as a feature milestone.
 
-## Executed verification
+## Files changed during this integration
 
-Environment: Windows, Node 22.23.4, Mongoose 9.12.2 installed in an external
-temporary directory. No workspace package manifest or lockfile was created.
+| Area | Files |
+| --- | --- |
+| Shared mounting/startup (essential changes only) | `backend/src/app.js`, `backend/src/server.js` |
+| Feature composition | New `backend/src/routes/createMovieNightRouter.cjs`; updated `backend/src/routes/movieNightRoutes.cjs` |
+| Account frontend | New `js/movie-night-account.js`; updated `js/movie-night.js`, `movie-night.html`, `movies.html`, `css/movie-night.css` |
+| Rooms frontend | New `js/movie-night-rooms.js` |
+| Shared-app/auth/database tests | New `backend/test/movie-night-integration.test.cjs`, `movie-night-concurrency.test.cjs`, `movie-night-rooms-integration.test.cjs` |
+| Browser tests | New `backend/test/movie-night-browser.test.cjs`, `movie-night-rooms-browser.test.cjs` |
+| Test-only support | New `backend/test-support/movieNightIntegration.cjs`, `movieNightServerProcess.cjs` |
+| Existing client test | Updated `backend/tests/movie-night-api.test.cjs` to reflect intentional script loading |
+| Documentation | `docs/movie-night-backend.md`, `docs/movie-night-room-contract.md`, this handoff, `backend/README.md`, root `README.md` |
 
-- Baseline: 136 tests passed before this execution.
-- Sequential milestone: 139 tests passed.
-- Model/repository preparation: 146 tests passed, including real disconnected
-  Mongoose document validation.
-- Rooms: 167 tests passed, including simulated join/vote/reset races.
-- HTTP preparation: 173 tests passed.
-- Dormant client/polling: 181 tests passed.
-- Mutation hardening: 182 tests passed; real Mongoose query casting also exercised.
-- Final suite: **184 passed, 0 failed, 0 skipped** with the external Mongoose path.
-  This includes the original 96 frontend tests and 88 Member 5 backend/helper tests.
-- `git diff --cached --check` passed before each code commit.
-- Node's optional coverage run passed before the final two added regressions;
-  coverage percentages are not evidence of database/authentication correctness.
+The original Member 5 services/model/repositories/controllers and independent
+tests remain, now exercised with installed dependencies and real MongoDB. M1's
+database module, M2's authentication/security modules, other feature modules,
+catalogue data and package configuration/lockfile were not modified by integration.
 
-Repeat the dependency-free suite from the root:
+## Verification environment and commands
+
+Windows; Node 22.23.4; project-locked Mongoose **8.24.10**; real isolated MongoDB
+**7.0.24**; installed Google Chrome controlled by Playwright. Physical devices were
+not available; separate cookie-isolated browser contexts exercised the device flow.
+
+From the root, after `cd backend; npm ci` has installed dependencies:
 
 ```powershell
-node --test
+$env:CINEFLIX_CHROME_PATH = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
+node --test --test-concurrency=1 --test-reporter=spec
 ```
 
-Without Mongoose, one clearly labelled Mongoose-specific test is skipped; pure
-rules/services, query spies, HTTP fixtures and browser-helper tests still run.
-To repeat the full Mongoose-inclusive suite without changing shared configuration:
+Equivalent backend-only discovery: `cd backend; npm test -- --test-concurrency=1`.
+Concurrency is limited between test files for predictable resource use; concurrency
+tests themselves still run competing requests against two real backend processes.
+If a compatible local mongod is already available, set `MONGOMS_SYSTEM_BINARY` to
+its executable to avoid the first-run test-binary download. Otherwise the existing
+mongodb-memory-server dependency downloads it. No shared Atlas credentials are
+needed. Browser checks explicitly skip when no executable is installed/configured.
 
-```powershell
-$member5Deps = Join-Path $env:TEMP 'cineflix-member5-validation'
-npm.cmd install --prefix $member5Deps --no-package-lock --no-audit --no-fund --ignore-scripts mongoose@9.12.2
-$env:CINEFLIX_MONGOOSE_PATH = Join-Path $member5Deps 'node_modules\mongoose'
-node --test --test-reporter=spec
-```
+Optional screenshots: set `CINEFLIX_MOVIE_NIGHT_ARTIFACTS` to a directory outside
+the repository before running the room browser test. Screenshots at 320, 390 and
+1440 pixels were generated and visually inspected; width checks found no overflow.
+No generated artifacts, binary, test data, .env or secrets are committed.
 
-Once M1 installs the project's agreed Mongoose version, its normal dependency can
-be used instead. Re-run compatibility tests with that version. Real Mongoose tests
-call `validate()` on disconnected documents and exercise query casting with the
-collection method replaced only inside the test. They do not contact MongoDB.
+## Verified behavior
 
-## What the tests prove, and what remains unverified
+- Real shared cookie registration/login, missing/malformed/expired-cookie rejection,
+  foreign ownership denial, exact Origin checks and unchanged catalogue/auth tests.
+- Persisted session create/list/get/reset/delete, timestamps, stable title IDs,
+  validation failures, completion, server-derived ties and independent app reads.
+- Ten competing same-revision votes across two backend processes accepted one;
+  last-slot competition never overflowed; six reset/vote races advanced once.
+- Real server restart preserved session progress; real browser refresh/restart
+  restored account state and completed results.
+- Actual partial unique room-code index, duplicate rejection and service collision
+  retry; sequential records coexisted without room-code uniqueness conflicts.
+- Concurrent capacity-limited joins, idempotent membership, host-only start/reset,
+  foreign room denial and authenticated join limiting.
+- Independent ballots across two backend processes succeeded while an extra ballot
+  for one account was rejected; completion/tallies matched stored records.
+- Fresh rounds reject old ballots; API polling omits raw ballots and participant IDs.
+- Browser host and participant contexts created, joined, started and voted; totals
+  updated, completed results survived restart, and reset was visible after refresh.
+- Browser API outages recovered without guest fallback; initial account/cached
+  catalogue failures were retried successfully; cross-tab logout cleared room data.
+- Guest selection/votes retained their original behavior and storage isolation.
+- Existing root frontend, navigation, ratings and My List regressions passed.
 
-Tests establish deterministic business rules, service ownership constraints,
-conditional-operation orchestration, generated query contents, Mongoose document
-validation/casting compatibility, response mapping and polling behavior.
-Test repositories apply CAS and participant uniqueness synchronously; barriers
-force competing reads of the same state. These simulations do not prove actual
-MongoDB atomicity, persistence, unique-index enforcement, JWT authentication,
-cookie security, CSRF protection, real cross-device behavior or browser-page UI
-integration. Do not describe the feature as live until those gates pass.
+Test-only identity/repository simulations remain useful unit coverage, but the
+claims above come from the new real MongoDB/HTTP/browser integration checks.
+Final root command `node --test --test-concurrency=1 --test-reporter=spec`:
+**240 passed, 0 failed, 0 skipped**, including all configured browser tests.
+Reusable test support was moved outside discovery so empty helper-file suites
+are not included in that count. The final run took approximately 90 seconds.
+The earlier 184-test independent-development result remains historical evidence;
+it is not substituted for these real integration checks.
 
-## Proposed contracts requiring team approval
+Final diff review confirmed that shared app mounting and startup each add only
+two lines. Shared dependency/lockfiles, connection, middleware, Title/User models,
+authentication UI, catalogue data, ratings and watchlist modules are unchanged
+relative to fetched main. All ten original Member 5 commits are ancestors of HEAD.
+No .env, credential URI/private-key/JWT literal, MongoDB data/binary, screenshot or
+test log is added to Git. The only remaining unrelated untracked path is `.vscode/`.
 
-1. `revision` on session DTOs and `X-Movie-Night-Revision` on sequential vote/reset
-   and room host start/reset. Missing/malformed => 400; stale/lost CAS => 409.
-2. Session status values `voting`/`complete`; room adds `waiting`. Internal tallies
-   use `{itemId,count}` and winner IDs. Result envelope remains the agreed shape.
-3. Six room routes, `X-Movie-Night-Round`, roomCode/roundId/membership fields,
-   participant vote records, host/participant permissions, and sanitized polling
-   DTO as specified in `movie-night-room-contract.md`.
-4. Same-collection mode separation and partial unique room-code/membership indexes.
-   Auto-index creation is disabled; these are definitions, not deployed indexes.
-5. Router factory's required supplied `requireAuth` and `protectMutation` interfaces
-   and the eventual single `/api/movie-night` mount.
+## Contracts and deployment/review boundaries
 
-The user approved independent implementation, not team integration. Existing
-sequential API paths and bodies are preserved. Room routes default disabled.
+See [session API](movie-night-backend.md) and [room contract](movie-night-room-contract.md).
+The branch preserves the seven agreed session paths/bodies and shared auth/error
+architecture, adding the previously documented revision header and six room routes.
+Room mode/schema/indexes, sanitized polling DTO and revision/round preconditions
+must be reviewed with the team in PR #22 before main is merged.
 
-## Integration sequence and ownership
+No Atlas connection, shared-data mutation, stress test, destructive seeding or
+index deployment was performed during verification. The next deliberate normal
+server startup will create the verified indexes in its configured database.
+Confirm database privileges and any external legacy records with M1 before that
+startup; existing records without mode/revision need explicit scoped migration.
+There is no need to invent replacement authentication or another shared server.
 
-### Member 1
+## Demonstration
 
-Supply the shared Express app/router, agreed package configuration/Mongoose
-version, existing connected Mongoose connection, Title model/seeded catalogue,
-JSON parser, static hosting, safe error middleware and route mount. The model
-factory takes `{mongoose,connection}` and must receive that existing connection.
-Construct the session/room repositories from the returned model and the title
-repository from M1's Title model. Inject them into the services and controllers.
+### Sequential
 
-Review schema/indexes and explicitly deploy indexes before allowing room creation.
-Missing room-code uniqueness makes collision retries ineffective. Review MongoDB
-update-pipeline support and Mongoose compatibility, query plans, polling load,
-join request limits and database write durability settings in the shared backend.
-If any existing records lack revisions/mode, agree on an explicit scoped migration;
-never silently treat every missing revision as zero or reset the shared database.
+1. Start the shared server using the existing private configuration and catalogue.
+2. Register/sign in through `login.html`. Open Movie Night and choose three films
+   from the keyboard-accessible movie picker.
+3. Set four slots, start, cast one vote, refresh and show restored progress.
+4. Cast remaining votes to produce a 2-2 tie; show the final stored results.
+5. Show saved-session selection, vote-only restart, delete, and an old-revision
+   request returning 409 without consuming a new turn.
+6. Open Guest demo explicitly and demonstrate that account votes were not imported
+   into browser storage and guest votes do not alter saved sessions.
 
-### Member 2
+### Rooms
 
-Supply real JWT-cookie `requireAuth` with verified string `req.user.id`, plus
-Origin/CSRF mutation protection. No caller should construct identities from body,
-headers or demo browser storage. Coordinate session-change/logout UI hooks.
-Room code possession never bypasses authentication. Each participating account
-gets one ballot per round; this is not proof of one human per ballot.
+1. Use separate signed-in browser profiles or devices. Host selects With other
+   devices, chooses three movies and creates a two-slot room.
+2. Host chooses Join as a voter. The second account enters the shared code.
+3. Once both slots fill, host starts. Each account votes from its own context.
+4. Observe progress/totals and server-derived winners/ties; refresh to restore.
+5. Demonstrate duplicate-account/old-round rejection and foreign-account denial.
+6. Host restarts the round, retaining the roster. Participants refresh to observe
+   it, and host explicitly starts again. Logout clears account state in other tabs.
 
-### Member 5 after integration approval
+## Known limitations
 
-Wire the supplied dependencies, then register approved feature routes with real
-middleware. Keep room routing disabled until the room contract is approved. Map
-unexpected controller errors through M1's safe 500 handler without details.
-Activate the dormant client only after the real API is working. Adapt existing
-Movie Night UI deliberately: distinguish clearing the entire night from resetting
-only votes, retain keyboard/poster/error behavior, add room create/join/start/vote
-controls and session selection/restoration, and preserve a clearly separate guest
-experience. Never fall back from failed account writes to guest storage or import
-old guest votes automatically. Stop polling on logout/navigation.
-
-## Real integration verification still required
-
-- Create/retrieve/list/delete/reset against MongoDB and verify refresh/restart
-  persistence, timestamps and account separation through actual HTTP/cookies.
-- Run two independent application processes against authorized isolated MongoDB
-  test infrastructure. Race same-revision votes and resets; verify only one write.
-- Verify different room participants can vote concurrently, duplicate ballots are
-  rejected, capacity cannot overflow and completion is written with the last vote.
-- Verify the actual unique room-code index, bounded collision handling, mode
-  isolation and old-round rejection across reset. Inspect generated database records.
-- Test missing/expired/tampered cookies, foreign accounts, role non-bypass,
-  Origin/CSRF denial, safe 500 responses and participant response privacy.
-- Run actual multi-device/browser-context create/join/start/vote/poll flows, including
-  disconnect/reconnect, session restoration and logout while polling.
-- Re-run all frontend and backend tests after shared integration. Confirm guest
-  data remains distinct and no account state is displayed after logout.
-
-Never drop the shared database or wipe collections for tests. Use authorized
-isolated fixtures and host-specific cleanup only.
-
-## Demo preparation
-
-Today, run the sequential voting and room test files to demonstrate rules,
-controlled races, ties and stale-request protection. Explain that repositories
-and identity contexts are test doubles and the website backend is not active.
-Show document validation separately with the Mongoose-inclusive command.
-
-After integration: host creates three-movie session, casts four votes with two
-for each of two movies, refreshes, and shows the persisted tie. Replay an old
-revision and show rejection without an extra vote. For rooms, use two signed-in
-browser profiles/devices, join the code (including host if voting), fill/start the
-room, cast independent ballots, observe polling and persistent results, replay a
-participant ballot, then reset and demonstrate the old round cannot vote.
+One account means one ballot, not proof of one human. There is no anonymous guest
+room membership, leave/kick flow, room expiry, room deletion UI or no-show timeout.
+The host must fill every configured slot before starting. Completed polling stops;
+use Refresh room or refocus the page to observe a later reset. The join limiter is
+per process. Blocked tab storage prevents transferring a new account draft between
+picker/pages and reports an error; existing URL-based saved state still restores.
+Guest demo still needs the shared server for catalogue/account status, as on main.
+No physical-device, shared Atlas or production deployment verification is claimed.

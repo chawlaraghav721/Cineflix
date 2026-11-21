@@ -11,6 +11,9 @@
     const status = document.getElementById("mylist-status");
     const errorMessage = document.getElementById("mylist-error");
     let catalogue = null;
+    let entries = [];
+    let revision = 0;
+    let busy = false;
 
     function posterFallback(item) {
         const fallback = document.createElement("div");
@@ -63,89 +66,81 @@
         removeButton.className = "mylist-remove";
         removeButton.textContent = "Remove";
         removeButton.setAttribute("aria-label", "Remove " + item.title + " from My List");
-        removeButton.addEventListener("click", function () {
-            const buttons = Array.from(grid.querySelectorAll(".mylist-remove"));
-            const index = buttons.indexOf(removeButton);
-            if (!myList.removeFromMyList(item.id)) {
-                errorMessage.textContent = "This title could not be removed. Please try again and check that browser storage is enabled.";
-                return;
-            }
-            // The storage event has rendered the updated cards synchronously.
-            const remaining = grid.querySelectorAll(".mylist-remove");
-            const nextFocus = remaining[Math.min(index, remaining.length - 1)] || search;
-            nextFocus.focus();
-        });
+        removeButton.disabled = busy;
+        removeButton.addEventListener("click", () => perform(() => myList.removeFromMyList(item.id)));
         card.append(link, removeButton);
         return card;
     }
 
     function render() {
         if (!catalogue) return;
-        errorMessage.textContent = "";
-        if (typeof myList.isStorageAvailable === "function" && !myList.isStorageAvailable()) {
-            grid.replaceChildren(addCard);
-            clearButton.disabled = true;
-            status.textContent = "";
-            errorMessage.textContent = "Browser storage is unavailable. Enable browser storage to load your saved titles.";
-            return;
-        }
-
-        const ids = myList.getMyListIds();
-        const items = ids.map(id => catalogueApi.getItemById(catalogue, id)).filter(Boolean);
+        const items = entries.map(entry => {
+            const item = catalogueApi.getItemById(catalogue, entry.itemId);
+            return item ? { ...item, watchStatus: entry.status } : null;
+        }).filter(Boolean);
         const query = search.value.trim().toLowerCase();
         const matches = items.filter(item => item.title.toLowerCase().includes(query));
         grid.replaceChildren(...matches.map(makeCard), addCard);
-        clearButton.disabled = ids.length === 0;
-
-        if (ids.length === 0) {
-            status.textContent = "Your list is empty. Browse movies and shows to find titles to save.";
-        } else if (items.length === 0) {
-            status.textContent = "Your saved titles are no longer available in the catalogue. You can clear your list and browse for other titles.";
-        } else {
-            status.textContent = matches.length === 0
-                ? "No saved titles match your search."
+        clearButton.disabled = busy || entries.length === 0;
+        status.textContent = entries.length === 0
+            ? "Your list is empty. Browse movies and shows to find titles to save."
+            : matches.length === 0 ? "No saved titles match your search."
                 : matches.length + " saved title(s) shown.";
-            if (items.length < ids.length) {
-                status.textContent += " Some saved titles are no longer available in the catalogue.";
-            }
-        }
+        if (items.length < entries.length) status.textContent += " Some saved titles are no longer available in the catalogue.";
     }
 
     async function loadMyList() {
+        const current = ++revision;
         catalogue = null;
+        entries = [];
+        grid.replaceChildren(addCard);
         grid.setAttribute("aria-busy", "true");
         search.disabled = true;
         clearButton.disabled = true;
         retryButton.hidden = true;
-        status.textContent = "Loading your list…";
+        status.textContent = "Loading your list?";
         errorMessage.textContent = "";
         try {
-            catalogue = await catalogueApi.loadCatalogue();
+            const [loaded, saved] = await Promise.all([catalogueApi.loadCatalogue(), myList.getMyListItems()]);
+            if (current !== revision) return;
+            catalogue = loaded;
+            entries = saved;
             search.disabled = false;
             render();
         } catch (error) {
+            if (current !== revision) return;
             status.textContent = "";
-            errorMessage.textContent = "Your list could not be loaded. Check your connection and try again.";
+            errorMessage.textContent = error.message || "Your list could not be loaded. Check your connection and try again.";
             retryButton.hidden = false;
         } finally {
-            grid.setAttribute("aria-busy", "false");
+            if (current === revision) grid.setAttribute("aria-busy", "false");
         }
     }
 
+    async function perform(operation) {
+        if (busy) return;
+        busy = true;
+        const current = revision;
+        errorMessage.textContent = "";
+        render();
+        try {
+            await operation();
+            await loadMyList();
+            search.focus();
+        } catch (error) {
+            if (current === revision) errorMessage.textContent = error.message || "Your list could not be updated. Please try again.";
+        } finally {
+            busy = false;
+            render();
+        }
+    }
     search.addEventListener("input", render);
     retryButton.addEventListener("click", loadMyList);
-    clearButton.addEventListener("click", function () {
-        if (!window.confirm("Clear My List and remove all saved movies and shows?")) return;
-        if (!myList.clearMyList()) {
-            errorMessage.textContent = "Your list could not be cleared. Please try again and check that browser storage is enabled.";
-            return;
-        }
-        search.focus();
+    clearButton.addEventListener("click", () => {
+        if (busy || !window.confirm("Clear My List and remove all saved movies and shows?")) return;
+        perform(() => myList.clearMyList());
     });
-    window.addEventListener("cineflix:list-updated", render);
-    window.addEventListener("pageshow", render);
-    window.addEventListener("storage", function (event) {
-        if (event.key === null || event.key === "cineflixMyList") render();
-    });
+    window.addEventListener("cineflix:list-updated", loadMyList);
+    window.addEventListener("pageshow", loadMyList);
     loadMyList();
 }());

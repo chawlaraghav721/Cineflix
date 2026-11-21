@@ -20,7 +20,7 @@ test('My List refreshes saved cards when restored from the back-forward cache', 
     const item = { id: 'movie-011', title: 'Inception', year: 2010, genre: 'Thriller', poster: '' };
     const window = {
         CineFlixCatalogue: { loadCatalogue: async () => ({ movies: [item], shows: [] }), getItemById: (_, id) => id === item.id ? item : null },
-        CineFlixMyList: { getMyListIds: () => saved, isStorageAvailable: () => true },
+        CineFlixMyList: { getMyListItems: async () => saved.map(itemId => ({ itemId, status: "want-to-watch" })) },
         addEventListener(type, callback) { (events[type] ||= []).push(callback); }
     };
     vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../js/mylist.js'), 'utf8'), {
@@ -31,10 +31,12 @@ test('My List refreshes saved cards when restored from the back-forward cache', 
     assert.equal(ids['mylist-grid'].children.length, 1); // browse link only
     saved = [item.id];
     for (const callback of events.pageshow || []) callback({ persisted: true });
+    await new Promise(resolve => setImmediate(resolve));
     assert.equal(ids['mylist-grid'].children[0].dataset.id, item.id);
     assert.match(ids['mylist-status'].textContent, /1 saved/);
     saved = [];
     for (const callback of events.pageshow || []) callback({ persisted: true });
+    await new Promise(resolve => setImmediate(resolve));
     assert.equal(ids['mylist-grid'].children.length, 1);
     assert.match(ids['mylist-status'].textContent, /empty/);
 });

@@ -21,7 +21,12 @@ function createRatingControllers({ ratingService }) {
         getSummary: handle(req => ratingService.getSummary(req.params.itemId)),
         getOwn: handle(req => ratingService.getOwn(req.user, req.params.itemId)),
         putOwn: handle(req => ratingService.putOwn(req.user, req.params.itemId, req.body)),
-        deleteOwn: handle(req => ratingService.deleteOwn(req.user, req.params.itemId), 204)
+        deleteOwn: handle(req => {
+            if (req.body && (Array.isArray(req.body) || Object.keys(req.body).length)) {
+                throw new RatingError("INVALID_RATING", "DELETE does not accept rating fields.");
+            }
+            return ratingService.deleteOwn(req.user, req.params.itemId);
+        }, 204)
     };
 }
 

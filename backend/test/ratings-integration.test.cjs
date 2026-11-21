@@ -99,6 +99,27 @@ test("ratings API with real JWT cookies and isolated MongoDB", { timeout: 60000 
         assert.equal(results.average, 3); assert.equal(results.count, 2);
     });
 
+    await t.test("a cookie/account race cannot write a previous account's draft and DELETE rejects ownership fields", async () => {
+        for (const method of ["get", "put", "delete"]) {
+            const response = await b.agent[method](own).set("Origin", f.config.origin)
+                .set("X-Ratings-Owner", a.user.id).send(method === "put" ? { score: 5, reviewText: "A private draft" } : undefined).expect(409);
+            assert.equal(response.body.error.code, "ACCOUNT_CHANGED");
+        }
+        await a.agent.delete(own).set("Origin", f.config.origin).send({ userId: b.user.id }).expect(400);
+        assert.equal((await b.agent.get(own)).body.rating.score, 2);
+        assert.equal((await a.agent.get(own)).body.rating.score, 4);
+        await b.agent.put(own).set("Origin", f.config.origin).set("X-Ratings-Owner", b.user.id).send({ score: 2 }).expect(200);
+    });
+
+    await t.test("unexpected database failures use the shared generic error response", async () => {
+        const original = Title.exists;
+        try {
+            Title.exists = () => { throw new Error("private connection information"); };
+            const response = await request(f.app).get(summary).expect(500);
+            assert.deepEqual(response.body, { error: { code: "INTERNAL_ERROR", message: "An unexpected server error occurred." } });
+        } finally { Title.exists = original; }
+    });
+
     await t.test("recent reviews have deterministic order and limit while totals include every score", async () => {
         const now = new Date("2026-01-01T00:00:00Z");
         const rows = Array.from({ length: 25 }, (_, index) => ({ user: new mongoose.Types.ObjectId(),

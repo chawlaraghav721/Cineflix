@@ -2,10 +2,11 @@
     "use strict";
 
     function createRatingsClient(fetcher = root.fetch.bind(root)) {
-        async function request(path, method = "GET", body) {
+        async function request(path, method = "GET", body, owner) {
             const response = await fetcher(path, {
                 method, credentials: "same-origin", cache: "no-store",
-                headers: { Accept: "application/json", ...(body === undefined ? {} : { "Content-Type": "application/json" }) },
+                headers: { Accept: "application/json", ...(owner ? { "X-Ratings-Owner": owner } : {}),
+                    ...(body === undefined ? {} : { "Content-Type": "application/json" }) },
                 ...(body === undefined ? {} : { body: JSON.stringify(body) })
             });
             if (response.status === 204 && response.ok) return null;
@@ -30,9 +31,9 @@
                 } catch (error) { if (error.status === 401) return null; throw error; }
             },
             getSummary: itemId => request(endpoint(itemId)),
-            getOwn: itemId => request(endpoint(itemId) + "/me"),
-            putOwn: (itemId, score, reviewText) => request(endpoint(itemId) + "/me", "PUT", { score, reviewText }),
-            deleteOwn: itemId => request(endpoint(itemId) + "/me", "DELETE")
+            getOwn: (itemId, owner) => request(endpoint(itemId) + "/me", "GET", undefined, owner),
+            putOwn: (itemId, score, reviewText, owner) => request(endpoint(itemId) + "/me", "PUT", { score, reviewText }, owner),
+            deleteOwn: (itemId, owner) => request(endpoint(itemId) + "/me", "DELETE", undefined, owner)
         };
     }
 

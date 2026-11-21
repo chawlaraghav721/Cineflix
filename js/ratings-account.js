@@ -71,7 +71,7 @@
             controls();
             summary.textContent = "Loading community ratings…"; reviews.replaceChildren();
             const expectedOwner = owner;
-            const results = await Promise.allSettled([client.getSummary(target), mode === "account" ? client.getOwn(target) : Promise.resolve(null)]);
+            const results = await Promise.allSettled([client.getSummary(target), mode === "account" ? client.getOwn(target, owner) : Promise.resolve(null)]);
             if (current !== generation) return;
             try {
                 if (results[0].status === "rejected") throw results[0].reason;
@@ -85,7 +85,7 @@
                 } catch (error) {
                     reset(); uncertain = true;
                     ratingMessage.textContent = error.status === 401 ? "Your session expired. Sign in again." : "Your account rating could not be loaded. Refresh ratings to retry.";
-                    if (error.status === 401) void auth.refresh();
+                    if (error.status === 401 || error.code === "ACCOUNT_CHANGED") void auth.refresh();
                 }
             }
             busy = false; controls();
@@ -103,7 +103,7 @@
                 const account = await client.getUser();
                 if (current !== generation) return;
                 if (account?.id !== expectedOwner || auth.getState().user?.id !== expectedOwner) { await auth.refresh(); return; }
-                const saved = remove ? await client.deleteOwn(target) : await client.putOwn(target, nextScore, text);
+                const saved = remove ? await client.deleteOwn(target, expectedOwner) : await client.putOwn(target, nextScore, text, expectedOwner);
                 if (current !== generation) return;
                 renderOwn(remove ? null : saved);
                 ratingMessage.textContent = remove ? "Your rating and review were removed." : "Your Rating: " + score + " out of 5 — saved.";
@@ -119,7 +119,7 @@
                 uncertain = true;
                 ratingMessage.textContent = error.status === 401 ? "Your session expired. Sign in again."
                     : "Unable to confirm the change. Refresh ratings before trying again.";
-                if (error.status === 401) { reset(); uncertain = true; void auth.refresh(); }
+                if (error.status === 401 || error.code === "ACCOUNT_CHANGED") { reset(); uncertain = true; void auth.refresh(); }
             } finally { if (current === generation) { busy = false; controls(); } }
         }
         async function refresh() { await auth.refresh(); }

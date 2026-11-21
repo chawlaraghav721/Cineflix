@@ -37,4 +37,18 @@ test("watchlist HTTP API with verified cookies and disposable MongoDB", async t 
         assert.deepEqual(Object.keys(response.body.items[0]).sort(), ["addedAt", "itemId", "status", "updatedAt"]);
         assert.equal(response.headers["cache-control"], "no-store");
     });
+    await t.test("POST persists movie/show defaults, rejects duplicates and invalid input", async () => {
+        const created = await call("post").send({ itemId: "movie-004" }).expect(201);
+        assert.equal(created.body.status, "want-to-watch");
+        assert(created.body.addedAt && created.body.updatedAt);
+        await call("post").send({ itemId: "show-001", status: "watching" }).expect(201);
+        await call("post").send({ itemId: "movie-004" }).expect(409);
+        await call("post").send({ itemId: "missing" }).expect(404);
+        for (const body of [null, [], {}, { itemId: { $ne: null } }, { itemId: "movie-004", status: "bad" },
+            { itemId: "movie-004", userId: userB }, { itemId: "movie-004", user: userB }]) {
+            const result = await call("post").send(body).expect(400);
+            assert(result.body.error.code);
+        }
+        assert.equal(await Watchlist.countDocuments({ user: userA }), 2);
+    });
 });

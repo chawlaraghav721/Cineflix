@@ -27,4 +27,15 @@ async function addMyList(req, res, next) {
         return next(error);
     }
 }
-module.exports = { getMyList, addMyList, publicEntry, fail };
+async function updateMyList(req, res, next) {
+    const invalid = validateBody(req.body, true);
+    if (invalid) return fail(res, 400, "INVALID_INPUT", invalid);
+    try {
+        if (!await Title.exists({ id: req.params.itemId })) return fail(res, 404, "TITLE_NOT_FOUND", "No catalogue title has that ID.");
+        const entry = await Watchlist.findOneAndUpdate({ user: req.user.id, itemId: req.params.itemId },
+            { $set: { status: req.body.status } }, { new: true, runValidators: true });
+        if (!entry) return fail(res, 404, "ENTRY_NOT_FOUND", "This title is not in your list.");
+        return res.json(publicEntry(entry));
+    } catch (error) { return next(error); }
+}
+module.exports = { getMyList, addMyList, updateMyList, publicEntry, fail };

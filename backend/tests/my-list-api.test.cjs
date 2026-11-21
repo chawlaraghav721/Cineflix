@@ -51,4 +51,19 @@ test("watchlist HTTP API with verified cookies and disposable MongoDB", async t 
         }
         assert.equal(await Watchlist.countDocuments({ user: userA }), 2);
     });
+    await t.test("PATCH changes only own status and preserves addedAt", async () => {
+        const before = (await call("get")).body.items.find(item => item.itemId === "movie-004");
+        for (const status of Watchlist.STATUSES) {
+            const response = await call("patch", "/movie-004").send({ status }).expect(200);
+            assert.equal(response.body.status, status);
+            assert.equal(response.body.addedAt, before.addedAt);
+            assert(new Date(response.body.updatedAt) >= new Date(before.updatedAt));
+        }
+        await call("patch", "/movie-004", b).send({ status: "watched" }).expect(404);
+        await call("patch", "/missing").send({ status: "watched" }).expect(404);
+        await call("patch", "/%20movie-004").send({ status: "watched" }).expect(400);
+        for (const body of [{}, { status: "bad" }, { status: "watched", itemId: "show-001" }]) {
+            await call("patch", "/movie-004").send(body).expect(400);
+        }
+    });
 });

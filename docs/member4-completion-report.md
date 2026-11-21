@@ -116,7 +116,7 @@ The inventory and complete commit-message list below describe this feature branc
 
 ### Commits
 
-Total feature-branch commits: **26**.
+Total feature-branch commits: **27**.
 
 1. `feat(mylist): define user-owned watchlist schema and unique index`
 2. `feat(mylist): validate catalogue IDs statuses and allowed request fields`
@@ -144,3 +144,4 @@ Total feature-branch commits: **26**.
 24. `test(mylist): add verified Postman collection for watchlist CRUD and errors`
 25. `docs(mylist): document API ownership integration testing and viva demonstration`
 26. `docs(mylist): record complete verification files and feature commit history`
+27. `docs(mylist): normalize handoff whitespace for clean patch checks`

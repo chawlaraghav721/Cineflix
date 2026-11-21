@@ -1,9 +1,9 @@
 # CINEFLIX — FULL-STACK BACKEND TEAM HANDOFF
 
-**Version:** 1.0  
-**Prepared:** 18 November 2026  
-**Repository:** https://github.com/chawlaraghav721/Cineflix  
-**Team:** 5 developers; one integrated CineFlix application  
+**Version:** 1.0
+**Prepared:** 18 November 2026
+**Repository:** https://github.com/chawlaraghav721/Cineflix
+**Team:** 5 developers; one integrated CineFlix application
 **Decision (final):** ONE shared MongoDB Atlas database, ONE shared Express backend codebase, ONE MongoDB connection module per running backend process, and FIVE individual feature branches.
 
 > **READ FIRST — FOR CODEX OR ANY CODING ASSISTANT**
@@ -225,7 +225,7 @@ Movie Night is the **existing same-device sequential voting experience**: voter 
 
 ### MEMBER 1 — Shared backend foundation, movie catalogue, search, admin management
 
-**Branch:** `feature/backend-catalogue`  
+**Branch:** `feature/backend-catalogue`
 **Relative challenge:** 3.5/5; **viva impact:** 4/5 (subjective estimates).
 
 **Own these files/modules:** `backend/package.json`, `backend/src/app.js`, `backend/src/server.js`, `backend/src/config/db.js`, `backend/src/models/Title.js`, `backend/src/controllers/titleController.js`, `backend/src/routes/titleRoutes.js`, `backend/src/scripts/seedCatalogue.js`, `js/catalogue.js` and catalogue browsing adapters, related backend tests. Coordinate edits to shared route mounts.
@@ -248,7 +248,7 @@ Movie Night is the **existing same-device sequential voting experience**: voter 
 
 ### MEMBER 2 — User authentication and account management
 
-**Branch:** `feature/backend-auth`  
+**Branch:** `feature/backend-auth`
 **Relative challenge:** 4.5/5; **viva impact:** 4.5/5.
 
 **Own these files/modules:** `backend/src/models/User.js`, auth routes/controller, `backend/src/middleware/requireAuth.js` (and `requireAdmin`), `js/login.js`, necessary registration/login HTML and small navigation auth changes, tests. Route registration into M1's `app.js` via coordinated integration.
@@ -271,7 +271,7 @@ Movie Night is the **existing same-device sequential voting experience**: voter 
 
 ### MEMBER 3 — Personal ratings, written reviews, and average score
 
-**Branch:** `feature/backend-ratings`  
+**Branch:** `feature/backend-ratings`
 **Relative challenge:** 3/5; **viva impact:** 3.5/5.
 
 **Own these files/modules:** `backend/src/models/Rating.js`, ratings route/controller, `js/ratings.js`, minimal review UI for Details, rating tests. Coordinate common Details markup with M4.
@@ -292,7 +292,7 @@ Movie Night is the **existing same-device sequential voting experience**: voter 
 
 ### MEMBER 4 — My List watchlist, status management, personalization
 
-**Branch:** `feature/backend-mylist`  
+**Branch:** `feature/backend-mylist`
 **Relative challenge:** 3.5/5; **viva impact:** 4.5/5.
 
 **Own these files/modules:** `backend/src/models/Watchlist.js`, my-list routes/controller, `js/my-list-storage.js`, `js/mylist.js`, coordinated Details/My List button updates and navbar count integration, tests.
@@ -315,7 +315,7 @@ Movie Night is the **existing same-device sequential voting experience**: voter 
 
 ### MEMBER 5 — Movie Night persistent sessions and voting rules
 
-**Branch:** `feature/backend-movie-night`  
+**Branch:** `feature/backend-movie-night`
 **Relative challenge:** 5/5; **viva impact:** 5/5.
 
 **Own these files/modules:** `backend/src/models/MovieNightSession.js`, movie-night route/controller, `js/movie-night.js`, `movie-night.html` as needed, tests.

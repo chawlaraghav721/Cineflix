@@ -74,11 +74,19 @@
           >
 
           <div class="mylist-actions">
+               <label for="mylist-filter">Watch status</label>
+               <select id="mylist-filter" class="mylist-select" disabled>
+                    <option value="all">All</option>
+                    <option value="want-to-watch">Want to Watch</option>
+                    <option value="watching">Watching</option>
+                    <option value="watched">Watched</option>
+               </select>
                <button id="mylist-clear" class="btn secondary" type="button" disabled>Clear My List</button>
                <button id="mylist-retry" class="btn" type="button" hidden>Try Again</button>
           </div>
           <p id="mylist-status" class="mylist-message" role="status">Loading your list…</p>
           <p id="mylist-error" class="mylist-message" role="alert"></p>
+          <p id="mylist-session" class="mylist-message" role="status"></p>
 
           <section class="movie-section" aria-label="Saved movies and shows">
 

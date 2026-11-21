@@ -14,7 +14,8 @@ test('My List refreshes saved cards when restored from the back-forward cache', 
         setAttribute() {}
         addEventListener() {}
     }
-    const ids = Object.fromEntries(['mylist-grid', 'mylist-add', 'mylist-search', 'mylist-clear', 'mylist-retry', 'mylist-status', 'mylist-error'].map(id => [id, new Element()]));
+    const ids = Object.fromEntries(['mylist-grid', 'mylist-add', 'mylist-search', 'mylist-clear', 'mylist-retry', 'mylist-status', 'mylist-error', 'mylist-filter', 'mylist-session'].map(id => [id, new Element()]));
+    ids['mylist-filter'].value = 'all';
     const events = {};
     let saved = [];
     const item = { id: 'movie-011', title: 'Inception', year: 2010, genre: 'Thriller', poster: '' };

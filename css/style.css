@@ -1001,6 +1001,20 @@ body.trailer-open {
     overflow-wrap: anywhere;
 }
 
+.my-list-page .mylist-select {
+    color: #fff;
+    background: #202020;
+    border: 1px solid #777;
+    border-radius: 6px;
+    padding: 10px;
+    font: inherit;
+    max-width: 100%;
+}
+
+.my-list-page .mylist-item-status { margin: 8px; width: calc(100% - 16px); }
+.my-list-page .mylist-select:focus-visible { outline: 2px solid #e50914; outline-offset: 3px; }
+.my-list-page .mylist-select:disabled { opacity: .65; }
+
 .my-list-page #mylist-error {
     color: #ff5964;
 }

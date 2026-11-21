@@ -8,6 +8,7 @@ const titleRoutes = require("./routes/titleRoutes");
 const cookieParser = require("cookie-parser");
 const { createAuthRouter } = require("./routes/authRoutes");
 const { loadAuthConfig } = require("./config/auth");
+const { createMovieNightRouter } = require("./routes/createMovieNightRouter.cjs");
 
 const repositoryRoot = path.resolve(__dirname, "../..");
 
@@ -40,6 +41,7 @@ function createApp({ authConfig = loadAuthConfig() } = {}) {
     app.use(cookieParser());
 
     app.use("/api/auth", createAuthRouter());
+    app.use("/api/movie-night", createMovieNightRouter());
     app.use("/api", healthRoutes);
     app.use("/api", titleRoutes);
     app.get("/api", (req, res) => res.json({ message: "CineFlix API" }));

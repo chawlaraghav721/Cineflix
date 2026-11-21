@@ -82,7 +82,10 @@ have saved the original request. Reviews are rendered exclusively with
 
 `ratings.js` preserves the existing guest storage and legacy-title migration.
 Shared production edits are limited to ratings scripts/styles, Details markup
-and script order, and the two backend mounting/startup hooks. Authentication,
+and script order, the two backend mounting/startup hooks, and guest-rating labels
+in the newly integrated account dashboard. That dashboard continues to preview
+browser-only guest ratings and now labels them explicitly; account ratings are
+restored on each title's Details page. Authentication,
 catalogue, My List, navigation, trailers and both Movie Night modes retain their
 existing interfaces.
 
@@ -126,10 +129,10 @@ overflow. Desktop and mobile screenshots were visually inspected; screenshots
 are local temporary QA artifacts, not committed application data.
 
 The complete root run (`node --test --test-concurrency=1` with Chrome configured)
-passed **273 tests, 0 failures, 0 skips**: 102 existing frontend tests and 171
-backend tests, including 28 new ratings checks. The earlier standalone backend
-run passed 169 tests before two final security/error-handling checks were added;
-the complete root run includes both additions. All 91 application/test JavaScript
+passed **274 tests, 0 failures, 0 skips**: 103 frontend tests and 171
+backend tests, including 28 new ratings checks. This run includes the latest
+login/account-dashboard changes from main and the guest/account compatibility
+check on that dashboard. All 92 application/test JavaScript
 files passed `node --check`, and the diff passed the whitespace check.
 
 No shared Atlas records were modified for ratings verification. Physical mobile devices and

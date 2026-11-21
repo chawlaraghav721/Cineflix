@@ -14,6 +14,8 @@
     const accountMessage = document.getElementById("account-message");
     const signOut = document.getElementById("account-signout");
     const showPassword = document.getElementById("toggle-password");
+    const shell = document.getElementById("auth-shell");
+    const hint = document.getElementById("session-hint");
     let registration = new URLSearchParams(window.location.search).get("mode") === "register";
     let busy = false;
     let hadAccount = false;
@@ -26,6 +28,8 @@
         account.hidden = !user;
         form.hidden = Boolean(user);
         toggle.hidden = Boolean(user);
+        if (shell) shell.classList[user ? "add" : "remove"]("account-view");
+        if (hint) hint.hidden = Boolean(user);
         title.textContent = user ? "Your Account" : registration ? "Create Account" : "Sign In";
         accountMessage.textContent = user ? "Signed in as " + user.name + " (" + user.email + ")." : "";
         nameGroup.hidden = !registration;
@@ -35,7 +39,10 @@
         submit.disabled = busy;
         toggle.textContent = registration ? "Already have an account? Sign in" : "New to CineFlix? Create an account";
         form.setAttribute("aria-busy", String(busy));
-        if (state?.status === "error" && !busy) feedback.textContent = "Account details could not be loaded. Check your connection and try signing in.";
+        if (state?.status === "error" && !busy && !feedback.textContent) {
+            feedback.textContent = "Account details could not be loaded. Check your connection and try signing in.";
+            feedback.dataset.state = "error";
+        }
     }
     function fieldError(id, message) {
         document.getElementById(id + "-error").textContent = message;
@@ -47,6 +54,7 @@
             document.getElementById(id).removeAttribute("aria-invalid");
         }
         feedback.textContent = "";
+        feedback.dataset.state = "";
     }
     toggle.addEventListener("click", event => {
         event.preventDefault();
@@ -87,13 +95,19 @@
             await window.CineFlixAuth[registration ? "register" : "login"](values);
             password.value = "";
             feedback.textContent = "";
-        } catch (error) { feedback.textContent = error.message; }
+        } catch (error) {
+            feedback.textContent = error.message || "Unable to sign in. Please try again.";
+            feedback.dataset.state = "error";
+            if (error.code === "USER_NOT_FOUND") fieldError("email", error.message);
+            if (error.code === "INVALID_CREDENTIALS") fieldError("password", error.message);
+            feedback.focus();
+        }
         finally { busy = false; render(); }
     });
     signOut.addEventListener("click", async () => {
         signOut.disabled = true;
-        try { await window.CineFlixAuth.logout(); feedback.textContent = "Signed out."; }
-        catch (error) { feedback.textContent = "Unable to sign out. " + error.message; }
+        try { await window.CineFlixAuth.logout(); clearErrors(); feedback.textContent = "Signed out."; }
+        catch (error) { feedback.textContent = "Unable to sign out. " + error.message; feedback.dataset.state = "error"; }
         finally { signOut.disabled = false; render(); }
     });
     window.addEventListener("cineflix:auth-state", render);

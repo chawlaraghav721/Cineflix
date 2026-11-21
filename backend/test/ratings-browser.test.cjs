@@ -59,6 +59,14 @@ test("Details ratings in a real browser with isolated MongoDB and the shared ser
         await page.reload(); await saved(page, 5);
         assert.match(await page.locator("#rating-review").inputValue(), /thoughtful/);
         assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem("cineflixPersonalRatings"))["movie-004"]), 2);
+        await page.goto(server.origin + "/login.html");
+        await page.waitForFunction(() => document.getElementById("account-rating-count").textContent === "1");
+        assert.equal(await page.locator("#account-rated-tab").textContent(), "Guest ratings");
+        await page.locator("#account-rated-tab").click();
+        await page.waitForFunction(() => document.querySelector(".account-title-rating")?.textContent.includes("2 / 5"));
+        assert.equal(await page.locator("#account-library-title").textContent(), "Guest ratings on this device");
+        assert.match(await page.locator(".account-settings").textContent(), /Account ratings and reviews are saved to your account/);
+        await page.goto(details()); await saved(page, 5);
     });
 
     await t.test("editing, two accounts and public averages use persisted records", async () => {

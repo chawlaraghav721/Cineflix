@@ -47,7 +47,8 @@ async function login(body) {
     const values = validateCredentials(body);
     const user = await User.findOne({ email: values.email }).select("+passwordHash");
     const valid = await verifyPassword(values.password, user ? user.passwordHash : await getDummyHash());
-    if (!user || !valid) throw new AuthError("INVALID_CREDENTIALS", "Email or password is incorrect.", 401);
+    if (!user) throw new AuthError("USER_NOT_FOUND", "User does not exist. Create an account to get started.", 401);
+    if (!valid) throw new AuthError("INVALID_CREDENTIALS", "Password is incorrect. Please try again.", 401);
     return userDto(user);
 }
 

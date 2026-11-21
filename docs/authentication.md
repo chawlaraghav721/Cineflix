@@ -27,8 +27,11 @@ data. Extra request fields, including `role` or `userId`, are rejected.
 Registration passwords require 12–128 characters. Password whitespace is
 significant. Node's asynchronous scrypt uses a random 16-byte salt, N=32768,
 r=8, p=3 and a 64-byte derived key. Verification uses timing-safe comparison.
-Missing accounts still perform password derivation; wrong email/password share
-the same response. Registration/login share a 20-attempt/15-minute IP limit.
+Missing accounts still perform password derivation. Unknown emails return 401
+with `USER_NOT_FOUND` and a prompt to create an account; incorrect passwords
+return 401 with `INVALID_CREDENTIALS`. The sign-in page displays these errors in
+a visible alert and highlights the relevant field. Registration/login share a
+20-attempt/15-minute IP limit.
 The limiter is process-local; multi-instance deployments need a shared store and
 an explicitly reviewed trusted-proxy configuration.
 
@@ -60,6 +63,13 @@ Logout clears the browser cookie with matching flags. It does not revoke a copie
 JWT; that token can be replayed until expiry. Password reset, email verification,
 refresh tokens, server-side session revocation and OAuth are outside this scope.
 The former demo Remember Me option is replaced by the fixed one-hour expiry.
+
+The signed-in account page shows the member's name and email, counts and previews
+of saved titles and personal ratings, and links to browse movies, TV shows and
+Movie Night. Collections use the existing browser storage and shared catalogue;
+they are not stored against the account. Unavailable catalogue IDs and invalid
+ratings are excluded from previews. Empty, unavailable-storage and catalogue-error
+states provide feedback without modifying saved records.
 
 ## Integration interfaces
 

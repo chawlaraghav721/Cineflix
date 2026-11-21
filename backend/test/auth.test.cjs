@@ -103,7 +103,11 @@ test("authentication with real HTTP handlers and isolated MongoDB", { concurrenc
         await request(server).get("/api/auth/me").expect(401);
         const wrong = await post(server, "login", { email: one.email, password: "wrong password" }).expect(401);
         const absent = await post(server, "login", { email: "absent@example.test", password }).expect(401);
-        assert.deepEqual(wrong.body, absent.body);
+        assert.equal(wrong.body.error.code, "INVALID_CREDENTIALS");
+        assert.match(wrong.body.error.message, /incorrect/i);
+        assert.equal(absent.body.error.code, "USER_NOT_FOUND");
+        assert.equal(absent.body.error.message, "User does not exist. Create an account to get started.");
+        assert.equal(absent.headers["set-cookie"], undefined);
         assert.equal(wrong.headers["set-cookie"], undefined);
         const savedCookie = cookie(a);
         const logout = await agentA.post("/api/auth/logout").set("Origin", config.origin).expect(200);

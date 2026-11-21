@@ -11,10 +11,10 @@
     let view = "saved";
     let revision = 0;
 
-    function savedIds() {
+    async function savedIds() {
         const storage = window.CineFlixMyList;
-        if (!storage || !storage.isStorageAvailable()) return null;
-        return storage.getMyListIds();
+        if (!storage) return null;
+        try { return await storage.getMyListIds(); } catch { return null; }
     }
 
     function savedRatings() {
@@ -89,14 +89,16 @@
             const catalogue = await window.CineFlixCatalogue.loadCatalogue();
             if (current !== revision) return;
             const items = window.CineFlixCatalogue.getAllItems(catalogue);
-            const ids = savedIds();
+            const ids = await savedIds();
+            if (current !== revision) return;
             const ratings = savedRatings();
             const saved = ids === null ? [] : ids.map(id => items.find(item => item.id === id)).filter(Boolean);
             const rated = ratings === null ? [] : items.filter(item => Object.hasOwn(ratings, item.id));
             document.getElementById("account-list-count").textContent = ids === null ? "—" : String(saved.length);
             document.getElementById("account-rating-count").textContent = ratings === null ? "—" : String(rated.length);
             if ((view === "saved" && ids === null) || (view === "rated" && ratings === null)) {
-                status.textContent = "Your collection is unavailable. Enable browser storage and try again.";
+                status.textContent = view === "saved" ? "Your saved titles could not be loaded. Check your connection and try again."
+                    : "Your ratings are unavailable. Enable browser storage and try again.";
                 retry.hidden = false;
                 return;
             }
@@ -109,7 +111,7 @@
                 : view === "saved" && collection.length > 5 ? "Showing 5 of " + collection.length + " saved titles. Open My List to see them all." : "";
         } catch {
             if (current !== revision) return;
-            status.textContent = "We couldn't load your collection. Your saved titles and ratings are still on this device.";
+            status.textContent = "We couldn't load your collection. Check your connection and try again.";
             retry.hidden = false;
         } finally {
             if (current === revision) grid.setAttribute("aria-busy", "false");

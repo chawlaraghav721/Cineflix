@@ -81,4 +81,13 @@ test("watchlist HTTP API with verified cookies and disposable MongoDB", async t 
         assert.equal((await call("get", "", b)).body.items.length, 1);
         await call("delete").expect(204);
     });
+    await t.test("concurrent adds use the database unique index; separate users may save the same title", async () => {
+        const attempts = await Promise.all(Array.from({ length: 5 }, () => call("post").send({ itemId: "movie-004" })));
+        assert.deepEqual(attempts.map(res => res.status).sort(), [201, 409, 409, 409, 409]);
+        await call("post", "", b).send({ itemId: "movie-004" }).expect(201);
+        assert.equal(await Watchlist.countDocuments({ itemId: "movie-004" }), 2);
+        app = createApp({ authConfig: config });
+        assert.equal((await call("get")).body.items[0].itemId, "movie-004");
+        await assert.rejects(Watchlist.create({ user: userA, itemId: "movie-004" }), { code: 11000 });
+    });
 });

@@ -7,12 +7,14 @@ const { createApp } = require("./app");
 const { connectDatabase, disconnectDatabase } = require("./config/db");
 const { loadAuthConfig, AuthConfigurationError } = require("./config/auth");
 const User = require("./models/User");
+const Watchlist = require("./models/Watchlist");
 const { ensureMovieNightIndexes } = require("./routes/createMovieNightRouter.cjs");
 
 async function startServer() {
     const authConfig = loadAuthConfig();
     await connectDatabase();
     await User.createIndexes();
+    await Watchlist.createIndexes();
     await ensureMovieNightIndexes();
     const port = Number.parseInt(process.env.PORT || "3000", 10);
     if (!Number.isInteger(port) || port < 1 || port > 65535) {

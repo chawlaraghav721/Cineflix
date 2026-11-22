@@ -232,7 +232,7 @@ async function queryTitles(req, res, next) {
     if (options.type) filter.type = options.type;
     if (options.q && options.q.trim()) {
         const expression = new RegExp(escapeRegex(options.q.trim()), "i");
-        filter.$or = ["title", "genre", "description", "director", "cast"].map(field => ({ [field]: expression }));
+        filter.$or = ["id", "title", "genre", "description", "director", "cast"].map(field => ({ [field]: expression }));
     }
     if (options.genre && options.genre.trim()) {
         filter.genre = new RegExp("(^|\\s/\\s)" + escapeRegex(options.genre.trim()) + "(\\s/\\s|$)", "i");

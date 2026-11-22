@@ -147,6 +147,9 @@ test("catalogue API integration and admin CRUD", { concurrency: false }, async t
         const search = await request(server).get("/api/titles?type=movie&q=interstellar").expect(200);
         assert.equal(search.body.total, 1);
         assert.equal(search.body.items[0].id, "movie-012");
+        const stableId = await request(server).get("/api/titles?q=movie-012").expect(200);
+        assert.equal(stableId.body.total, 1);
+        assert.equal(stableId.body.items[0].title, "Interstellar");
         const genre = await request(server).get("/api/titles?genre=Thriller").expect(200);
         assert(genre.body.items.some(item => item.id === "movie-004"));
         assert(!genre.body.items.some(item => item.id === "movie-004" && item.genre !== "Action / Thriller"));
@@ -264,6 +267,19 @@ test("catalogue API integration and admin CRUD", { concurrency: false }, async t
         assert(!JSON.stringify(duplicate.body).includes("MongoServerError"));
     });
 
+    await t.test("simultaneous creates with one stable ID return one success and one conflict", async () => {
+        const payload = newTitle({ id: "movie-concurrent-admin-create", title: "Concurrent Admin Create" });
+        const responses = await Promise.all([
+            admin.post("/api/titles").set("Origin", config.origin).send(payload),
+            admin.post("/api/titles").set("Origin", config.origin).send(payload)
+        ]);
+        assert.deepEqual(responses.map(response => response.status).sort(), [201, 409]);
+        const conflict = responses.find(response => response.status === 409);
+        assert.equal(conflict.body.error.code, "DUPLICATE_TITLE_ID");
+        assert.equal(await Title.countDocuments({ id: payload.id }), 1);
+        await Title.deleteOne({ id: payload.id });
+    });
+
     await t.test("patch applies a field allowlist and preserves omitted metadata", async () => {
         const before = await Title.findOne({ id: "movie-001" }).lean();
         const response = await admin.patch("/api/titles/movie-001").set("Origin", config.origin).send({
@@ -359,6 +375,23 @@ test("catalogue API integration and admin CRUD", { concurrency: false }, async t
         } finally {
             await connection.close();
             await isolatedMongo.stop();
+        }
+    });
+
+    await t.test("database failures return a generic error without exposing internal details", async () => {
+        const inheritedFind = !Object.hasOwn(Title, "find");
+        const originalFind = Title.find;
+        Title.find = () => { throw new Error("private database connection detail"); };
+        try {
+            const response = await request(server).get("/api/catalogue").expect(500);
+            assert.deepEqual(response.body, { error: {
+                code: "INTERNAL_ERROR",
+                message: "An unexpected server error occurred."
+            } });
+            assert(!JSON.stringify(response.body).includes("private database connection detail"));
+        } finally {
+            if (inheritedFind) delete Title.find;
+            else Title.find = originalFind;
         }
     });
 });

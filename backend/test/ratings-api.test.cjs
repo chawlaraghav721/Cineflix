@@ -48,7 +48,7 @@ test("ratings HTTP contracts on the shared app with real MongoDB and cookie acco
         for (const method of ["get", "put", "delete"]) await a.agent[method]("/api/ratings/missing/me")
             .set("Origin", f.config.origin).send(method === "put" ? { score: 4 } : undefined).expect(404);
         await request(f.app).get("/api/ratings/missing").expect(404);
-        await request(f.app).get("/api/ratings/").expect(404);
+        await request(f.app).get("/api/ratings/").expect(401);
         assert.equal(await f.Rating.countDocuments({ user: a.user.id, itemId: "movie-004" }), 0);
     });
 

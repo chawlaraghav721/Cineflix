@@ -16,6 +16,7 @@ function handle(work, status = 200) {
 }
 
 exports.summary = handle(req => service.summary(req.params.itemId));
+exports.list = handle(req => service.list(req.user));
 exports.own = handle(req => service.own(req.user, req.params.itemId));
 exports.save = handle(req => service.save(req.user, req.params.itemId, req.body));
 exports.remove = handle(req => {

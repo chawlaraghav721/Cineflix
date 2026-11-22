@@ -11,6 +11,9 @@ function createRatingService({ ratings = repository, titles = Title } = {}) {
         if (!await titles.exists({ id: itemId })) throw new RatingError("TITLE_NOT_FOUND", "This catalogue title does not exist.", 404);
     }
     return {
+        async list(actor) {
+            return { items: await ratings.listOwn(authenticatedId(actor)) };
+        },
         async summary(itemId) {
             await title(itemId);
             return ratings.community(itemId);

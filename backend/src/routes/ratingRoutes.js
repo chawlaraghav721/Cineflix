@@ -19,6 +19,7 @@ router.use((req, res, next) => {
     if (Object.keys(req.query).length) return res.status(400).json({ error: { code: "INVALID_QUERY", message: "Ratings endpoints do not accept query parameters." } });
     return next();
 });
+router.get("/", requireAuth, expectedAccount, controller.list);
 router.get("/:itemId", controller.summary);
 router.get("/:itemId/me", requireAuth, expectedAccount, controller.own);
 router.put("/:itemId/me", requireAuth, protectMutation, expectedAccount, controller.save);

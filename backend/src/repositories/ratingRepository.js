@@ -47,4 +47,9 @@ async function community(itemId) {
     return { average: statistics?.average ?? null, count: statistics?.count ?? 0, reviews: result?.reviews ?? [] };
 }
 
-module.exports = { findOwn, saveOwn, removeOwn, community };
+async function listOwn(user) {
+    return Rating.find({ user }).sort({ itemId: 1 }).select({ _id: 0, itemId: 1,
+        score: 1, reviewText: 1, createdAt: 1, updatedAt: 1 }).lean();
+}
+
+module.exports = { findOwn, saveOwn, removeOwn, community, listOwn };

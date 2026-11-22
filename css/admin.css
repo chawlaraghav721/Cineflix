@@ -23,6 +23,7 @@
 .admin-panel-heading .admin-eyebrow { margin-bottom: 6px; }
 .admin-panel-heading h2 { font-size: 22px; letter-spacing: -.035em; }
 .admin-result-count { color: #9a9ba8; font-size: 12px; }
+.admin-catalogue-heading-actions { display: flex; align-items: center; gap: 18px; }
 .admin-catalogue-status { padding: 34px 24px; color: #aeb0bd; font-size: 13px; line-height: 1.6; }
 .admin-catalogue-controls { display: grid; grid-template-columns: minmax(220px, 1fr) 145px 165px auto; align-items: end; gap: 12px; padding: 17px 22px; border-bottom: 1px solid #ffffff0e; }
 .admin-catalogue-controls label { display: grid; gap: 7px; color: #989aa7; font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
@@ -51,6 +52,26 @@
 .admin-pagination span { min-width: 85px; color: #aeb0bd; text-align: center; font-size: 11px; }
 .admin-pagination .admin-button { min-height: 36px; padding: 0 12px; font-size: 11px; }
 .admin-pagination .admin-button:disabled { opacity: .38; }
+.admin-editor-panel { margin-top: 22px; overflow: hidden; border: 1px solid #ffffff15; border-radius: 12px; background: #17181e; }
+.admin-editor-heading { border-bottom: 1px solid #ffffff10; }
+.admin-title-form { padding: 22px 24px 24px; }
+.admin-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 16px; }
+.admin-form-field { min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+.admin-field-wide { grid-column: 1 / -1; }
+.admin-form-field > label { color: #dfe0e7; font-size: 11px; font-weight: 700; }
+.admin-form-field > label > span:first-child { color: #ff858c; }
+.admin-form-field .admin-optional { color: #898b98; font-weight: 400; }
+.admin-form-field input, .admin-form-field select, .admin-form-field textarea { width: 100%; min-width: 0; padding: 11px 12px; color: #f5f5f7; border: 1px solid #ffffff20; border-radius: 6px; background: #101116; font: inherit; font-size: 12px; line-height: 1.5; }
+.admin-form-field input, .admin-form-field select { min-height: 43px; }
+.admin-form-field textarea { resize: vertical; }
+.admin-form-field input::placeholder, .admin-form-field textarea::placeholder { color: #747682; }
+.admin-form-field input[readonly] { color: #a8a9b4; background: #1b1c23; }
+.admin-form-field input[aria-invalid="true"], .admin-form-field select[aria-invalid="true"], .admin-form-field textarea[aria-invalid="true"] { border-color: #ff5964; }
+.admin-field-help { color: #858793; font-size: 10px; line-height: 1.5; }
+.admin-field-error { min-height: 0; color: #ff9ca2; font-size: 10px; line-height: 1.45; }
+.admin-field-error:empty, .admin-form-error:empty { display: none; }
+.admin-form-error { color: #ffc6ca; font-size: 12px; line-height: 1.5; margin-top: 18px; }
+.admin-form-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 18px; margin-top: 20px; border-top: 1px solid #ffffff10; }
 .admin-gate { width: min(580px, 100%); margin: clamp(48px, 12vh, 130px) auto; padding: clamp(26px, 6vw, 48px); text-align: center; background: radial-gradient(ellipse at 50% 0, #8d142a34, transparent 75%), #191b22; border: 1px solid #ffffff16; border-radius: 16px; box-shadow: 0 24px 75px #0005; }
 .admin-gate > p:not(.admin-eyebrow) { color: #b8b9c4; font-size: 14px; line-height: 1.7; margin-top: 14px; }
 .admin-gate-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 25px; }
@@ -78,6 +99,8 @@
     .admin-stat-icon { width: 32px; height: 32px; border-radius: 9px; font-size: 15px; }
     .admin-panel-heading { padding: 18px 16px; }
     .admin-catalogue-status { padding: 28px 16px; }
+    .admin-title-form { padding: 18px 16px; }
+    .admin-form-grid { gap: 14px 11px; }
     .admin-catalogue-controls { grid-template-columns: minmax(0, 1fr) minmax(120px, .7fr); gap: 10px; padding: 15px; }
     .admin-search-field { grid-column: 1 / -1; }
     .admin-catalogue-controls .admin-button { width: 100%; }
@@ -89,10 +112,17 @@
     .admin-stat-icon { width: 38px; height: 38px; }
     .admin-stat-card strong { font-size: 27px; }
     .admin-panel-heading { align-items: flex-start; flex-direction: column; gap: 8px; }
+    .admin-catalogue-heading-actions { width: 100%; align-items: center; justify-content: space-between; }
+    .admin-catalogue-heading-actions .admin-result-count { order: -1; }
+    .admin-catalogue-heading-actions .admin-button { min-height: 38px; padding: 0 11px; white-space: nowrap; }
     .admin-catalogue-controls { grid-template-columns: 1fr; }
     .admin-search-field { grid-column: auto; }
     .admin-pagination { gap: 8px; }
     .admin-pagination .admin-button { padding: 0 9px; }
+    .admin-form-grid { grid-template-columns: 1fr; }
+    .admin-field-wide { grid-column: auto; }
+    .admin-editor-heading { align-items: flex-start; flex-direction: row; }
+    .admin-editor-heading > .admin-result-count { display: none; }
     .admin-footer { align-items: flex-start; flex-direction: column; }
 }
 @media (prefers-reduced-motion: reduce) {

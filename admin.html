@@ -84,7 +84,10 @@
                         <p class="admin-eyebrow">YOUR COLLECTION</p>
                         <h2 id="admin-catalogue-heading">Catalogue</h2>
                     </div>
-                    <p id="admin-result-count" class="admin-result-count">Loading titles…</p>
+                    <div class="admin-catalogue-heading-actions">
+                        <p id="admin-result-count" class="admin-result-count">Loading titles…</p>
+                        <button id="admin-open-create" class="admin-button admin-button-primary" type="button">+ Add title</button>
+                    </div>
                 </div>
                 <div class="admin-catalogue-controls" aria-label="Catalogue filters">
                     <label class="admin-search-field" for="admin-search">
@@ -120,6 +123,87 @@
                     <span id="admin-page-indicator" aria-live="polite">Page 1 of 1</span>
                     <button id="admin-page-next" class="admin-button admin-button-quiet" type="button" aria-label="Next page">Next →</button>
                 </nav>
+            </section>
+
+            <section id="admin-editor" class="admin-editor-panel" aria-labelledby="admin-editor-title" hidden>
+                <div class="admin-panel-heading admin-editor-heading">
+                    <div><p class="admin-eyebrow">CATALOGUE DETAILS</p><h2 id="admin-editor-title">Add a title</h2></div>
+                    <p class="admin-result-count">Fields marked with * are required</p>
+                </div>
+                <form id="admin-title-form" class="admin-title-form" novalidate>
+                    <div class="admin-form-grid">
+                        <div class="admin-form-field">
+                            <label for="title-type">Type <span>*</span></label>
+                            <select id="title-type" required aria-describedby="title-type-error">
+                                <option value="movie">Movie</option>
+                                <option value="show">TV show</option>
+                            </select>
+                            <p id="title-type-error" class="admin-field-error" aria-live="polite"></p>
+                        </div>
+                        <div class="admin-form-field">
+                            <label for="title-id">Stable catalogue ID <span>*</span></label>
+                            <input id="title-id" type="text" maxlength="128" autocomplete="off" spellcheck="false" placeholder="movie-example-title" required aria-describedby="title-id-help title-id-error">
+                            <small id="title-id-help" class="admin-field-help">Unique ID beginning with movie- or show-. It stays fixed after creation.</small>
+                            <p id="title-id-error" class="admin-field-error" aria-live="polite"></p>
+                        </div>
+                        <div class="admin-form-field">
+                            <label for="title-name">Title <span>*</span></label>
+                            <input id="title-name" type="text" maxlength="200" autocomplete="off" required aria-describedby="title-name-error">
+                            <p id="title-name-error" class="admin-field-error" aria-live="polite"></p>
+                        </div>
+                        <div class="admin-form-field">
+                            <label for="title-genre">Genre <span>*</span></label>
+                            <input id="title-genre" type="text" maxlength="100" placeholder="Drama / Mystery" required aria-describedby="title-genre-error">
+                            <p id="title-genre-error" class="admin-field-error" aria-live="polite"></p>
+                        </div>
+                        <div class="admin-form-field admin-field-wide">
+                            <label for="title-poster">Poster URL or root-relative path <span>*</span></label>
+                            <input id="title-poster" type="text" maxlength="2048" placeholder="https://… or /images/poster.jpg" required aria-describedby="title-poster-error">
+                            <p id="title-poster-error" class="admin-field-error" aria-live="polite"></p>
+                        </div>
+                        <div class="admin-form-field admin-field-wide">
+                            <label for="title-description">Description</label>
+                            <textarea id="title-description" maxlength="10000" rows="4" aria-describedby="title-description-error"></textarea>
+                            <p id="title-description-error" class="admin-field-error" aria-live="polite"></p>
+                        </div>
+                        <div class="admin-form-field">
+                            <label for="title-year">Year</label>
+                            <input id="title-year" type="number" min="1" max="3000" step="1" inputmode="numeric" aria-describedby="title-year-error">
+                            <p id="title-year-error" class="admin-field-error" aria-live="polite"></p>
+                        </div>
+                        <div class="admin-form-field">
+                            <label for="title-rating">Catalogue rating <span class="admin-optional">/ 10</span></label>
+                            <input id="title-rating" type="number" min="0" max="10" step="0.1" inputmode="decimal" aria-describedby="title-rating-error">
+                            <p id="title-rating-error" class="admin-field-error" aria-live="polite"></p>
+                        </div>
+                        <div class="admin-form-field admin-field-wide">
+                            <label for="title-cast">Cast</label>
+                            <textarea id="title-cast" maxlength="6100" rows="3" placeholder="One name per line" aria-describedby="title-cast-help title-cast-error"></textarea>
+                            <small id="title-cast-help" class="admin-field-help">Up to 50 names, 120 characters each.</small>
+                            <p id="title-cast-error" class="admin-field-error" aria-live="polite"></p>
+                        </div>
+                        <div class="admin-form-field">
+                            <label for="title-director">Director</label>
+                            <input id="title-director" type="text" maxlength="200" aria-describedby="title-director-error">
+                            <p id="title-director-error" class="admin-field-error" aria-live="polite"></p>
+                        </div>
+                        <div class="admin-form-field">
+                            <label for="title-duration">Duration</label>
+                            <input id="title-duration" type="text" maxlength="80" placeholder="1h 45m" aria-describedby="title-duration-error">
+                            <p id="title-duration-error" class="admin-field-error" aria-live="polite"></p>
+                        </div>
+                        <div class="admin-form-field admin-field-wide">
+                            <label for="title-trailer">Trailer URL</label>
+                            <input id="title-trailer" type="text" maxlength="2048" placeholder="https://…" aria-describedby="title-trailer-error">
+                            <p id="title-trailer-error" class="admin-field-error" aria-live="polite"></p>
+                        </div>
+                    </div>
+                    <p id="admin-form-error" class="admin-form-error" role="alert" aria-live="assertive"></p>
+                    <div class="admin-form-actions">
+                        <button id="admin-cancel-editor" class="admin-button admin-button-quiet" type="button">Cancel</button>
+                        <button id="admin-save-title" class="admin-button admin-button-primary" type="submit">Create title</button>
+                    </div>
+                </form>
             </section>
 
             <p id="admin-feedback" class="admin-feedback" role="status" aria-live="polite" hidden></p>

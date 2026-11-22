@@ -12,6 +12,7 @@ const Title = require("../src/models/Title");
 const User = require("../src/models/User");
 const Rating = require("../src/models/Rating");
 const Watchlist = require("../src/models/Watchlist");
+const { createMovieNightSessionModel } = require("../src/models/MovieNightSession.cjs");
 const dotenv = require("dotenv");
 const originalDotenvConfig = dotenv.config;
 let seedEnvPath;
@@ -295,23 +296,54 @@ test("catalogue API integration and admin CRUD", { concurrency: false }, async t
         })).expect(201);
         const adminUser = await User.findById(adminUserId);
         assert(adminUser);
-        await Rating.create({ user: adminUser._id, itemId: created.body.id, score: 5, reviewText: "Keep this record." });
-        await Watchlist.create({ user: adminUser._id, itemId: created.body.id, status: "watching" });
-        const countBeforeDelete = await Title.countDocuments();
+        const MovieNightSession = createMovieNightSessionModel({ mongoose, connection: mongoose.connection });
+        let movieNightSession;
+        try {
+            await Rating.create({ user: adminUser._id, itemId: created.body.id, score: 5, reviewText: "Keep this record." });
+            await Watchlist.create({ user: adminUser._id, itemId: created.body.id, status: "watching" });
+            movieNightSession = await MovieNightSession.create({
+                hostUser: adminUser._id,
+                selectedIds: [created.body.id, "movie-001", "movie-002"],
+                voterCount: 2,
+                votes: [],
+                status: "voting"
+            });
+            assert.deepEqual(movieNightSession.selectedIds, [created.body.id, "movie-001", "movie-002"]);
+            const countBeforeDelete = await Title.countDocuments();
 
-        const response = await admin.delete("/api/titles/movie-admin-delete").set("Origin", config.origin).expect(204);
-        assert.equal(response.text, "");
-        assert.equal(await Title.findOne({ id: created.body.id }), null);
-        assert.equal(await Title.countDocuments(), countBeforeDelete - 1);
-        assert(await Title.findOne({ id: "movie-001" }));
-        assert(await Rating.findOne({ user: adminUser._id, itemId: created.body.id }));
-        assert(await Watchlist.findOne({ user: adminUser._id, itemId: created.body.id }));
+            const response = await admin.delete("/api/titles/movie-admin-delete").set("Origin", config.origin).expect(204);
+            assert.equal(response.text, "");
+            assert.equal(await Title.findOne({ id: created.body.id }), null);
+            assert.equal(await Title.countDocuments(), countBeforeDelete - 1);
+            assert(await Title.findOne({ id: "movie-001" }));
+            assert(await Rating.findOne({ user: adminUser._id, itemId: created.body.id }));
+            assert(await Watchlist.findOne({ user: adminUser._id, itemId: created.body.id }));
 
-        const missing = await admin.delete("/api/titles/movie-admin-delete").set("Origin", config.origin).expect(404);
-        assert.equal(missing.body.error.code, "TITLE_NOT_FOUND");
-        await admin.delete("/api/titles/not-a-stable-id").set("Origin", config.origin).expect(400);
-        await Rating.deleteMany({ user: adminUser._id, itemId: created.body.id });
-        await Watchlist.deleteMany({ user: adminUser._id, itemId: created.body.id });
+            const retainedSession = await MovieNightSession.findById(movieNightSession._id).lean();
+            assert(retainedSession);
+            assert.equal(retainedSession.mode, movieNightSession.mode);
+            assert.equal(String(retainedSession.hostUser), String(adminUser._id));
+            assert.deepEqual(retainedSession.selectedIds, [created.body.id, "movie-001", "movie-002"]);
+            assert.equal(retainedSession.voterCount, movieNightSession.voterCount);
+            assert.deepEqual(retainedSession.votes, movieNightSession.votes);
+            assert.equal(retainedSession.status, "voting");
+            assert.equal(retainedSession.revision, movieNightSession.revision);
+
+            const missing = await admin.delete("/api/titles/movie-admin-delete").set("Origin", config.origin).expect(404);
+            assert.equal(missing.body.error.code, "TITLE_NOT_FOUND");
+            await admin.delete("/api/titles/not-a-stable-id").set("Origin", config.origin).expect(400);
+        } finally {
+            await Promise.all([
+                Rating.deleteOne({ user: adminUser._id, itemId: created.body.id }),
+                Watchlist.deleteOne({ user: adminUser._id, itemId: created.body.id }),
+                movieNightSession ? MovieNightSession.deleteOne({ _id: movieNightSession._id }) : Promise.resolve(),
+                Title.deleteOne({ id: created.body.id })
+            ]);
+            assert.equal(await Rating.countDocuments({ user: adminUser._id, itemId: created.body.id }), 0);
+            assert.equal(await Watchlist.countDocuments({ user: adminUser._id, itemId: created.body.id }), 0);
+            assert.equal(movieNightSession ? await MovieNightSession.countDocuments({ _id: movieNightSession._id }) : 0, 0);
+            assert.equal(await Title.countDocuments({ id: created.body.id }), 0);
+        }
     });
 
     await t.test("a duplicate legacy database ID makes index creation fail without deleting data", async () => {

@@ -14,6 +14,7 @@ class Element {
     constructor() {
         this.hidden = false;
         this.disabled = false;
+        this.value = "";
         this._textContent = "";
         this.dataset = {};
         this.attributes = {};
@@ -104,17 +105,21 @@ async function loadPage(options = {}) {
         addEventListener(type, listener) { (events[type] ||= []).push(listener); },
         dispatchEvent(event) { for (const listener of events[event.type] || []) listener(event); }
     };
-    const context = vm.createContext({
-        document, window, localStorage: saved, URL, URLSearchParams, console,
-        Event: class { constructor(type) { this.type = type; } },
-        fetch: async () => {
+    const fetcher = async url => {
             if (options.fetchError) throw new Error("Catalogue fetch failed");
-            return { ok: true, json: async () => options.catalogue || catalogue };
-        }
+            return { ok: true, status: 200, json: async () => String(url).startsWith("/api/ratings/")
+                ? { average: null, count: 0, reviews: [] } : options.catalogue || catalogue };
+    };
+    window.fetch = fetcher;
+    const context = vm.createContext({
+        document, window, localStorage: saved, URL, URLSearchParams, console, AbortController, setTimeout, clearTimeout,
+        Event: class { constructor(type) { this.type = type; } }, fetch: fetcher
     });
     const run = name => vm.runInContext(fs.readFileSync(path.join(root, "js", name), "utf8"), context);
     for (const name of ["catalogue.js", "my-list-storage.js", "details.js"]) run(name);
-    if (options.ratings !== false) run("ratings.js");
+    if (options.ratings !== false) {
+        for (const name of ["ratings-api.js", "ratings-account.js", "ratings.js"]) run(name);
+    }
     run("details-integration.js");
     window.CineFlixCatalogue.loadCatalogue = async () => options.catalogue || catalogue;
     const loadingHidden = section.hidden;

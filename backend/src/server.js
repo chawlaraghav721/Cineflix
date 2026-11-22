@@ -8,6 +8,7 @@ const { connectDatabase, disconnectDatabase } = require("./config/db");
 const { loadAuthConfig, AuthConfigurationError } = require("./config/auth");
 const User = require("./models/User");
 const Watchlist = require("./models/Watchlist");
+const Rating = require("./models/Rating");
 const { ensureMovieNightIndexes } = require("./routes/createMovieNightRouter.cjs");
 
 async function startServer() {
@@ -15,6 +16,7 @@ async function startServer() {
     await connectDatabase();
     await User.createIndexes();
     await Watchlist.createIndexes();
+    await Rating.createIndexes();
     await ensureMovieNightIndexes();
     const port = Number.parseInt(process.env.PORT || "3000", 10);
     if (!Number.isInteger(port) || port < 1 || port > 65535) {

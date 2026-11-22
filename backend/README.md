@@ -21,7 +21,7 @@ The Express app serves the existing frontend and `/api` routes from the same ori
 
    Open <http://localhost:3000>. `npm run dev` restarts the server when backend source files change.
 
-The server exits before listening if authentication configuration is invalid, `MONGODB_URI` is missing, MongoDB cannot be reached, or the user/watchlist/Movie Night indexes cannot be created. Indexes are created non-destructively on the existing connection; the feature index definitions were verified first on isolated MongoDB. `GET /api/health` reports the database connection state. Do not put database credentials in frontend files or commit `.env`.
+The server exits before listening if authentication configuration is invalid, `MONGODB_URI` is missing, MongoDB cannot be reached, or the user/watchlist/ratings/Movie Night indexes cannot be created. Indexes are created non-destructively on the existing connection; the feature index definitions were verified first on isolated MongoDB. `GET /api/health` reports the database connection state. Do not put database credentials in frontend files or commit `.env`.
 
 ## Catalogue endpoints
 
@@ -49,7 +49,16 @@ Admin title creation, update, and deletion remain outside this authentication ch
 
 POST requests require an exact matching `Origin` header, or a same-origin `Referer` when Origin is absent. Set `Origin` explicitly in Postman/curl. Cookie flags are HttpOnly, SameSite=Strict, Path=/ and Secure in production; expiry is one hour. Logout clears the browser cookie but copied stateless JWTs remain valid until expiry. Registration/login share a per-process limit of 20 attempts per IP per 15 minutes.
 
-See [authentication integration and verification](../docs/authentication.md) for middleware usage, admin account designation, tests and the completed live Atlas authentication verification record. Signed-in watchlists now use MongoDB-backed `/api/my-list` CRUD with watch-status filters; logged-out visitors retain a separate guest list. See [Member 4's API and integration guide](../docs/my-list-backend.md), [Postman/viva demonstration](../docs/my-list-demo.md), and [verification report](../docs/member4-completion-report.md). Personal ratings retain their existing behavior. Movie Night is integrated as described below.
+See [authentication integration and verification](../docs/authentication.md) for middleware usage, admin account designation, tests and the completed live Atlas authentication verification record. Signed-in watchlists now use MongoDB-backed `/api/my-list` CRUD with watch-status filters; logged-out visitors retain a separate guest list. See [Member 4's API and integration guide](../docs/my-list-backend.md), [Postman/viva demonstration](../docs/my-list-demo.md), and [verification report](../docs/member4-completion-report.md). Ratings and Movie Night are integrated as described below.
+
+## Ratings and reviews
+
+Details saves account scores and optional reviews through `/api/ratings/:itemId/me`
+and displays public summaries at `/api/ratings/:itemId`. The account dashboard
+uses the private `GET /api/ratings` collection. Guest scores stay separate.
+Startup creates the unique user/title index before serving requests.
+See [ratings architecture and contracts](../docs/ratings-backend.md) and the
+[browser/Postman demonstration](../docs/ratings-demo.md).
 
 ## Movie Night
 

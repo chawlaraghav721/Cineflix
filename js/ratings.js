@@ -64,7 +64,15 @@
 
     function restoreRating() {
         if (account) return account.reload();
+        if (window.CineFlixAuth) return unavailable();
         restoreGuestRating();
+    }
+
+    function unavailable() {
+        displayRating(0);
+        stars.forEach(star => { star.disabled = true; });
+        clearButton.disabled = true;
+        ratingMessage.textContent = "Rating controls could not be loaded. Refresh the page to retry.";
     }
 
     // Called only after Details resolves the item through the shared catalogue.
@@ -73,11 +81,13 @@
             (item.type === "movie" || item.type === "show") ? item.id : null;
         section.hidden = !itemId;
         if (account) return account.connect(itemId);
+        if (window.CineFlixAuth) return unavailable();
         displayRating(0);
         restoreRating();
     }
 
     function saveGuestRating(selectedRating) {
+        if (window.CineFlixAuth && !account) return unavailable();
         if (!itemId || !isValidRating(selectedRating)) return;
         try {
             const ratings = getSavedRatings();
@@ -90,6 +100,7 @@
     }
 
     function clearGuestRating() {
+        if (window.CineFlixAuth && !account) return unavailable();
         if (!itemId) return;
         try {
             const ratings = getSavedRatings();
@@ -118,7 +129,7 @@
     window.addEventListener("storage", function (event) {
         if (event.key === storageKey || event.key === null) {
             if (account) account.restoreGuest();
-            else restoreGuestRating();
+            else restoreRating();
         }
     });
     window.addEventListener("pageshow", restoreRating);

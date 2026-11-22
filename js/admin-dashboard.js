@@ -58,6 +58,9 @@
     let searchTimer;
     let savingTitle = false;
     let autoId = true;
+    let editorMode = "create";
+    let originalTitle = null;
+    let visibleTitles = new Map();
 
     async function requestJSON(url, options = {}) {
         let response;
@@ -216,6 +219,17 @@
         row.appendChild(textCell(Number.isInteger(item.year) ? String(item.year) : "—", "", "Year"));
         const rating = typeof item.rating === "number" && Number.isFinite(item.rating) ? "★ " + item.rating.toFixed(1) : "—";
         row.appendChild(textCell(rating, "admin-rating", "Rating"));
+        const actions = document.createElement("td");
+        actions.dataset.label = "Actions";
+        const edit = document.createElement("button");
+        edit.type = "button";
+        edit.className = "admin-row-action";
+        edit.dataset.action = "edit";
+        edit.dataset.itemId = item.id;
+        edit.setAttribute("aria-label", "Edit " + item.title);
+        edit.textContent = "Edit";
+        actions.appendChild(edit);
+        row.appendChild(actions);
         return row;
     }
 
@@ -243,6 +257,7 @@
                 return loadCatalogue();
             }
             resultCount.textContent = data.total + (data.total === 1 ? " title" : " titles");
+            visibleTitles = new Map(data.items.map(item => [item.id, item]));
             if (!data.items.length) {
                 tableScroll.hidden = true;
                 catalogueStatus.textContent = query || typeFilter.value
@@ -339,7 +354,7 @@
         if (values.rating && (!Number.isFinite(Number(values.rating)) || Number(values.rating) < 0 || Number(values.rating) > 10)) {
             invalid("rating", "Enter a rating from 0 to 10.");
         }
-        const castNames = values.cast.split(/[\n,]/).map(name => name.trim()).filter(Boolean);
+        const castNames = values.cast.split(/\r?\n/).map(name => name.trim()).filter(Boolean);
         if (castNames.length > 50) invalid("cast", "Add no more than 50 cast names.");
         else if (castNames.some(name => name.length > 120)) invalid("cast", "Each cast name must be 120 characters or fewer.");
         if (values.trailerUrl && !isWebUrl(values.trailerUrl)) invalid("trailerUrl", "Use a valid HTTP(S) trailer URL.");
@@ -371,6 +386,29 @@
         return payload;
     }
 
+    function buildEditPatch(formData) {
+        const { values, castNames } = formData;
+        const patch = {};
+        for (const field of ["title", "genre", "poster", "description", "director", "duration", "trailerUrl"]) {
+            const previous = typeof originalTitle[field] === "string" ? originalTitle[field].trim() : "";
+            if (values[field] !== previous) patch[field] = values[field];
+        }
+        const castBefore = Array.isArray(originalTitle.cast) ? originalTitle.cast : [];
+        if (JSON.stringify(castNames) !== JSON.stringify(castBefore)) patch.cast = castNames;
+        for (const field of ["year", "rating"]) {
+            const previous = typeof originalTitle[field] === "number" ? originalTitle[field] : null;
+            if (!values[field] && previous !== null) {
+                setFieldError(field, "Enter a value to keep this field. Clearing numeric metadata is not supported.");
+                return null;
+            }
+            if (values[field]) {
+                const next = Number(values[field]);
+                if (next !== previous) patch[field] = next;
+            }
+        }
+        return patch;
+    }
+
     function showFeedback(message, state = "success") {
         feedback.textContent = message;
         feedback.dataset.state = state;
@@ -381,12 +419,43 @@
 
     function openCreateForm() {
         clearFormErrors();
+        editorMode = "create";
+        originalTitle = null;
         titleForm.reset();
         autoId = true;
+        formFields.type.disabled = false;
+        formFields.id.readOnly = false;
         syncGeneratedId();
         formFields.id.readOnly = false;
         editorTitle.textContent = "Add a title";
         saveTitleButton.textContent = "Create title";
+        editor.hidden = false;
+        editor.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+        formFields.title.focus({ preventScroll: true });
+    }
+
+    function openEditForm(title) {
+        clearFormErrors();
+        editorMode = "edit";
+        originalTitle = { ...title, cast: Array.isArray(title.cast) ? [...title.cast] : [] };
+        titleForm.reset();
+        formFields.type.value = title.type;
+        formFields.type.disabled = true;
+        formFields.id.value = title.id;
+        formFields.id.readOnly = true;
+        formFields.title.value = title.title || "";
+        formFields.genre.value = title.genre || "";
+        formFields.poster.value = title.poster || "";
+        formFields.description.value = title.description || "";
+        formFields.year.value = Number.isInteger(title.year) ? String(title.year) : "";
+        formFields.rating.value = typeof title.rating === "number" ? String(title.rating) : "";
+        formFields.cast.value = Array.isArray(title.cast) ? title.cast.join("\n") : "";
+        formFields.director.value = title.director || "";
+        formFields.duration.value = title.duration || "";
+        formFields.trailerUrl.value = title.trailerUrl || "";
+        autoId = false;
+        editorTitle.textContent = "Edit title";
+        saveTitleButton.textContent = "Save changes";
         editor.hidden = false;
         editor.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
         formFields.title.focus({ preventScroll: true });
@@ -397,40 +466,57 @@
         if (savingTitle) return;
         const validForm = validateForm();
         if (!validForm) return;
+        const wasEditing = editorMode === "edit";
+        const payload = wasEditing ? buildEditPatch(validForm) : createPayload(validForm);
+        if (!payload) return;
+        if (wasEditing && !Object.keys(payload).length) {
+            formError.textContent = "No changes to save.";
+            return;
+        }
+        const itemId = originalTitle?.id;
         savingTitle = true;
         saveTitleButton.disabled = true;
         document.getElementById("admin-cancel-editor").disabled = true;
-        saveTitleButton.textContent = "Creating…";
+        saveTitleButton.textContent = wasEditing ? "Saving…" : "Creating…";
         try {
-            const created = await requestJSON("/api/titles", {
-                method: "POST",
-                body: JSON.stringify(createPayload(validForm))
+            const saved = await requestJSON(wasEditing ? "/api/titles/" + encodeURIComponent(itemId) : "/api/titles", {
+                method: wasEditing ? "PATCH" : "POST",
+                body: JSON.stringify(payload)
             });
-            if (!created || typeof created.id !== "string") throw new Error("The created title could not be confirmed.");
+            if (!saved || typeof saved.id !== "string") throw new Error("The saved title could not be confirmed.");
             editor.hidden = true;
             titleForm.reset();
             autoId = true;
+            editorMode = "create";
+            originalTitle = null;
+            formFields.type.disabled = false;
+            formFields.id.readOnly = false;
             syncGeneratedId();
-            searchInput.value = "";
-            typeFilter.value = "";
-            currentPage = 1;
-            showFeedback("“" + created.title + "” was added to the catalogue.");
+            if (!wasEditing) {
+                searchInput.value = "";
+                typeFilter.value = "";
+                currentPage = 1;
+            }
+            showFeedback(wasEditing ? "“" + saved.title + "” was updated." : "“" + saved.title + "” was added to the catalogue.");
             loadOverview();
             loadCatalogue();
         } catch (error) {
             if (error.code === "DUPLICATE_TITLE_ID") setFieldError("id", "A title with this stable ID already exists.");
+            else if (wasEditing && error.code === "TITLE_NOT_FOUND") {
+                formError.textContent = "This title may already have been deleted. Refresh the catalogue before making another change.";
+            }
             else {
                 const field = error.message.match(/^(id|type|title|genre|poster|description|year|rating|cast|director|duration|trailerUrl)\b/i)?.[1];
                 if (field && Object.hasOwn(formFields, field)) setFieldError(field, error.message);
                 else formError.textContent = error.status >= 500
-                    ? "The catalogue service is unavailable. Your title was not confirmed; check the catalogue before trying again."
-                    : error.message || "The title could not be created. Check the form and try again.";
+                    ? "The catalogue service is unavailable. Your changes were not confirmed; check the catalogue before trying again."
+                    : error.message || "The title could not be saved. Check the form and try again.";
             }
         } finally {
             savingTitle = false;
             saveTitleButton.disabled = false;
             document.getElementById("admin-cancel-editor").disabled = false;
-            saveTitleButton.textContent = "Create title";
+            saveTitleButton.textContent = editorMode === "edit" ? "Save changes" : "Create title";
         }
     }
 
@@ -471,6 +557,12 @@
         if (!savingTitle) editor.hidden = true;
     });
     titleForm.addEventListener("submit", createTitle);
+    catalogueRows.addEventListener("click", event => {
+        const button = event.target.closest('button[data-action="edit"]');
+        if (!button) return;
+        const title = visibleTitles.get(button.dataset.itemId);
+        if (title) openEditForm(title);
+    });
     formFields.type.addEventListener("change", syncGeneratedId);
     formFields.title.addEventListener("input", syncGeneratedId);
     formFields.id.addEventListener("input", () => { autoId = false; });

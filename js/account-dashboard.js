@@ -17,20 +17,6 @@
         try { return await storage.getMyListIds(); } catch { return null; }
     }
 
-    function savedRatings() {
-        try {
-            const ratings = JSON.parse(window.localStorage.getItem("cineflixPersonalRatings") || "{}");
-            if (!ratings || typeof ratings !== "object" || Array.isArray(ratings)) return {};
-            const valid = Object.fromEntries(Object.entries(ratings).filter(([, value]) => Number.isInteger(value) && value >= 1 && value <= 5));
-            // Match the existing Details page's legacy rating migration without writing storage.
-            if (valid["the-last-run"] && !valid["movie-004"]) valid["movie-004"] = valid["the-last-run"];
-            return valid;
-        } catch (error) {
-            // Bad JSON is an empty collection; blocked storage must be reported as unavailable.
-            return error instanceof SyntaxError ? {} : null;
-        }
-    }
-
     function titleCard(item, rating) {
         const card = document.createElement("a");
         card.className = "account-title-card";
@@ -89,17 +75,20 @@
             const catalogue = await window.CineFlixCatalogue.loadCatalogue();
             if (current !== revision) return;
             const items = window.CineFlixCatalogue.getAllItems(catalogue);
-            const ids = await savedIds();
+            const results = await Promise.allSettled([savedIds(),
+                Promise.resolve().then(() => window.CineFlixRatingsApi.createClient().list(user.id))]);
             if (current !== revision) return;
+            const ids = results[0].status === "fulfilled" ? results[0].value : null;
             if (ids !== null) window.dispatchEvent(new Event("cineflix:list-refreshed"));
-            const ratings = savedRatings();
+            const ratings = results[1].status === "fulfilled"
+                ? Object.fromEntries(results[1].value.map(item => [item.itemId, item.score])) : null;
             const saved = ids === null ? [] : ids.map(id => items.find(item => item.id === id)).filter(Boolean);
             const rated = ratings === null ? [] : items.filter(item => Object.hasOwn(ratings, item.id));
             document.getElementById("account-list-count").textContent = ids === null ? "—" : String(saved.length);
             document.getElementById("account-rating-count").textContent = ratings === null ? "—" : String(rated.length);
             if ((view === "saved" && ids === null) || (view === "rated" && ratings === null)) {
                 status.textContent = view === "saved" ? "Your saved titles could not be loaded. Check your connection and try again."
-                    : "Your ratings are unavailable. Enable browser storage and try again.";
+                    : "Your account ratings could not be loaded. Check your connection and try again.";
                 retry.hidden = false;
                 return;
             }
@@ -110,6 +99,10 @@
                 ? view === "saved" ? "Your next favourites belong here. Explore movies and add a title to My List to start your collection."
                     : "Every opinion starts with a story. Open a movie or show and leave your first rating."
                 : view === "saved" && collection.length > 5 ? "Showing 5 of " + collection.length + " saved titles. Open My List to see them all." : "";
+            if (view === "saved" && ratings === null) {
+                status.textContent += " Your saved titles are available, but ratings could not be loaded. Try again to refresh ratings.";
+                retry.hidden = false;
+            }
         } catch {
             if (current !== revision) return;
             status.textContent = "We couldn't load your collection. Check your connection and try again.";
@@ -125,8 +118,9 @@
     retry.addEventListener("click", render);
     window.addEventListener("cineflix:auth-state", render);
     window.addEventListener("cineflix:list-updated", render);
+    window.addEventListener("cineflix:ratings-updated", render);
     window.addEventListener("storage", event => {
-        if (event.key === null || ["cineflixMyList", "cineflixPersonalRatings"].includes(event.key)) render();
+        if (event.key === null || event.key === "cineflixMyList") render();
     });
     window.addEventListener("pageshow", render);
     document.addEventListener("DOMContentLoaded", render);

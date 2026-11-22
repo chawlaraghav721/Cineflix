@@ -12,6 +12,7 @@
     <script src="js/catalogue.js" defer></script>
     <script src="js/login.js" defer></script>
     <script src="js/my-list-storage.js" defer></script>
+    <script src="js/ratings-api.js" defer></script>
     <script src="js/account-dashboard.js" defer></script>
     <script src="js/navigation.js" defer></script>
 </head>
@@ -78,7 +79,7 @@
                     </div>
                 </section>
 
-                <div class="account-stats" aria-label="Your collection on this device">
+                <div class="account-stats" aria-label="Your account collection">
                     <a href="mylist.html" class="account-stat">
                         <span class="account-stat-label">My List</span>
                         <strong id="account-list-count">—</strong>
@@ -116,7 +117,7 @@
                 </div>
 
                 <section class="account-settings" aria-labelledby="account-settings-title">
-                    <div><h2 id="account-settings-title">Account &amp; privacy</h2><p class="account-muted">Lists and ratings are saved in this browser. Sign-in lasts up to one hour.</p></div>
+                    <div><h2 id="account-settings-title">Account &amp; privacy</h2><p class="account-muted">Your list, ratings and reviews are saved to your account. Guest data stays in this browser. Sign-in lasts up to one hour.</p></div>
                     <button id="account-signout" type="button">Sign Out</button>
                 </section>
             </div>
@@ -181,7 +182,7 @@
             <p class="login-extra">
                 <a href="login.html?mode=register" id="auth-toggle">New to CineFlix? Create an account</a>
             </p>
-            <p class="auth-hint" id="session-hint">Sign-in lasts up to one hour. Saved lists, ratings and Movie Night currently stay on this device.</p>
+            <p class="auth-hint" id="session-hint">Sign-in lasts up to one hour. Account lists, ratings, reviews and Movie Night save to your account. Guest data stays on this device.</p>
 
         </div>
 

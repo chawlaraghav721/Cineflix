@@ -167,6 +167,8 @@ test("browser accounts, cookies, cross-tab logout and refresh persistence with i
         const result = await contextB.request.post(origin + "/api/my-list", { headers: { Origin: origin }, data: { itemId } });
         assert.equal(result.status(), 201);
     }
+    const accountRating = await contextB.request.put(origin + "/api/ratings/movie-001/me", { headers: { Origin: origin }, data: { score: 4 } });
+    assert.equal(accountRating.status(), 200);
     await b.reload();
     await b.waitForFunction(() => document.querySelector("#account-list-count").textContent === "2");
     assert.equal(await b.locator("#profile-name").textContent(), "Viewer B");
@@ -198,7 +200,7 @@ test("browser accounts, cookies, cross-tab logout and refresh persistence with i
         localStorage.setItem("cineflixPersonalRatings", "[]");
         window.dispatchEvent(new StorageEvent("storage", { key: null }));
     });
-    await b.waitForFunction(() => document.querySelector("#account-rating-count").textContent === "0");
+    await b.waitForFunction(() => document.querySelector("#account-rating-count").textContent === "1");
     assert.equal(await b.locator("#account-list-count").textContent(), "2");
     assert.equal(await b.locator(".account-title-card").count(), 2);
 
@@ -208,11 +210,16 @@ test("browser accounts, cookies, cross-tab logout and refresh persistence with i
         window.dispatchEvent(new StorageEvent("storage", { key: "cineflixPersonalRatings" }));
     });
     await b.locator("#account-rated-tab").click();
-    await b.waitForFunction(() => document.querySelector("#account-library-status").textContent.includes("Enable browser storage"));
+    await b.waitForFunction(() => document.querySelector("#account-rating-count").textContent === "1");
+    assert.equal(await b.locator(".account-title-card").count(), 1);
+    await b.route("**/api/ratings", route => route.fulfill({ status: 503, contentType: "application/json", body: '{}' }));
+    await b.locator("#account-rated-tab").click();
+    await b.waitForFunction(() => document.querySelector("#account-library-status").textContent.includes("account ratings could not be loaded"));
     assert.equal(await b.locator("#account-list-count").textContent(), "2");
     assert.equal(await b.locator("#account-library-retry").isVisible(), true);
     await b.locator("#account-saved-tab").click();
     await b.waitForFunction(() => document.querySelectorAll(".account-title-card").length === 2);
+    await b.unroute("**/api/ratings");
     await b.evaluate(() => {
         Storage.prototype.getItem = window.restoreAccountStorage;
         delete window.restoreAccountStorage;

@@ -102,8 +102,9 @@ All registrations create role `user`; no public admin-promotion route exists.
 For a designated demo administrator, the database owner must identify a registered
 account privately and update only that user's `role` to `admin` using Compass or
 an equivalent authorized database operation. Test administrator changes operate
-only on test users in the isolated test database. Catalogue admin CRUD is not
-implemented by this module; its route owner can now apply the middleware above.
+only on test users in the isolated test database. The catalogue POST, PATCH and
+DELETE routes apply `requireAuth`, `protectMutation`, and `requireAdmin` in that
+order; no public role-promotion endpoint exists.
 
 ## Browser behavior
 

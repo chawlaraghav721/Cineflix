@@ -34,6 +34,7 @@ async function seedCatalogue(options = {}) {
 
 async function main() {
     await connectDatabase();
+    await Title.createIndexes();
     const result = await seedCatalogue();
     console.log(`Catalogue seed complete: ${result.upsertedCount || 0} inserted, ${result.modifiedCount || 0} updated.`);
 }

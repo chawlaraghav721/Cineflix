@@ -10,6 +10,7 @@ const { createAuthRouter } = require("./routes/authRoutes");
 const { loadAuthConfig } = require("./config/auth");
 const { createMovieNightRouter } = require("./routes/createMovieNightRouter.cjs");
 const myListRoutes = require("./routes/myListRoutes");
+const ratingRoutes = require("./routes/ratingRoutes");
 
 const repositoryRoot = path.resolve(__dirname, "../..");
 
@@ -43,6 +44,7 @@ function createApp({ authConfig = loadAuthConfig() } = {}) {
 
     app.use("/api/auth", createAuthRouter());
     app.use("/api/my-list", myListRoutes);
+    app.use("/api/ratings", ratingRoutes);
     app.use("/api/movie-night", createMovieNightRouter());
     app.use("/api", healthRoutes);
     app.use("/api", titleRoutes);

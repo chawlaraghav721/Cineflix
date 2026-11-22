@@ -30,4 +30,21 @@ async function removeOwn(user, itemId) {
     await Rating.deleteOne(owned(user, itemId));
 }
 
-module.exports = { findOwn, saveOwn, removeOwn };
+async function community(itemId) {
+    const [result] = await Rating.aggregate([
+        { $match: { itemId } },
+        { $facet: {
+            statistics: [{ $group: { _id: null, average: { $avg: "$score" }, count: { $sum: 1 } } }],
+            reviews: [
+                { $match: { reviewText: { $type: "string", $ne: "" } } },
+                { $sort: { updatedAt: -1, _id: -1 } },
+                { $limit: 20 },
+                { $project: { _id: 0, score: 1, reviewText: 1, createdAt: 1, updatedAt: 1 } }
+            ]
+        } }
+    ]);
+    const statistics = result?.statistics[0];
+    return { average: statistics?.average ?? null, count: statistics?.count ?? 0, reviews: result?.reviews ?? [] };
+}
+
+module.exports = { findOwn, saveOwn, removeOwn, community };

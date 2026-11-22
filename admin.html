@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#111318">
+    <link rel="icon" href="images/cineflix-icon.png" type="image/png">
+    <title>CineFlix Admin — Catalogue Studio</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <script src="js/navigation.js" defer></script>
+    <script src="js/admin-dashboard.js" defer></script>
+</head>
+<body class="admin-page">
+    <header class="navbar">
+        <a href="index.html" class="logo"><img src="images/cineflix-icon.png" alt="">CineFlix</a>
+        <nav aria-label="Main navigation">
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="movies.html">Movies</a></li>
+                <li><a href="shows.html">TV Shows</a></li>
+                <li><a href="mylist.html">My List</a></li>
+                <li><a href="login.html" class="login-link">Login</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="admin-main">
+        <section id="admin-access-check" class="admin-gate" role="status" aria-live="polite">
+            <span class="admin-spinner" aria-hidden="true"></span>
+            <p>Checking your CineFlix account…</p>
+        </section>
+
+        <section id="admin-access-denied" class="admin-gate admin-denied" aria-labelledby="admin-denied-title" hidden>
+            <p class="admin-eyebrow">CINEFLIX ADMIN</p>
+            <h1 id="admin-denied-title">Admin access required</h1>
+            <p id="admin-denied-copy">We couldn’t verify your administrator access.</p>
+            <div class="admin-gate-actions">
+                <a id="admin-signin-link" class="admin-button admin-button-primary" href="login.html">Go to your account</a>
+                <button id="admin-retry-access" class="admin-button admin-button-quiet" type="button" hidden>Try again</button>
+            </div>
+        </section>
+
+        <div id="admin-console" hidden>
+            <section class="admin-hero" aria-labelledby="admin-title">
+                <div>
+                    <p class="admin-eyebrow">CINEFLIX / ADMIN</p>
+                    <h1 id="admin-title">Catalogue Studio</h1>
+                    <p class="admin-intro">A clear view of the stories in your catalogue, ready for their next update.</p>
+                </div>
+                <div class="admin-session-card">
+                    <span class="admin-session-mark" aria-hidden="true">✓</span>
+                    <span><strong>Administrator</strong><small id="admin-current-name">Access verified</small></span>
+                </div>
+            </section>
+
+            <section class="admin-overview" aria-label="Catalogue overview">
+                <article class="admin-stat-card admin-stat-total">
+                    <span class="admin-stat-icon" aria-hidden="true">▦</span>
+                    <span class="admin-stat-label">All titles</span>
+                    <strong id="admin-total-count">—</strong>
+                    <span class="admin-stat-note">In the CineFlix catalogue</span>
+                </article>
+                <article class="admin-stat-card">
+                    <span class="admin-stat-icon" aria-hidden="true">▰</span>
+                    <span class="admin-stat-label">Movies</span>
+                    <strong id="admin-movie-count">—</strong>
+                    <span class="admin-stat-note">Feature films</span>
+                </article>
+                <article class="admin-stat-card">
+                    <span class="admin-stat-icon" aria-hidden="true">▣</span>
+                    <span class="admin-stat-label">TV shows</span>
+                    <strong id="admin-show-count">—</strong>
+                    <span class="admin-stat-note">Series and shows</span>
+                </article>
+            </section>
+
+            <p id="admin-overview-status" class="admin-status" role="status" aria-live="polite"></p>
+            <button id="admin-retry-overview" class="admin-button admin-button-quiet" type="button" hidden>Retry catalogue counts</button>
+
+            <section class="admin-catalogue-panel" aria-labelledby="admin-catalogue-heading">
+                <div class="admin-panel-heading">
+                    <div>
+                        <p class="admin-eyebrow">YOUR COLLECTION</p>
+                        <h2 id="admin-catalogue-heading">Catalogue</h2>
+                    </div>
+                    <div class="admin-catalogue-heading-actions">
+                        <p id="admin-result-count" class="admin-result-count">Loading titles…</p>
+                        <button id="admin-open-create" class="admin-button admin-button-primary" type="button">+ Add title</button>
+                    </div>
+                </div>
+                <div class="admin-catalogue-controls" aria-label="Catalogue filters">
+                    <label class="admin-search-field" for="admin-search">
+                        <span>Search catalogue</span>
+                        <span class="admin-search-input-wrap"><span aria-hidden="true">⌕</span><input id="admin-search" type="search" maxlength="100" placeholder="Title or stable ID" autocomplete="off"></span>
+                    </label>
+                    <label for="admin-type-filter"><span>Type</span>
+                        <select id="admin-type-filter">
+                            <option value="">All titles</option>
+                            <option value="movie">Movies</option>
+                            <option value="show">TV shows</option>
+                        </select>
+                    </label>
+                    <label for="admin-sort"><span>Sort by</span>
+                        <select id="admin-sort">
+                            <option value="title_asc">Title A–Z</option>
+                            <option value="title_desc">Title Z–A</option>
+                            <option value="year_desc">Newest year</option>
+                            <option value="year_asc">Oldest year</option>
+                        </select>
+                    </label>
+                    <button id="admin-refresh-catalogue" class="admin-button admin-button-quiet" type="button">Refresh</button>
+                </div>
+                <div class="admin-table-scroll" role="region" aria-label="Catalogue titles" tabindex="0">
+                    <table id="admin-catalogue-table" aria-describedby="admin-catalogue-status" aria-busy="true">
+                        <thead><tr><th scope="col">Title</th><th scope="col">Stable ID</th><th scope="col">Type</th><th scope="col">Year</th><th scope="col">Rating</th><th scope="col">Actions</th></tr></thead>
+                        <tbody id="admin-catalogue-rows"></tbody>
+                    </table>
+                </div>
+                <p id="admin-catalogue-status" class="admin-catalogue-status" role="status" aria-live="polite">Loading titles…</p>
+                <nav id="admin-pagination" class="admin-pagination" aria-label="Catalogue pages" hidden>
+                    <button id="admin-page-previous" class="admin-button admin-button-quiet" type="button" aria-label="Previous page">← Previous</button>
+                    <span id="admin-page-indicator" aria-live="polite">Page 1 of 1</span>
+                    <button id="admin-page-next" class="admin-button admin-button-quiet" type="button" aria-label="Next page">Next →</button>
+                </nav>
+            </section>
+
+            <section id="admin-editor" class="admin-editor-panel" aria-labelledby="admin-editor-title" hidden>
+                <div class="admin-panel-heading admin-editor-heading">
+                    <div><p class="admin-eyebrow">CATALOGUE DETAILS</p><h2 id="admin-editor-title">Add a title</h2></div>
+                    <p class="admin-result-count">Fields marked with * are required</p>
+                </div>
+                <form id="admin-title-form" class="admin-title-form" novalidate>
+                    <div class="admin-form-grid">
+                        <div class="admin-form-field">
+                            <label for="title-type">Type <span>*</span></label>
+                            <select id="title-type" required aria-describedby="title-type-error">
+                                <option value="movie">Movie</option>
+                                <option value="show">TV show</option>
+                            </select>
+                            <p id="title-type-error" class="admin-field-error" aria-live="polite"></p>
+                        </div>
+                        <div class="admin-form-field">
+                            <label for="title-id">Stable catalogue ID <span>*</span></label>
+                            <input id="title-id" type="text" maxlength="128" autocomplete="off" spellcheck="false" placeholder="movie-example-title" required aria-describedby="title-id-help title-id-error">
+                            <small id="title-id-help" class="admin-field-help">Unique ID beginning with movie- or show-. It stays fixed after creation.</small>
+                            <p id="title-id-error" class="admin-field-error" aria-live="polite"></p>
+                        </div>
+                        <div class="admin-form-field">
+                            <label for="title-name">Title <span>*</span></label>
+                            <input id="title-name" type="text" maxlength="200" autocomplete="off" required aria-describedby="title-name-error">
+                            <p id="title-name-error" class="admin-field-error" aria-live="polite"></p>
+                        </div>
+                        <div class="admin-form-field">
+                            <label for="title-genre">Genre <span>*</span></label>
+                            <input id="title-genre" type="text" maxlength="100" placeholder="Drama / Mystery" required aria-describedby="title-genre-error">
+                            <p id="title-genre-error" class="admin-field-error" aria-live="polite"></p>
+                        </div>
+                        <div class="admin-form-field admin-field-wide">
+                            <label for="title-poster">Poster URL or root-relative path <span>*</span></label>
+                            <input id="title-poster" type="text" maxlength="2048" placeholder="https://… or /images/poster.jpg" required aria-describedby="title-poster-error">
+                            <p id="title-poster-error" class="admin-field-error" aria-live="polite"></p>
+                        </div>
+                        <div class="admin-form-field admin-field-wide">
+                            <label for="title-description">Description</label>
+                            <textarea id="title-description" maxlength="10000" rows="4" aria-describedby="title-description-error"></textarea>
+                            <p id="title-description-error" class="admin-field-error" aria-live="polite"></p>
+                        </div>
+                        <div class="admin-form-field">
+                            <label for="title-year">Year</label>
+                            <input id="title-year" type="number" min="1" max="3000" step="1" inputmode="numeric" aria-describedby="title-year-error">
+                            <p id="title-year-error" class="admin-field-error" aria-live="polite"></p>
+                        </div>
+                        <div class="admin-form-field">
+                            <label for="title-rating">Catalogue rating <span class="admin-optional">/ 10</span></label>
+                            <input id="title-rating" type="number" min="0" max="10" step="0.1" inputmode="decimal" aria-describedby="title-rating-error">
+                            <p id="title-rating-error" class="admin-field-error" aria-live="polite"></p>
+                        </div>
+                        <div class="admin-form-field admin-field-wide">
+                            <label for="title-cast">Cast</label>
+                            <textarea id="title-cast" maxlength="6100" rows="3" placeholder="One name per line" aria-describedby="title-cast-help title-cast-error"></textarea>
+                            <small id="title-cast-help" class="admin-field-help">Up to 50 names, 120 characters each.</small>
+                            <p id="title-cast-error" class="admin-field-error" aria-live="polite"></p>
+                        </div>
+                        <div class="admin-form-field">
+                            <label for="title-director">Director</label>
+                            <input id="title-director" type="text" maxlength="200" aria-describedby="title-director-error">
+                            <p id="title-director-error" class="admin-field-error" aria-live="polite"></p>
+                        </div>
+                        <div class="admin-form-field">
+                            <label for="title-duration">Duration</label>
+                            <input id="title-duration" type="text" maxlength="80" placeholder="1h 45m" aria-describedby="title-duration-error">
+                            <p id="title-duration-error" class="admin-field-error" aria-live="polite"></p>
+                        </div>
+                        <div class="admin-form-field admin-field-wide">
+                            <label for="title-trailer">Trailer URL</label>
+                            <input id="title-trailer" type="text" maxlength="2048" placeholder="https://…" aria-describedby="title-trailer-error">
+                            <p id="title-trailer-error" class="admin-field-error" aria-live="polite"></p>
+                        </div>
+                    </div>
+                    <p id="admin-form-error" class="admin-form-error" role="alert" aria-live="assertive"></p>
+                    <div class="admin-form-actions">
+                        <button id="admin-cancel-editor" class="admin-button admin-button-quiet" type="button">Cancel</button>
+                        <button id="admin-save-title" class="admin-button admin-button-primary" type="submit">Create title</button>
+                    </div>
+                </form>
+            </section>
+
+            <dialog id="admin-delete-dialog" class="admin-delete-dialog" aria-labelledby="admin-delete-title" aria-describedby="admin-delete-warning">
+                <div class="admin-delete-dialog-content">
+                    <p class="admin-eyebrow">REMOVE FROM CATALOGUE</p>
+                    <h2 id="admin-delete-title">Delete this title?</h2>
+                    <p class="admin-delete-intro">This removes one title from the CineFlix catalogue.</p>
+                    <dl class="admin-delete-details">
+                        <div><dt>Title</dt><dd id="admin-delete-name"></dd></div>
+                        <div><dt>Stable ID</dt><dd id="admin-delete-id" class="admin-stable-id"></dd></div>
+                        <div><dt>Type</dt><dd id="admin-delete-type"></dd></div>
+                    </dl>
+                    <p id="admin-delete-warning" class="admin-delete-warning">Ratings, watchlists and Movie Night records are not automatically deleted. They will keep their stored references to this stable ID.</p>
+                    <label class="admin-delete-confirm-label" for="admin-delete-confirmation">Type <strong id="admin-delete-required-id"></strong> to confirm</label>
+                    <input id="admin-delete-confirmation" type="text" autocomplete="off" spellcheck="false" aria-describedby="admin-delete-warning admin-delete-error">
+                    <p id="admin-delete-error" class="admin-field-error" role="alert" aria-live="assertive"></p>
+                    <div class="admin-form-actions admin-delete-actions">
+                        <button id="admin-cancel-delete" class="admin-button admin-button-quiet" type="button">Keep title</button>
+                        <button id="admin-confirm-delete" class="admin-button admin-button-danger" type="button" disabled>Delete title</button>
+                    </div>
+                </div>
+            </dialog>
+
+            <p id="admin-feedback" class="admin-feedback" role="status" aria-live="polite" tabindex="-1" hidden></p>
+        </div>
+    </main>
+
+    <footer class="admin-footer">
+        <span>CineFlix Catalogue Studio</span>
+        <a href="index.html">Back to CineFlix <span aria-hidden="true">↗</span></a>
+    </footer>
+</body>
+</html>

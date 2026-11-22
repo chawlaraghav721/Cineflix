@@ -6,25 +6,30 @@ require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
 const { createApp } = require("./app");
 const { connectDatabase, disconnectDatabase } = require("./config/db");
 const { loadAuthConfig, AuthConfigurationError } = require("./config/auth");
+const Title = require("./models/Title");
 const User = require("./models/User");
 const Watchlist = require("./models/Watchlist");
 const Rating = require("./models/Rating");
 const { ensureMovieNightIndexes } = require("./routes/createMovieNightRouter.cjs");
 
-async function startServer() {
-    const authConfig = loadAuthConfig();
-    await connectDatabase();
+async function startServer({ mongoUri = process.env.MONGODB_URI, authConfig = loadAuthConfig(), port = process.env.PORT || "3000" } = {}) {
+    const requestedPort = Number(port);
+    if (!Number.isInteger(requestedPort) || requestedPort < 0 || requestedPort > 65535) {
+        throw new Error("PORT must be an integer between 0 and 65535.");
+    }
+    await connectDatabase(mongoUri);
+    // createIndexes is non-destructive and must complete before the listener accepts requests.
+    await Title.createIndexes();
     await User.createIndexes();
     await Watchlist.createIndexes();
     await Rating.createIndexes();
     await ensureMovieNightIndexes();
-    const port = Number.parseInt(process.env.PORT || "3000", 10);
-    if (!Number.isInteger(port) || port < 1 || port > 65535) {
-        throw new Error("PORT must be an integer between 1 and 65535.");
-    }
-    const server = createApp({ authConfig }).listen(port, () => {
-        console.log(`CineFlix backend listening on port ${port}`);
+    const server = createApp({ authConfig }).listen(requestedPort);
+    await new Promise((resolve, reject) => {
+        server.once("listening", resolve);
+        server.once("error", reject);
     });
+    if (requestedPort !== 0) console.log(`CineFlix backend listening on port ${requestedPort}`);
     const shutdown = () => {
         server.close(async () => {
             await disconnectDatabase();
@@ -38,8 +43,12 @@ async function startServer() {
 
 if (require.main === module) {
     startServer().catch(async error => {
-        console.error("CineFlix backend startup failed:", error instanceof AuthConfigurationError
-            ? error.message : "Check database access and server configuration.");
+        const safeMessage = error instanceof AuthConfigurationError
+            ? error.message
+            : error && error.code === 11000
+                ? "A unique database index could not be created because duplicate records exist. Review the affected data without deleting records."
+                : "Check database access and server configuration.";
+        console.error("CineFlix backend startup failed:", safeMessage);
         await disconnectDatabase();
         process.exitCode = 1;
     });

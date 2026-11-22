@@ -206,7 +206,28 @@
                 </form>
             </section>
 
-            <p id="admin-feedback" class="admin-feedback" role="status" aria-live="polite" hidden></p>
+            <dialog id="admin-delete-dialog" class="admin-delete-dialog" aria-labelledby="admin-delete-title" aria-describedby="admin-delete-warning">
+                <div class="admin-delete-dialog-content">
+                    <p class="admin-eyebrow">REMOVE FROM CATALOGUE</p>
+                    <h2 id="admin-delete-title">Delete this title?</h2>
+                    <p class="admin-delete-intro">This removes one title from the CineFlix catalogue.</p>
+                    <dl class="admin-delete-details">
+                        <div><dt>Title</dt><dd id="admin-delete-name"></dd></div>
+                        <div><dt>Stable ID</dt><dd id="admin-delete-id" class="admin-stable-id"></dd></div>
+                        <div><dt>Type</dt><dd id="admin-delete-type"></dd></div>
+                    </dl>
+                    <p id="admin-delete-warning" class="admin-delete-warning">Ratings, watchlists and Movie Night records are not automatically deleted. They will keep their stored references to this stable ID.</p>
+                    <label class="admin-delete-confirm-label" for="admin-delete-confirmation">Type <strong id="admin-delete-required-id"></strong> to confirm</label>
+                    <input id="admin-delete-confirmation" type="text" autocomplete="off" spellcheck="false" aria-describedby="admin-delete-warning admin-delete-error">
+                    <p id="admin-delete-error" class="admin-field-error" role="alert" aria-live="assertive"></p>
+                    <div class="admin-form-actions admin-delete-actions">
+                        <button id="admin-cancel-delete" class="admin-button admin-button-quiet" type="button">Keep title</button>
+                        <button id="admin-confirm-delete" class="admin-button admin-button-danger" type="button" disabled>Delete title</button>
+                    </div>
+                </div>
+            </dialog>
+
+            <p id="admin-feedback" class="admin-feedback" role="status" aria-live="polite" tabindex="-1" hidden></p>
         </div>
     </main>
 

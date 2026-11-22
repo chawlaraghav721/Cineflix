@@ -31,6 +31,15 @@
     const saveTitleButton = document.getElementById("admin-save-title");
     const formError = document.getElementById("admin-form-error");
     const feedback = document.getElementById("admin-feedback");
+    const deleteDialog = document.getElementById("admin-delete-dialog");
+    const deleteName = document.getElementById("admin-delete-name");
+    const deleteId = document.getElementById("admin-delete-id");
+    const deleteType = document.getElementById("admin-delete-type");
+    const deleteRequiredId = document.getElementById("admin-delete-required-id");
+    const deleteConfirmation = document.getElementById("admin-delete-confirmation");
+    const deleteError = document.getElementById("admin-delete-error");
+    const confirmDelete = document.getElementById("admin-confirm-delete");
+    const cancelDelete = document.getElementById("admin-cancel-delete");
     const formFields = {
         type: document.getElementById("title-type"),
         id: document.getElementById("title-id"),
@@ -61,6 +70,8 @@
     let editorMode = "create";
     let originalTitle = null;
     let visibleTitles = new Map();
+    let pendingDelete = null;
+    let deletingTitle = false;
 
     async function requestJSON(url, options = {}) {
         let response;
@@ -84,6 +95,9 @@
             const error = new Error(data?.error?.message || "The request could not be completed.");
             error.status = response.status;
             error.code = data?.error?.code;
+            if ([401, 403].includes(response.status) && window.CineFlixAuth) {
+                window.CineFlixAuth.refresh().catch(() => {});
+            }
             throw error;
         }
         return data;
@@ -91,6 +105,9 @@
 
     function showDenied(state) {
         hasAdminAccess = false;
+        overviewRevision++;
+        catalogueRevision++;
+        if (deleteDialog.open) deleteDialog.close();
         consolePanel.hidden = true;
         accessCheck.hidden = true;
         denied.hidden = false;
@@ -229,6 +246,14 @@
         edit.setAttribute("aria-label", "Edit " + item.title);
         edit.textContent = "Edit";
         actions.appendChild(edit);
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "admin-row-action admin-row-action-danger";
+        remove.dataset.action = "delete";
+        remove.dataset.itemId = item.id;
+        remove.setAttribute("aria-label", "Delete " + item.title);
+        remove.textContent = "Delete";
+        actions.appendChild(remove);
         row.appendChild(actions);
         return row;
     }
@@ -520,6 +545,54 @@
         }
     }
 
+    function openDeleteDialog(title) {
+        pendingDelete = title;
+        deleteName.textContent = title.title;
+        deleteId.textContent = title.id;
+        deleteRequiredId.textContent = title.id;
+        deleteType.textContent = title.type === "show" ? "TV show" : "Movie";
+        deleteConfirmation.value = "";
+        deleteError.textContent = "";
+        confirmDelete.disabled = true;
+        deleteDialog.showModal();
+        deleteConfirmation.focus();
+    }
+
+    async function deleteTitle() {
+        if (deletingTitle || !pendingDelete || deleteConfirmation.value !== pendingDelete.id) return;
+        deletingTitle = true;
+        confirmDelete.disabled = true;
+        cancelDelete.disabled = true;
+        deleteConfirmation.disabled = true;
+        deleteError.textContent = "";
+        try {
+            await requestJSON("/api/titles/" + encodeURIComponent(pendingDelete.id), { method: "DELETE" });
+            const deletedName = pendingDelete.title;
+            deleteDialog.close();
+            showFeedback("“" + deletedName + "” was removed from the catalogue.");
+            feedback.focus({ preventScroll: true });
+            loadOverview();
+            loadCatalogue();
+        } catch (error) {
+            if (error.status === 404 || error.code === "TITLE_NOT_FOUND") {
+                const missingName = pendingDelete.title;
+                deleteDialog.close();
+                showFeedback("“" + missingName + "” was already missing. The catalogue has been refreshed.", "error");
+                loadOverview();
+                loadCatalogue();
+            } else {
+                deleteError.textContent = error.status >= 500
+                    ? "The catalogue service is unavailable. The title may still be present; refresh the catalogue before retrying."
+                    : error.message || "The title could not be deleted. Try again.";
+            }
+        } finally {
+            deletingTitle = false;
+            cancelDelete.disabled = false;
+            deleteConfirmation.disabled = false;
+            confirmDelete.disabled = !pendingDelete || deleteConfirmation.value !== pendingDelete.id;
+        }
+    }
+
     function waitForInitialAuth(auth) {
         const current = auth.getState();
         if (current.status !== "loading") return Promise.resolve(current);
@@ -558,11 +631,28 @@
     });
     titleForm.addEventListener("submit", createTitle);
     catalogueRows.addEventListener("click", event => {
-        const button = event.target.closest('button[data-action="edit"]');
+        const button = event.target.closest("button[data-action]");
         if (!button) return;
         const title = visibleTitles.get(button.dataset.itemId);
-        if (title) openEditForm(title);
+        if (!title) return;
+        if (button.dataset.action === "edit") openEditForm(title);
+        else if (button.dataset.action === "delete") openDeleteDialog(title);
     });
+    deleteConfirmation.addEventListener("input", () => {
+        confirmDelete.disabled = deletingTitle || !pendingDelete || deleteConfirmation.value !== pendingDelete.id;
+    });
+    cancelDelete.addEventListener("click", () => { if (!deletingTitle) deleteDialog.close(); });
+    deleteDialog.addEventListener("cancel", event => {
+        if (deletingTitle) event.preventDefault();
+    });
+    deleteDialog.addEventListener("close", () => {
+        pendingDelete = null;
+        deleteConfirmation.value = "";
+        deleteConfirmation.disabled = false;
+        deleteError.textContent = "";
+        confirmDelete.disabled = true;
+    });
+    confirmDelete.addEventListener("click", deleteTitle);
     formFields.type.addEventListener("change", syncGeneratedId);
     formFields.title.addEventListener("input", syncGeneratedId);
     formFields.id.addEventListener("input", () => { autoId = false; });

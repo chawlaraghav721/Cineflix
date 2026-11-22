@@ -7,6 +7,7 @@
     const clearButton = document.getElementById("clear-rating");
     const storageKey = "cineflixPersonalRatings";
     let itemId = null;
+    let account = null;
 
     if (!section || !stars.length || !ratingMessage || !clearButton) return;
 
@@ -40,7 +41,7 @@
         clearButton.disabled = !itemId || rating === 0;
     }
 
-    function restoreRating() {
+    function restoreGuestRating() {
         if (!itemId) return;
         try {
             const ratings = getSavedRatings();
@@ -61,31 +62,34 @@
         }
     }
 
+    function restoreRating() {
+        if (account) return account.reload();
+        restoreGuestRating();
+    }
+
     // Called only after Details resolves the item through the shared catalogue.
     function connectItem(item) {
         itemId = item && typeof item.id === "string" && item.id.trim() &&
             (item.type === "movie" || item.type === "show") ? item.id : null;
         section.hidden = !itemId;
+        if (account) return account.connect(itemId);
         displayRating(0);
         restoreRating();
     }
 
-    stars.forEach(function (star) {
-        star.addEventListener("click", function () {
-            const selectedRating = Number(star.dataset.rating);
-            if (!itemId || !isValidRating(selectedRating)) return;
-            try {
-                const ratings = getSavedRatings();
-                ratings[itemId] = selectedRating;
-                localStorage.setItem(storageKey, JSON.stringify(ratings));
-                displayRating(selectedRating);
-            } catch (error) {
-                ratingMessage.textContent = "Unable to save your rating. Check that browser storage is enabled and try again.";
-            }
-        });
-    });
+    function saveGuestRating(selectedRating) {
+        if (!itemId || !isValidRating(selectedRating)) return;
+        try {
+            const ratings = getSavedRatings();
+            ratings[itemId] = selectedRating;
+            localStorage.setItem(storageKey, JSON.stringify(ratings));
+            displayRating(selectedRating);
+        } catch (error) {
+            ratingMessage.textContent = "Unable to save your rating. Check that browser storage is enabled and try again.";
+        }
+    }
 
-    clearButton.addEventListener("click", function () {
+    function clearGuestRating() {
         if (!itemId) return;
         try {
             const ratings = getSavedRatings();
@@ -97,12 +101,31 @@
         } catch (error) {
             ratingMessage.textContent = "Unable to clear your rating. Check that browser storage is enabled and try again.";
         }
+    }
+
+    stars.forEach(function (star) {
+        star.addEventListener("click", function () {
+            const value = Number(star.dataset.rating);
+            if (account) account.select(value);
+            else saveGuestRating(value);
+        });
+    });
+    clearButton.addEventListener("click", function () {
+        if (account) account.remove();
+        else clearGuestRating();
     });
 
     window.addEventListener("storage", function (event) {
-        if (event.key === storageKey || event.key === null) restoreRating();
+        if (event.key === storageKey || event.key === null) {
+            if (account) account.restoreGuest();
+            else restoreGuestRating();
+        }
     });
     window.addEventListener("pageshow", restoreRating);
     window.CineFlixRatings = { connectItem: connectItem };
+    if (window.CineFlixAuth && window.CineFlixRatingsUi && window.CineFlixRatingsApi) {
+        account = window.CineFlixRatingsUi.create({ section, stars, ratingMessage, clearButton,
+            guest: { restore: restoreGuestRating, select: saveGuestRating, remove: clearGuestRating } });
+    }
     connectItem(null);
 }());

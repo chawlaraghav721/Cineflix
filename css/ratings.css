@@ -1,5 +1,17 @@
 /* PERSONAL RATING */
 
+#rating-editor { margin-top: 20px; }
+#rating-editor label { display: block; margin-bottom: 8px; color: #f1f2f4; font-size: 14px; }
+#rating-editor label span { color: #bfc3cc; }
+#rating-review { box-sizing: border-box; width: 100%; min-height: 100px; resize: vertical; padding: 12px; margin-bottom: 10px; background: #252830; color: #f1f2f4; border: 1px solid #555b66; border-radius: 6px; font: inherit; line-height: 1.5; }
+#save-rating, #refresh-ratings { min-height: 44px; padding: 10px 14px; background: #30343c; color: white; border: 1px solid #555b66; border-radius: 6px; font: inherit; font-size: 13px; cursor: pointer; }
+#save-rating:disabled { opacity: .5; cursor: not-allowed; }
+#rating-review:focus-visible, #save-rating:focus-visible, #refresh-ratings:focus-visible { outline: 2px solid #d4d8df; outline-offset: 3px; }
+.community-ratings { border-top: 1px solid #343842; padding-top: 20px; margin-top: 24px; }
+.community-ratings h3 { color: #f1f2f4; font-size: 16px; margin-bottom: 8px; }
+#community-reviews { padding: 0; margin: 0 0 16px; list-style: none; }
+#community-reviews li { white-space: pre-wrap; overflow-wrap: anywhere; padding: 12px 0; border-bottom: 1px solid #343842; color: #d4d8df; line-height: 1.6; font-size: 14px; }
+
 .personal-rating {
     background: #1b1e25;
     padding: 20px;

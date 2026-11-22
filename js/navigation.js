@@ -171,6 +171,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!loginLink || !navList) return;
         const state = window.CineFlixAuth.getState();
         const existingSignOut = navList.querySelector(".signout-btn");
+        let adminItem = navList.querySelector("[data-admin-nav]");
 
         loginLink.setAttribute("aria-busy", String(state.status === "loading"));
         if (!state.user) {
@@ -178,12 +179,31 @@ document.addEventListener("DOMContentLoaded", function () {
             loginLink.removeAttribute("title");
             loginLink.classList.remove("account-link");
             if (existingSignOut) existingSignOut.parentNode.remove();
+            if (adminItem) adminItem.remove();
             return;
         }
 
         loginLink.textContent = "My Account";
         loginLink.title = state.user.email;
         loginLink.classList.add("account-link");
+        if (state.user.role === "admin") {
+            if (!adminItem) {
+                adminItem = document.createElement("li");
+                adminItem.dataset.adminNav = "true";
+                const adminLink = document.createElement("a");
+                adminLink.href = "admin.html";
+                adminLink.className = "admin-link";
+                adminLink.textContent = "Admin";
+                if ((window.location.pathname.split("/").pop() || "index.html") === "admin.html") {
+                    adminLink.classList.add("active");
+                    adminLink.setAttribute("aria-current", "page");
+                }
+                adminItem.appendChild(adminLink);
+                navList.appendChild(adminItem);
+            }
+        } else if (adminItem) {
+            adminItem.remove();
+        }
         if (existingSignOut) return;
 
         const signOutItem = document.createElement("li");

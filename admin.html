@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#111318">
+    <link rel="icon" href="images/cineflix-icon.png" type="image/png">
+    <title>CineFlix Admin — Catalogue Studio</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <script src="js/navigation.js" defer></script>
+    <script src="js/admin-dashboard.js" defer></script>
+</head>
+<body class="admin-page">
+    <header class="navbar">
+        <a href="index.html" class="logo"><img src="images/cineflix-icon.png" alt="">CineFlix</a>
+        <nav aria-label="Main navigation">
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="movies.html">Movies</a></li>
+                <li><a href="shows.html">TV Shows</a></li>
+                <li><a href="mylist.html">My List</a></li>
+                <li><a href="login.html" class="login-link">Login</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="admin-main">
+        <section id="admin-access-check" class="admin-gate" role="status" aria-live="polite">
+            <span class="admin-spinner" aria-hidden="true"></span>
+            <p>Checking your CineFlix account…</p>
+        </section>
+
+        <section id="admin-access-denied" class="admin-gate admin-denied" aria-labelledby="admin-denied-title" hidden>
+            <p class="admin-eyebrow">CINEFLIX ADMIN</p>
+            <h1 id="admin-denied-title">Admin access required</h1>
+            <p id="admin-denied-copy">We couldn’t verify your administrator access.</p>
+            <div class="admin-gate-actions">
+                <a id="admin-signin-link" class="admin-button admin-button-primary" href="login.html">Go to your account</a>
+                <button id="admin-retry-access" class="admin-button admin-button-quiet" type="button" hidden>Try again</button>
+            </div>
+        </section>
+
+        <div id="admin-console" hidden>
+            <section class="admin-hero" aria-labelledby="admin-title">
+                <div>
+                    <p class="admin-eyebrow">CINEFLIX / ADMIN</p>
+                    <h1 id="admin-title">Catalogue Studio</h1>
+                    <p class="admin-intro">A clear view of the stories in your catalogue, ready for their next update.</p>
+                </div>
+                <div class="admin-session-card">
+                    <span class="admin-session-mark" aria-hidden="true">✓</span>
+                    <span><strong>Administrator</strong><small id="admin-current-name">Access verified</small></span>
+                </div>
+            </section>
+
+            <section class="admin-overview" aria-label="Catalogue overview">
+                <article class="admin-stat-card admin-stat-total">
+                    <span class="admin-stat-icon" aria-hidden="true">▦</span>
+                    <span class="admin-stat-label">All titles</span>
+                    <strong id="admin-total-count">—</strong>
+                    <span class="admin-stat-note">In the CineFlix catalogue</span>
+                </article>
+                <article class="admin-stat-card">
+                    <span class="admin-stat-icon" aria-hidden="true">▰</span>
+                    <span class="admin-stat-label">Movies</span>
+                    <strong id="admin-movie-count">—</strong>
+                    <span class="admin-stat-note">Feature films</span>
+                </article>
+                <article class="admin-stat-card">
+                    <span class="admin-stat-icon" aria-hidden="true">▣</span>
+                    <span class="admin-stat-label">TV shows</span>
+                    <strong id="admin-show-count">—</strong>
+                    <span class="admin-stat-note">Series and shows</span>
+                </article>
+            </section>
+
+            <p id="admin-overview-status" class="admin-status" role="status" aria-live="polite"></p>
+            <button id="admin-retry-overview" class="admin-button admin-button-quiet" type="button" hidden>Retry catalogue counts</button>
+
+            <section class="admin-catalogue-panel" aria-labelledby="admin-catalogue-heading">
+                <div class="admin-panel-heading">
+                    <div>
+                        <p class="admin-eyebrow">YOUR COLLECTION</p>
+                        <h2 id="admin-catalogue-heading">Catalogue</h2>
+                    </div>
+                    <p id="admin-result-count" class="admin-result-count">Loading titles…</p>
+                </div>
+                <p id="admin-catalogue-status" class="admin-catalogue-status" role="status" aria-live="polite">Your titles will appear here.</p>
+            </section>
+
+            <p id="admin-feedback" class="admin-feedback" role="status" aria-live="polite" hidden></p>
+        </div>
+    </main>
+
+    <footer class="admin-footer">
+        <span>CineFlix Catalogue Studio</span>
+        <a href="index.html">Back to CineFlix <span aria-hidden="true">↗</span></a>
+    </footer>
+</body>
+</html>
